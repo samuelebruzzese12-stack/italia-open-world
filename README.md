@@ -1,6 +1,6 @@
 # ITALIA OPEN WORLD
 
-Gioco open world 3D per telefono (una sola pagina web, three.js) ambientato sulla mappa reale dell'Italia.
+Gioco open world 3D per telefono (una sola pagina web, three.js) ambientato sulla mappa reale dell'Italia: città con facciate, tetti, negozi, lampioni, auto in sosta, traffico, passanti e polizia sulle strade vere di OpenStreetMap.
 
 **Gioca:** apri `https://samuelebruzzese12-stack.github.io/italia-open-world/` dal telefono (serve la connessione a internet: la mappa si scarica mentre giochi).
 
