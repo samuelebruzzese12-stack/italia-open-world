@@ -18795,7 +18795,7 @@ function renderMenu(){$('#tabs').innerHTML=Object.keys(MENU).map(k=>'<button cla
  $('#items').innerHTML=ITEMS.filter(i=>i.k===tab_).map(i=>'<button class="b i" data-n="'+i.n+'"><span class="p">'+i.e+'</span><span class="nm">'+i.n+'</span><span>'+eur(i.c)+'</span></button>').join('')}
 function near(){const px=inCar?C.x:P.x,pz=inCar?C.z:P.z,L3=[];
  if(inCar)L3.push({x:px,z:pz,r:99,t:'Scendi dall\u2019auto',a:exitCar});
- else{L3.push({x:C.x,z:C.z,r:4.6,t:'Sali in auto',a:()=>{inCar=true;S.inCar=true;cs.v=0;camYaw=C.h;view=0;lookYaw=lookPitch=0;save();radioApply(RADIO.cur>0)}});
+ else{L3.push({x:C.x,z:C.z,r:4.6,t:'Sali in auto',a:()=>{inCar=true;S.inCar=true;cs.v=0;camYaw=C.h;view=0;lookYaw=lookPitch=0;save();radioApply(RADIO.cur>0);if(VEHOK)VEHX.avvioAuto()}});
   const bb=REAL.nearBar(px,pz);if(bb)L3.push({x:bb.x,z:bb.z,r:16,t:'Ordina'+(bb.name?' da '+bb.name:' al bar'),a:()=>{menu=true;$('#menu').hidden=false;$('#menu b').textContent=(bb.name||'Bar')+' · Menu';renderMenu()}});
   if(CC.st>=3&&CC.st<=6)OF.forEach(o=>{if(o.visible)L3.push({x:o.position.x,z:o.position.z,r:2.2,t:'Saluta il carabiniere',a:()=>toast('«Buongiorno! Tutto tranquillo da queste parti?» — «Sì, grazie, agente.»')})});
   NP.forEach(n=>L3.push({x:n.x,z:n.z,r:2.2,t:'Parla con il passante',a:()=>{n.p=2.5;toast(LINES[Math.random()*LINES.length|0])}}))}
@@ -19337,6 +19337,8 @@ const ECUN=VEHOK?IOW_ECU.crea(VEH,{seed:12}):null,DANS=VEHOK?IOW_DANNI.crea():nu
 const VEHX={t:0,cmd:null,vl:0,attritoDAN:0,tempAria:18,hudT:0,panT:0,tab:'quadro',open:false,prezzoL:1699,ultimoPOI:null,inOfficina:false,avviaT:0,consumoMedia:null,cal:null,toastT:0,
  /* effetti dello sterzo dai danni meccanici (oltre a quelli già calcolati dal gioco con la rete deformabile) */
  guida(){return VEHOK?IOW_DANNI.effettiGuida(DANS):{sterzoCorsa:1,sterzoTiro:0}},
+ /* salendo in auto il motore si avvia da solo (se c'è carburante e la batteria è carica) */
+ avvioAuto(){if(!VEHOK||VEH.motore.acceso)return;VEH.v=0;IOW_FISICA.passo(VEH,0.7,{acc:0,iy:0,avvia:true},VEHX.amb());VEH.v=0;if(!VEH.motore.acceso)toast(VEH.carburante.vuoto?'Serbatoio vuoto: il motore non parte (cerca un benzinaio ⛽)':'Batteria scarica: il motore non parte')},
  /* notte secondo il ciclo giorno/notte del gioco (fari accesi → consumo della batteria) */
  notte(){try{return typeof UNI!=='undefined'&&UNI.uNight?UNI.uNight.value>.25:false}catch(e){return false}},
  /* superficie e pendenza sotto l'auto */
@@ -19352,7 +19354,7 @@ const VEHX={t:0,cmd:null,vl:0,attritoDAN:0,tempAria:18,hudT:0,panT:0,tab:'quadro
   const S=(D&&D.on)||ty?{zones:D&&D.on?D.zones:[0,0,0,0,0,0],fC:R?R.fC:0,rC:R?R.rC:0,sL:R?R.sL:0,sR:R?R.sR:0,fS:R?R.fS:0,hubs:R?R.hubs:[],engine:D&&D.on?D.engine:1,wl:D?D.wl:null,lampF:R?R.lampF:null,lampR:R?R.lampR:null,tyreF:ty?ty.f:null,tyreShred:ty?ty.shred:null}:null;
   const ctx=IOW_DANNI.aggiorna(DANS,dt,S,VEH);VEHX.attritoDAN=VEH.mod.attritoExtra;
   if(!inCar){VEH.v=0;IOW_FISICA.passo(VEH,dt,{acc:0,freno:1,iy:0},{pendenza:0,superficie:'asfalto',acqua:0,tempAria:VEHX.tempAria,quota:0,vento:0});VEH.v=0}
-  IOW_ECU.passo(ECUN,dt,{scivolamentoLaterale:inCar?VEHX.vl:0,danni:ctx,luci:VEHX.notte(),notte:VEHX.notte(),portaAperta:!!S_door(),escAttivo:true});
+  IOW_ECU.passo(ECUN,dt,{scivolamentoLaterale:inCar?VEHX.vl:0,danni:ctx,luci:inCar&&VEHX.notte(),notte:inCar&&VEHX.notte(),portaAperta:!!S_door(),escAttivo:true});
   if(inCar&&VEH.carburante.vuoto&&!VEH.motore.acceso&&VEHX.toastT<VEHX.t&&Math.abs(cs.v)<.5){VEHX.toastT=VEHX.t+30;toast('Serbatoio vuoto: cerca un benzinaio (⛽ sulla minimappa) o apri il pannello 🚗')}
   VEHX.hudT+=dt;if(VEHX.hudT>.25){VEHX.hudT=0;VEHX.hud();const poi=inCar&&Math.abs(cs.v)<2?(REAL.nearFuel?REAL.nearFuel(C.x,C.z):null):null;if(poi&&poi!==VEHX.ultimoPOI){VEHX.ultimoPOI=poi;toast((poi.cl==='car_repair'?'Officina':'Benzinaio')+(poi.name?' «'+poi.name+'»':'')+': apri il pannello 🚗 per '+(poi.cl==='car_repair'?'riparare':'fare rifornimento o riparare'))}}
   if(VEHX.open){VEHX.panT+=dt;if(VEHX.panT>.5){VEHX.panT=0;VEHX.render()}}},
@@ -19441,7 +19443,7 @@ if(VEHOK){
  /* riparazione d'emergenza (pulsante esistente): carrozzeria e gomme come prima, meccanica solo al 70% */
  {const dmgRepair0=dmgRepair;dmgRepair=function(a){dmgRepair0(a);if(a===carA&&!VEHX.inOfficina){IOW_DANNI.ripara(DANS,'emergenza',undefined,VEH);if(VEHX.open)VEHX.render()}}}
  const exitCar0=exitCar;exitCar=function(){const was=inCar;exitCar0();if(was&&!inCar){VEH.motore.acceso=false;VEH.motore.rpm=0}};
- VEHX.ripristina(S.veicolo);
+ VEHX.ripristina(S.veicolo);if(inCar)setTimeout(()=>VEHX.avvioAuto(),800);
  {let km0=VEH.odometro,L0=VEH.carburante.consumoTot;setInterval(()=>{const dk=VEH.odometro-km0,dL=VEH.carburante.consumoTot-L0;if(dk>500){VEHX.consumoMedia=dL/dk*1e5;km0=VEH.odometro;L0=VEH.carburante.consumoTot}},5000)}
  $('#vbtn').addEventListener('pointerdown',e=>{e.stopPropagation();VEHX.apri(!VEHX.open)});
  $('#gup').addEventListener('pointerdown',e=>{e.stopPropagation();VEHX.cmd='su'});$('#gdn').addEventListener('pointerdown',e=>{e.stopPropagation();VEHX.cmd='giu'});
