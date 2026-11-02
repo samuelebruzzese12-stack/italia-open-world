@@ -28,6 +28,8 @@ Le risorse soltanto valutate e scartate sono nella sezione finale, con il motivo
 | earcut (Mapbox) | https://github.com/mapbox/earcut | Triangolazione dei poligoni | ISC | Codice incluso nel lavoratore della mappa | — | — | nessuno |
 | «Alfa Romeo 159 Sedan And Wagon» di Nieve5677 | https://sketchfab.com/ | Modello 3D dell'auto | CC BY 4.0 | Incluso nel gioco (già dalle versioni precedenti) | — | — | nessuno |
 | Modelli delle armi (vari autori) | vedi «Crediti» nell'armeria | Modelli 3D | CC BY 4.0 / CC0 (per modello) | File `armi/modelli/*.json` | — | — | nessuno |
+| Dati tecnici dichiarati Alfa Romeo 159 1.9 JTDm 150 CV | alvolante.it, automoto.it, auto-data.net, ultimatespecs.com, cars-data.com, autodata1.com, topgear.com, carsopedia.com (consultati il 2026-11-02) | Dati tecnici pubblici (potenza, coppia, masse, dimensioni, pneumatici, prestazioni e consumi dichiarati) | Fatti tecnici non protetti; nessun testo o immagine copiati | Trascritti in `motore/veicoli_db.js` con fonte, unità, attendibilità e stato di verifica; i dati non dichiarati (rapporti del cambio, ecc.) sono provvisori e marcati | `motore/veicoli_db.js` | i cataloghi divergono su massa e altezza (riportati come intervalli); rapporti del cambio non disponibili | nessuno |
+| Codici di guasto generici SAE J2012 / ISO 15031-6 | standard pubblici | Elenco dei codici P/C/B/U generici usati dalle ECU virtuali | Nomenclatura standard pubblica | Descrizioni scritte in italiano in `motore/ecu.js` | — | nessuna conformità certificata | nessuno |
 
 ## Risorse valutate e NON usate (con il motivo)
 
@@ -41,4 +43,5 @@ Le risorse soltanto valutate e scartate sono nella sezione finale, con il motivo
 - Copernicus Data Space Ecosystem / Sentinel Hub: richiedono un account (Sentinel Hub anche un abbonamento oltre la prova); i dati Sentinel arrivano nel gioco tramite i prodotti ESA WorldCover.
 - QGIS, Blender, BlenderGIS: non eseguibili nell'ambiente di sviluppo (nessun accesso ai pacchetti); il lavoro equivalente è fatto da script Python/Node e dal codice del gioco (vedi `docs/IMPLEMENTATION_REPORT.md`).
 - Cesium/CesiumJS/3D Tiles: motore separato o incompatibile con la versione di three.js del gioco; dati con account/token e piani a pagamento per uso commerciale.
+- Hardware HIL (Vector, dSPACE, NI) e tool professionali (CARLA, OpenDRIVE/OpenSCENARIO, Omniverse): non usati; il gioco gira in una pagina web e le centraline sono solo virtuali (vedi docs/ECU.md). Nessun collegamento fisico è simulato come esistente.
 - Strumenti AI di generazione (Meshy, Tripo, RunPod, modelli su Hugging Face): richiedono account, crediti o GPU a pagamento; alcuni modelli hanno licenze che escludono l'UE; i modelli generati non rispetterebbero le impronte reali.
