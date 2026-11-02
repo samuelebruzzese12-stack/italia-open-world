@@ -805,8 +805,8 @@ function buildCell(L, opt) {
   const places = [], pois = [];
   { const ly = L.place; if (ly) { const k = S / ext0(ly); for (let i = 0; i < ly.n; i++) { const f = ly.feat(i), p = f.props; if (f.type !== 1 || !p.name) continue; const pt = f.parts[0]; if (!pt) continue; const u = pt[0] * k, v = pt[1] * k; if (u < 0 || v < 0 || u > S || v > S) continue;
       places.push({ x: -u, z: -v, name: p['name:it'] || p.name, cl: p.class, rank: p.rank || 0 }) } } }
-  { const ly = L.poi; if (ly && A) { const k = S / ext0(ly); for (let i = 0; i < ly.n; i++) { const f = ly.feat(i), p = f.props; if (f.type !== 1) continue; if (p.class !== 'cafe' && p.class !== 'bar' && p.subclass !== 'cafe' && p.subclass !== 'bar' && p.subclass !== 'pub') continue; const pt = f.parts[0]; const u = pt[0] * k, v = pt[1] * k; if (u < 0 || v < 0 || u > S || v > S) continue;
-      pois.push({ x: -u, z: -v, name: p.name || '', cl: p.subclass || p.class }) } } }
+  { const ly = L.poi; if (ly && A) { const k = S / ext0(ly); for (let i = 0; i < ly.n; i++) { const f = ly.feat(i), p = f.props; if (f.type !== 1) continue; if (p.class !== 'cafe' && p.class !== 'bar' && p.subclass !== 'cafe' && p.subclass !== 'bar' && p.subclass !== 'pub' && p.class !== 'fuel' && p.subclass !== 'fuel' && p.subclass !== 'car_repair') continue; const pt = f.parts[0]; const u = pt[0] * k, v = pt[1] * k; if (u < 0 || v < 0 || u > S || v > S) continue;
+      pois.push({ x: -u, z: -v, name: p.name || '', cl: (p.class === 'fuel' || p.subclass === 'fuel') ? 'fuel' : p.subclass === 'car_repair' ? 'car_repair' : (p.subclass || p.class) }) } } }
   for (const mn of mini) { mn.pk = mn.R.pk || 0; delete mn.R }
   // --- nomi delle vie, insegne dei negozi veri, numeri civici, fermate dell'autobus, cestini e colonnine (dati OpenStreetMap)
   const names = [], NR = RHN ? new Int16Array(RHN * RHN).fill(-1) : null;

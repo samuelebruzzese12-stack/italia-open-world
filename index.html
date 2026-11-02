@@ -131,6 +131,11 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 }
 @media (orientation:landscape) and (max-height:520px) and (max-width:860px){#armCred{display:none}}
 
+#qd{font-size:12px;padding:6px 10px;max-width:46vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#qd[hidden]{display:none}
+#vbtn{position:absolute;left:calc(10px + var(--sl));top:calc(232px + var(--st));width:46px;height:46px;border-radius:50%;padding:0;font-size:22px;display:flex;align-items:center;justify-content:center}
+#vp{position:absolute;left:calc(10px + var(--sl));top:calc(124px + var(--st));width:min(92vw,520px);max-height:66vh;overflow:auto;background:rgba(16,24,34,.95);color:#fff;border-radius:12px;padding:10px;font-size:13px;line-height:1.3;z-index:5}#vp[hidden]{display:none}#vp,#vp *{touch-action:pan-y}#vp .ph{font-weight:800;margin-bottom:4px}#vp .pr{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}#vp .s{height:34px;padding:0 9px;font-size:12px;min-width:0}#vp .s.on{background:var(--go)}#vp .s[disabled]{opacity:.4}#vp .vrow{margin:3px 0}#vp .vg{font-size:15px;margin:2px 0 4px}#vp .vnote{font-size:11px;opacity:.8;margin:4px 0}#vp .vt{width:100%;border-collapse:collapse;font-size:12px}#vp .vt td{padding:3px 4px;border-top:1px solid rgba(255,255,255,.12);vertical-align:top}#vp .vbar{display:inline-block;width:64px;height:8px;background:rgba(255,255,255,.15);border-radius:4px;vertical-align:middle;overflow:hidden}#vp .vbar i{display:block;height:100%}#vp .vok{color:#7fd8a8}#vp .vko{color:#ff8f8f;font-weight:700}#vp .vmem{color:#f3c76b}#vp .vpre{margin:0;font:10.5px/1.3 monospace;white-space:pre-wrap;max-height:120px;overflow:auto;background:#0008;border-radius:8px;padding:6px}
+#gbx{position:absolute;right:calc(20px + var(--sr));bottom:calc(236px + var(--sb));display:none;gap:6px}#gbx .b{height:48px;min-width:52px;font-size:15px}
+@media (orientation:landscape) and (max-height:520px){#vbtn{top:calc(200px + var(--st));width:42px;height:42px}#vp{top:calc(56px + var(--st));max-height:calc(100% - 66px)}#gbx{right:calc(116px + var(--sr));bottom:calc(126px + var(--sb))}#qd{font-size:11px;padding:5px 8px}}
 #rld{position:fixed;inset:0;z-index:12;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;background:#1d2733;color:#fff;font:600 15px system-ui,sans-serif;text-align:center}#rld[hidden]{display:none}#rlt{font-size:20px;font-weight:800}#rlp{opacity:.8;font-size:13px}#rle{color:#ffb4a8;font-size:13px;max-width:520px}#rla{position:absolute;bottom:calc(10px + var(--sb));left:10px;right:10px;font-size:10px;opacity:.6}#mgo{background:var(--go);opacity:1;height:48px;font-size:14px}#mcity{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;max-width:96vw;padding:2px 4px;touch-action:pan-x}#mcity *{touch-action:pan-x}#mcity .b{height:40px;min-width:0;white-space:nowrap;font-size:12px;padding:0 10px;flex:0 0 auto}#mc{width:min(96vw,calc(100vh - 230px))}#mcred{position:absolute;left:calc(14px + var(--sl));bottom:calc(14px + var(--sb));height:40px}#rcred{position:absolute;inset:0;z-index:3;background:rgba(8,16,26,.97);color:#fff;padding:calc(14px + var(--st)) 16px calc(14px + var(--sb));overflow-y:auto;touch-action:pan-y;font:500 13px/1.45 system-ui,sans-serif}#rcred[hidden]{display:none}#rcred *{touch-action:pan-y}#rcred a{color:#8fc3ff}#rcred>button{float:right}#zn{display:none;white-space:pre-line;line-height:1.25;max-width:180px}@media (orientation:landscape) and (max-height:520px){#mc{width:auto;height:calc(100% - 16px)}#mcity{flex-direction:column;flex-wrap:nowrap;overflow-x:hidden;overflow-y:auto;max-height:calc(100% - 210px);width:190px;touch-action:pan-y;align-self:flex-start;margin-top:calc(124px + var(--st))}#mcity *{touch-action:pan-y}#mcity .b{height:34px}#mgo{position:absolute;right:calc(14px + var(--sr));top:calc(70px + var(--st));height:40px}#mcred{left:auto;right:calc(120px + var(--sr))}}
 #msat{position:absolute;left:calc(92px + var(--sl));bottom:calc(14px + var(--sb));height:40px}
 #mdati{position:absolute;left:calc(92px + var(--sl));bottom:calc(62px + var(--sb));height:40px}
@@ -2098,8 +2103,8 @@ function buildCell(L, opt) {
   const places = [], pois = [];
   { const ly = L.place; if (ly) { const k = S / ext0(ly); for (let i = 0; i < ly.n; i++) { const f = ly.feat(i), p = f.props; if (f.type !== 1 || !p.name) continue; const pt = f.parts[0]; if (!pt) continue; const u = pt[0] * k, v = pt[1] * k; if (u < 0 || v < 0 || u > S || v > S) continue;
       places.push({ x: -u, z: -v, name: p['name:it'] || p.name, cl: p.class, rank: p.rank || 0 }) } } }
-  { const ly = L.poi; if (ly && A) { const k = S / ext0(ly); for (let i = 0; i < ly.n; i++) { const f = ly.feat(i), p = f.props; if (f.type !== 1) continue; if (p.class !== 'cafe' && p.class !== 'bar' && p.subclass !== 'cafe' && p.subclass !== 'bar' && p.subclass !== 'pub') continue; const pt = f.parts[0]; const u = pt[0] * k, v = pt[1] * k; if (u < 0 || v < 0 || u > S || v > S) continue;
-      pois.push({ x: -u, z: -v, name: p.name || '', cl: p.subclass || p.class }) } } }
+  { const ly = L.poi; if (ly && A) { const k = S / ext0(ly); for (let i = 0; i < ly.n; i++) { const f = ly.feat(i), p = f.props; if (f.type !== 1) continue; if (p.class !== 'cafe' && p.class !== 'bar' && p.subclass !== 'cafe' && p.subclass !== 'bar' && p.subclass !== 'pub' && p.class !== 'fuel' && p.subclass !== 'fuel' && p.subclass !== 'car_repair') continue; const pt = f.parts[0]; const u = pt[0] * k, v = pt[1] * k; if (u < 0 || v < 0 || u > S || v > S) continue;
+      pois.push({ x: -u, z: -v, name: p.name || '', cl: (p.class === 'fuel' || p.subclass === 'fuel') ? 'fuel' : p.subclass === 'car_repair' ? 'car_repair' : (p.subclass || p.class) }) } } }
   for (const mn of mini) { mn.pk = mn.R.pk || 0; delete mn.R }
   // --- nomi delle vie, insegne dei negozi veri, numeri civici, fermate dell'autobus, cestini e colonnine (dati OpenStreetMap)
   const names = [], NR = RHN ? new Int16Array(RHN * RHN).fill(-1) : null;
@@ -2286,13 +2291,13 @@ onmessage = async e => { const m = e.data;
 <div id="hud"><div id="ottica" hidden><i class="oh"></i><i class="ov"></i><i class="ol"></i><i class="or"></i><i class="ob"></i><i class="op"></i></div>
 <div id="look"></div>
 <div id="joy"><div id="base"><div id="knob"></div></div></div>
-<div id="top"><div class="chip" id="w"></div><div class="chip" id="sp" hidden></div><div style="flex:1"></div><button class="b" id="tbtn" title="Ora del giorno">🌓</button><button class="b" id="rbtn" title="Radio">📻</button><button class="b" id="v360">360°</button><button class="b" id="vw">VISTA</button></div>
+<div id="top"><div class="chip" id="w"></div><div class="chip" id="sp" hidden></div><div class="chip" id="qd" hidden></div><div style="flex:1"></div><button class="b" id="tbtn" title="Ora del giorno">🌓</button><button class="b" id="rbtn" title="Radio">📻</button><button class="b" id="v360">360°</button><button class="b" id="vw">VISTA</button></div>
 <button class="b" id="hb" hidden>FRENO A MANO</button>
 <button class="b" id="act">—</button>
 <div class="chip" id="toast"></div>
 <div id="cr">Mappa © OpenStreetMap contributors · OpenMapTiles · OpenFreeMap · Rilievo Mapterhorn (INGV TINITALY e fonti regionali) · © ESA WorldCover 2021, dati Copernicus Sentinel (CC BY 4.0) · Texture Poly Haven e ambientCG (CC0) · Auto: «Alfa Romeo 159 Sedan And Wagon» di Nieve5677 (sketchfab.com), CC BY 4.0</div>
 <canvas id="mm" width="240" height="240"></canvas><div class="chip" id="zn"></div>
-<div id="arr" hidden></div><button class="b" id="pbtn">🚔</button><div class="chip" id="heat" style="display:none"></div><div class="chip" id="dmg" style="display:none"></div><button class="b" id="rep" style="display:none">🔧 Ripara l'auto</button><div id="sub"></div>
+<div id="arr" hidden></div><button class="b" id="pbtn">🚔</button><button class="b" id="vbtn" title="Veicolo">🚗</button><div id="vp" hidden></div><div id="gbx"><button class="b" id="gdn">−</button><button class="b" id="gup">+</button></div><div class="chip" id="heat" style="display:none"></div><div class="chip" id="dmg" style="display:none"></div><button class="b" id="rep" style="display:none">🔧 Ripara l'auto</button><div id="sub"></div>
 <div id="mirino"><i class="a"></i><i class="bb"></i><i class="c"></i><i class="d"></i><i class="p"></i></div>
 <button class="b" id="bspara">SPARA</button><button class="b" id="bmira">MIRA</button><button class="b" id="bricarica">RICARICA</button>
 <div class="chip" id="colpi"></div><button class="b" id="barmi" title="Armeria">ARMI</button><button class="b" id="bfull" title="Schermo intero"><svg class="i1" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg><svg class="i2" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg></button>
@@ -2304,6 +2309,7 @@ onmessage = async e => { const m = e.data;
 <div id="rld"><div id="rlt">Caricamento della mappa reale…</div><div id="rlp"></div><div id="rle"></div><button class="b" id="rlr" hidden>Riprova</button><div id="rla">Mappa © OpenStreetMap contributors · OpenMapTiles · OpenFreeMap · Rilievo Mapterhorn (INGV TINITALY e fonti regionali)</div></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="motore/veicoli_db.js"></script><script src="motore/fisica_veicolo.js"></script><script src="motore/ecu.js"></script><script src="motore/danni_meccanici.js"></script><script src="motore/calibrazione.js"></script>
 <script>
 ( function () {
 
@@ -16673,7 +16679,8 @@ function drawMini(){const mm=$('#mm'),c=mm.getContext('2d'),px=inCar?C.x:P.x,pz=
  c.save();c.clearRect(0,0,240,240);c.beginPath();c.arc(120,120,118,0,6.2832);c.clip();c.fillStyle='#ece6d8';c.fillRect(0,0,240,240);
  const m=g2m(px,pz),hw=wm/2/K,tx0=Math.floor((m[0]-hw+MH)/S14),tx1=Math.floor((m[0]+hw+MH)/S14),ty0=Math.floor((MH-(m[1]+hw))/S14),ty1=Math.floor((MH-(m[1]-hw))/S14);
  for(let ty=ty0;ty<=ty1;ty++)for(let tx=tx0;tx<=tx1;tx++){const e=mapTileGet(14,tx,ty,512,2);if(!e)continue;const g0=m2g(-MH+tx*S14,MH-ty*S14),S=S14*K*k;c.drawImage(e.img,120+(px-g0[0])*k,120+(pz-g0[1])*k,S+.5,S+.5)}
- c.restore();if(!inCar){const x=120+(px-C.x)*k,y=120+(pz-C.z)*k;if((x-120)**2+(y-120)**2<110*110)carIcon(c,x,y,-C.h)}arrow(c,120,120,-(inCar?C.h:yaw),13)}
+ c.restore();for(const ce of CELLS.values()){if(ce.lod!=='A')continue;for(const p of ce.pois){if(p.cl!=='fuel'&&p.cl!=='car_repair')continue;const x=120+(px-p.x)*k,y=120+(pz-p.z)*k;if((x-120)**2+(y-120)**2>104*104)continue;c.font='bold 11px system-ui,sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#fff';c.beginPath();c.arc(x,y,7,0,6.2832);c.fill();c.fillStyle='#1b3a66';c.fillText(p.cl==='fuel'?'⛽':'🔧',x,y+1)}}   /* benzinai e officine (OpenStreetMap) per il rifornimento e le riparazioni */
+ if(!inCar){const x=120+(px-C.x)*k,y=120+(pz-C.z)*k;if((x-120)**2+(y-120)**2<110*110)carIcon(c,x,y,-C.h)}arrow(c,120,120,-(inCar?C.h:yaw),13)}
 /* ---------- mappa grande: tile OpenMapTiles disegnate qui, zoom e spostamento, viaggio verso un punto ---------- */
 const MAPV={z:13,cx:0,cy:0,mark:null,markName:''};
 function mapOpen(){const m=g2m(inCar?C.x:P.x,inCar?C.z:P.z);MAPV.cx=m[0];MAPV.cy=m[1];if(MAPV.z<5)MAPV.z=13;MAPV.mark=null;$('#mgo').hidden=true;drawMap()}
@@ -16747,7 +16754,11 @@ function update(px,pz,all){UPP[0]=px;UPP[1]=pz;SKY.position.copy(cam.position);t
 function rescale(ll,pg,cg){const h=C.h,yw=yaw;if(typeof VITA!=='undefined')VITA.travelReset();dropAll();setOrigin(ll[0],ll[1]);const p=m2g(...ll2m(pg[0],pg[1])),c=m2g(...ll2m(cg[0],cg[1]));
  LOAD.on=true;LOAD.t0=performance.now();LOAD.label='';P.x=p[0];P.z=p[1];C.x=c[0];C.z=c[1];LOAD.place=()=>{placeAt(0,0,{pl:[p[0],p[1]],car:[c[0],c[1]],ch:h,h:yw});yaw=yw};overlay(true);$('#rlt').textContent='Aggiornamento della scala della mappa…';plan.force=true}
 /* ---------- bar e caffè veri: si può ordinare al banco ---------- */
-function nearBar(x,z){let b=null,bd=16;for(const c of CELLS.values()){if(c.lod!=='A')continue;for(const p of c.pois){const d=Math.hypot(p.x-x,p.z-z);if(d<bd){bd=d;b=p}}}return b}
+function nearBar(x,z){let b=null,bd=16;for(const c of CELLS.values()){if(c.lod!=='A')continue;for(const p of c.pois){if(p.cl==='fuel'||p.cl==='car_repair')continue;const d=Math.hypot(p.x-x,p.z-z);if(d<bd){bd=d;b=p}}}return b}
+function nearFuel(x,z){let b=null,bd=34;for(const c of CELLS.values()){if(c.lod!=='A')continue;for(const p of c.pois){if(p.cl!=='fuel'&&p.cl!=='car_repair')continue;const d=Math.hypot(p.x-x,p.z-z);if(d<bd){bd=d;b=p}}}return b}
+/* superficie sotto il veicolo per il motore fisico: strada (asfalto o sterrato) oppure classe del suolo della cella */
+const SURF_CL=['asfalto','asfalto','lastricato','erba','terra','terra','erba','ghiaia','terra','neve','erba','lastricato','terra'];
+function surf(x,z){const c=cellAt(x,z);if(!c)return 'asfalto';const u=c.X-x,v=c.Z-z;if(c.RH){const r=rhCell(c,u,v);if(r===r)return 'asfalto'}if(bridgeH(x,z)!==null)return 'asfalto';if(c.cls){const n=c.CR,i=Math.min(n-1,Math.max(0,Math.floor(u/c.S*n))),j=Math.min(n-1,Math.max(0,Math.floor(v/c.S*n)));return SURF_CL[c.cls[j*n+i]]||'asfalto'}return 'asfalto'}
 /* ---------- salvataggio della posizione geografica ---------- */
 function saveGeo(){if(LOAD.on||!WK.length)return;S.geo=geoOf(P.x,P.z);S.cgeo=geoOf(C.x,C.z);S.ch=C.h}
 function start(){PBR.load();mkWorkers();if(!WK.length){overlay(true);$('#rle').textContent='Il caricatore della mappa non è disponibile in questo browser.';return}
@@ -16760,7 +16771,7 @@ function start(){PBR.load();mkWorkers();if(!WK.length){overlay(true);$('#rle').t
  const go=$('#mgo');if(go)go.onclick=()=>{if(!MAPV.mark)return;const ll=m2ll(MAPV.mark[0],MAPV.mark[1]);const nm=MAPV.markName||'';MAPV.mark=null;go.hidden=true;openMap(false);if(inCar&&Math.hypot(V.vx,V.vz)>3){V.vx=V.vz=0}travel(ll[0],ll[1],nm||'il punto scelto')};
  const rb=$('#rlr');if(rb)rb.onclick=retry;
  const cb=$('#mcred');if(cb)cb.onclick=()=>{const p=$('#rcred');p.hidden=!p.hidden};{const eb=$('#mdati');if(eb)eb.onclick=async()=>{eb.disabled=true;eb.textContent='📦 scarico…';try{const r=await esportaZona();toast('Salvato '+r.name+' ('+r.kb+' KB): mandalo in chat per far riprodurre il difetto');eb.textContent='📦 Dati zona'}catch(e){toast('Dati zona: errore '+e.message);eb.textContent='📦 Dati zona'}eb.disabled=false}}{const sb=$('#msat');if(sb){const lab=()=>{sb.textContent=COP.on?'🛰 Copernicus: sì':'🛰 Copernicus: no'};lab();sb.onclick=()=>{copToggle();lab();toast(COP.on?'Dati Copernicus attivi: boschi, campi e roccia da ESA WorldCover; terreno lontano dalle immagini Sentinel-2':'Dati Copernicus disattivati: solo OpenStreetMap')}}}const cx=$('#rcredx');if(cx)cx.onclick=()=>{$('#rcred').hidden=true}}
-return{start,update,ground,terrainH,bridgeH,wet,inside:(x,z)=>!LOAD.on&&!!cellAt(x,z),placeName,roadName,hudText,nearBar,saveGeo,travel,drawMini,drawMap,mapOpen:()=>{mapOpen_=true;mapOpen()},mapClose:()=>{mapOpen_=false},mapZoom,mapZoomTo,mapCenter,mapPan,mapTap,mapCity,
+return{start,update,ground,terrainH,bridgeH,wet,surf,nearFuel,inside:(x,z)=>!LOAD.on&&!!cellAt(x,z),placeName,roadName,hudText,nearBar,saveGeo,travel,drawMini,drawMap,mapOpen:()=>{mapOpen_=true;mapOpen()},mapClose:()=>{mapOpen_=false},mapZoom,mapZoomTo,mapCenter,mapPan,mapTap,mapCity,
  sunPos:CIELO.sunPos,CIELO,PBR,UNI,ERBA,COP,copToggle,esportaZona,_mkCell:mkCell,busy:()=>LOAD.on,CSO:CSO2,CARG,MTR,CARCOLS,laneOff,MAPV,CELLS,FARS,STATS,ERR,CFG,geoOf,ll2m,m2g,g2m,get K(){return K},get GEN(){return GEN},nearRoad,cellAt,bridgeH,PLACES,MT2,QUEUE,JOBS}})();
 const WORLD={CSZ:32,WS:0,SEA:0,X0:-1e9,X1:1e9,Z0:-1e9,Z1:1e9,NCH:0,H:(x,z)=>REAL.terrainH(x,z),ground:(x,z,yh,ped)=>REAL.ground(x,z,yh,ped),wet:(x,z)=>REAL.wet(x,z),inside:(x,z)=>REAL.inside(x,z),chunkOK:()=>false,zone:()=>0,coastX:()=>0,
  RS:[],SCH:new Map(),BCH:new Map(),RIV:[],BR:[],SPEC:[],MWS:[],CITIES:[],TOWNS:[],TOWN:{cx:0,cz:0,name:''},townAt:()=>null,LAKE:null,MILAN:null,MW:null,mwAt:()=>null,bridgeAt:(x,z)=>REAL.bridgeH(x,z),deckAt:()=>0,SGTXT:[]};
@@ -19069,15 +19080,17 @@ function groundCar(dt){const sn=Math.sin(C.h),cn=Math.cos(C.h),yh=V.y,yf=GY(C.x+
  V.y+=((yf+yb)/2-V.y)*k;V.tp+=(-Math.atan2(yf-yb,3)-V.tp)*k;V.tr+=(Math.atan2(yl-yr,1.8)-V.tr)*k}
 function drive(dt,ix,iy){const hb=!!(K[' ']||K.hb);if(V.rol){crRollDrive(dt);return}if(V.flip){V.vx*=Math.exp(-6*dt);V.vz*=Math.exp(-6*dt);cs.v=0;return}
  let sn=Math.sin(C.h),cn=Math.cos(C.h),vf=V.vx*sn+V.vz*cn,vl=V.vz*sn-V.vx*cn;if(crTrip(V,carA,vl,Math.hypot(vf,vl),dt)){V.rlF=vf;crRollDrive(dt);return}
- const sp=Math.abs(vf),lock=.6/(1+sp*sp/220);V.st+=(ix*lock*CARDMG.lk+CARDMG.pull*Math.min(1,sp/6)-V.st)*Math.min(1,dt*9);
- let w=vf/2.7*Math.tan(V.st)*(hb?1.35:1);if(sp<.4)w*=sp/.4;
+ const sp=Math.abs(vf),lock=.6/(1+sp*sp/220),EG=VEHX.guida();V.st+=(ix*lock*CARDMG.lk*EG.sterzoCorsa+(CARDMG.pull+EG.sterzoTiro)*Math.min(1,sp/6)-V.st)*Math.min(1,dt*9);
+ let w=vf/2.7*Math.tan(V.st)*(hb?1.35:1)*(VEHOK&&VEH.ruote.bloccate?.35:1);if(sp<.4)w*=sp/.4;   /* ruote anteriori bloccate (senza ABS): lo sterzo non risponde */
  C.h-=w*dt;C.h+=(V.yw+V.ywW)*dt;V.yw*=Math.exp(-1.1*dt);V.ywW*=Math.exp(-4*dt);sn=Math.sin(C.h);cn=Math.cos(C.h);vf=V.vx*sn+V.vz*cn;vl=V.vz*sn-V.vx*cn;
  const f0=vf;
- if(iy>.05)vf+=(vf>=-.3?9.5*CARDMG.ef*(1-Math.pow(Math.max(0,vf)/66,1.6)):14*Math.max(.3,CARDMG.ef))*iy*dt;
- else if(iy<-.05)vf+=(vf>.3?-15:-6)*(-iy)*dt;
- vf-=Math.sign(vf)*Math.min(Math.abs(vf),(.35+.001*vf*vf+(Math.abs(iy)<.05?1.2:0))*dt);
- if(hb)vf-=Math.sign(vf)*Math.min(Math.abs(vf),8*dt);
- vf-=Math.sign(vf)*Math.min(Math.abs(vf),CARDMG.drag*dt);vf=cl(vf,-12,CARDMG.vmax);vl*=Math.exp(-((hb||(typeof PD!=='undefined'&&V.slipT>PD.t))?1.4:(Math.abs(vl)>7?3.5:8.5)*(CARDMG.grip||1))*dt);
+ if(VEHOK){vf=VEHX.drive(dt,vf,vl,iy,hb);if(CARDMG.vmax<56)vf=cl(vf,-12,CARDMG.vmax)}   /* motore fisico reale: motore, cambio, frizione, freni con ABS/ASR, pendenza, superficie, consumo (motore/fisica_veicolo.js) */
+ else{if(iy>.05)vf+=(vf>=-.3?9.5*CARDMG.ef*(1-Math.pow(Math.max(0,vf)/66,1.6)):14*Math.max(.3,CARDMG.ef))*iy*dt;
+  else if(iy<-.05)vf+=(vf>.3?-15:-6)*(-iy)*dt;
+  vf-=Math.sign(vf)*Math.min(Math.abs(vf),(.35+.001*vf*vf+(Math.abs(iy)<.05?1.2:0))*dt);
+  if(hb)vf-=Math.sign(vf)*Math.min(Math.abs(vf),8*dt);
+  vf-=Math.sign(vf)*Math.min(Math.abs(vf),CARDMG.drag*dt);vf=cl(vf,-12,CARDMG.vmax)}   /* modello arcade di riserva se i moduli non sono caricati */
+ vl*=Math.exp(-((hb||(typeof PD!=='undefined'&&V.slipT>PD.t))?1.4:(Math.abs(vl)>7?3.5:8.5)*(CARDMG.grip||1)*(VEHOK?.3+.7*VEH.ruote.aderenza:1))*dt);
  V.vx=sn*vf-cn*vl;V.vz=cn*vf+sn*vl;
  let nx=C.x+V.vx*dt,nz=C.z+V.vz*dt;
  for(const o of [1.3,-1.3]){const fx=nx+sn*o,fz=nz+cn*o,q=push(fx,fz,1),ux=q[0]-fx,uz=q[1]-fz;if(q[2]&&(ux||uz)){const l=Math.hypot(ux,uz),mx=ux/l,mz=uz/l,vn=V.vx*mx+V.vz*mz;try{VITA.carHitBy(PO.s,-vn)}catch(e){}nx+=ux;nz+=uz;{const so=PO.s,lo=!!(so&&so.lo),vt=V.vx*-mz+V.vz*mx;crScrape(fx-mx,V.y+(lo?.48:.38),fz-mz,-mz,mx,vt,Math.max(0,-vn));const lat=-cn*mx+sn*mz,vl0=V.vz*sn-V.vx*cn;if(lo&&Math.abs(lat)>.75&&vl0*lat<-10&&!V.rol){V.rlF=V.vx*sn+V.vz*cn;rlStart(V,vl0,.3,'guardrail',.6,0)}}if(vn<0){if(vn<-3.2)carHit(carA,{x:C.x,z:C.z,h:C.h,y:V.y,vx:V.vx,vz:V.vz,player:true},fx-mx,fz-mz,mx,mz,-vn);const e=vn<-8?1.05:vn<-4?1.15:1.25,ox=V.vx,oz=V.vz;V.vx=(V.vx-e*vn*mx)*.97;V.vz=(V.vz-e*vn*mz)*.97;if(vn<-2){const rx=fx-mx-C.x,rz=fz-mz-C.z;V.ywW=cl(V.ywW+(rz*(V.vx-ox)-rx*(V.vz-oz))*.16,-2.4,2.4)}}}}
@@ -19116,7 +19129,7 @@ function renderMenu(){$('#tabs').innerHTML=Object.keys(MENU).map(k=>'<button cla
  $('#items').innerHTML=ITEMS.filter(i=>i.k===tab_).map(i=>'<button class="b i" data-n="'+i.n+'"><span class="p">'+i.e+'</span><span class="nm">'+i.n+'</span><span>'+eur(i.c)+'</span></button>').join('')}
 function near(){const px=inCar?C.x:P.x,pz=inCar?C.z:P.z,L3=[];
  if(inCar)L3.push({x:px,z:pz,r:99,t:'Scendi dall\u2019auto',a:exitCar});
- else{L3.push({x:C.x,z:C.z,r:4.6,t:'Sali in auto',a:()=>{inCar=true;S.inCar=true;cs.v=0;camYaw=C.h;view=0;lookYaw=lookPitch=0;save();radioApply(RADIO.cur>0)}});
+ else{L3.push({x:C.x,z:C.z,r:4.6,t:'Sali in auto',a:()=>{inCar=true;S.inCar=true;cs.v=0;camYaw=C.h;view=0;lookYaw=lookPitch=0;save();radioApply(RADIO.cur>0);if(VEHOK)VEHX.avvioAuto()}});
   const bb=REAL.nearBar(px,pz);if(bb)L3.push({x:bb.x,z:bb.z,r:16,t:'Ordina'+(bb.name?' da '+bb.name:' al bar'),a:()=>{menu=true;$('#menu').hidden=false;$('#menu b').textContent=(bb.name||'Bar')+' · Menu';renderMenu()}});
   if(CC.st>=3&&CC.st<=6)OF.forEach(o=>{if(o.visible)L3.push({x:o.position.x,z:o.position.z,r:2.2,t:'Saluta il carabiniere',a:()=>toast('«Buongiorno! Tutto tranquillo da queste parti?» — «Sì, grazie, agente.»')})});
   NP.forEach(n=>L3.push({x:n.x,z:n.z,r:2.2,t:'Parla con il passante',a:()=>{n.p=2.5;toast(LINES[Math.random()*LINES.length|0])}}))}
@@ -19647,7 +19660,130 @@ function armInit(){armHudInit();armViewInput();try{armFxInit();if(AFX.flash&&!AF
 let lastLabel='';
 const TOLL={last:-99,inside:false,list:null};
 function tollStep(){if(!inCar)return;if(!TOLL.list)TOLL.list=WORLD.SPEC.filter(q=>q.t==='toll');let inA=false;for(const q of TOLL.list){const dx=C.x-q.x,dz=C.z-q.z;if(Math.abs(dx)>60||Math.abs(dz)>60)continue;const c=Math.cos(q.a),s=Math.sin(q.a),lx=dx*c+dz*s,lz=-dx*s+dz*c;if(Math.abs(lx)<q.w/2&&Math.abs(lz)<q.d/2){inA=true;if(!TOLL.inside&&PD.t-TOLL.last>20){TOLL.last=PD.t;const cost=q.main?220:380;S.cents=Math.max(0,S.cents-cost);S.log.push({t:Date.now(),w:'Pedaggio '+(q.name||'casello'),c:-cost});if(S.log.length>30)S.log.shift();save();hud();toast('Pedaggio '+(q.name||'')+': −'+eur(cost))}}}TOLL.inside=inA}
-function step(dt){const ts=performance.now()/1000;dmgDrive();dmgStep(dt);crStep(dt);if(inCar)dmgSmokeFor(carA,{x:C.x,z:C.z,h:C.h,y:V.y},dt);dmgUi(dt);if(RADIO.el&&!RADIO.el.paused){const tv=(VOICE.cur?.22:1)*RADIO.vol*(inCar?1:0);RADIO.el.volume+=(tv-RADIO.el.volume)*Math.min(1,dt*4)}
+
+/* ===================================================================================================================
+   VEICOLO REALE: motore fisico, ECU virtuali, danni meccanici, quadro strumenti, officina, benzinai, salvataggio
+   Moduli puri in motore/*.js (testati con node test/run.js). Qui c'è solo il collegamento al gioco.
+   =================================================================================================================== */
+const VEHOK=!!(window.IOW_FISICA&&window.IOW_VEICOLI&&window.IOW_ECU&&window.IOW_DANNI);
+const VEH=VEHOK?IOW_FISICA.crea(IOW_VEICOLI.parametri('alfa_159_19_jtdm_150'),{Tambiente:18,carburante:42,acceso:false}):null;
+const ECUN=VEHOK?IOW_ECU.crea(VEH,{seed:12}):null,DANS=VEHOK?IOW_DANNI.crea():null;
+const VEHX={t:0,cmd:null,vl:0,attritoDAN:0,tempAria:18,hudT:0,panT:0,tab:'quadro',open:false,prezzoL:1699,ultimoPOI:null,inOfficina:false,avviaT:0,consumoMedia:null,cal:null,toastT:0,
+ /* effetti dello sterzo dai danni meccanici (oltre a quelli già calcolati dal gioco con la rete deformabile) */
+ guida(){return VEHOK?IOW_DANNI.effettiGuida(DANS):{sterzoCorsa:1,sterzoTiro:0}},
+ /* salendo in auto il motore si avvia da solo (se c'è carburante e la batteria è carica) */
+ avvioAuto(){if(!VEHOK||VEH.motore.acceso)return;VEH.v=0;IOW_FISICA.passo(VEH,0.7,{acc:0,iy:0,avvia:true},VEHX.amb());VEH.v=0;if(!VEH.motore.acceso)toast(VEH.carburante.vuoto?'Serbatoio vuoto: il motore non parte (cerca un benzinaio ⛽)':'Batteria scarica: il motore non parte')},
+ /* notte secondo il ciclo giorno/notte del gioco (fari accesi → consumo della batteria) */
+ notte(){try{return typeof UNI!=='undefined'&&UNI.uNight?UNI.uNight.value>.25:false}catch(e){return false}},
+ /* superficie e pendenza sotto l'auto */
+ amb(){const sn=Math.sin(C.h),cn=Math.cos(C.h),yf=GY(C.x+sn*1.5,C.z+cn*1.5,V.y),yb=GY(C.x-sn*1.5,C.z-cn*1.5,V.y);return{pendenza:Math.atan2(yf-yb,3),superficie:REAL.surf?REAL.surf(C.x,C.z):'asfalto',acqua:0,tempAria:VEHX.tempAria,quota:Math.max(0,V.y),vento:0}},
+ /* chiamata da drive(): restituisce la nuova velocità longitudinale */
+ drive(dt,vf,vl,iy,hb){if(!VEHOK)return vf;VEH.v=vf;VEHX.vl=Math.abs(vl);VEH.mod.attritoExtra=VEHX.attritoDAN+CARDMG.drag*VEH.par.massa;
+  const avvia=!VEH.motore.acceso&&Math.abs(iy)>.05;if(avvia&&VEH.mod.avviamento===0&&VEHX.toastT<VEHX.t){VEHX.toastT=VEHX.t+4;toast(VEH.carburante.vuoto?'Serbatoio vuoto: il motore non parte':'Batteria scarica: il motore non parte')}
+  if(avvia&&VEH.carburante.vuoto&&VEHX.toastT<VEHX.t){VEHX.toastT=VEHX.t+4;toast('Serbatoio vuoto: serve un benzinaio')}
+  const inp={iy,frenoMano:hb,scivolamentoLaterale:Math.abs(vl),marciaCmd:VEH.cambio.modo==='man'?VEHX.cmd:null,avvia};VEHX.cmd=null;
+  const acceso0=VEH.motore.acceso;IOW_FISICA.passo(VEH,dt,inp,VEHX.amb());if(!acceso0&&VEH.motore.acceso)toast('Motore avviato');return VEH.v},
+ /* ogni fotogramma: danni → fisica, ECU, quadro, pannello */
+ step(dt){if(!VEHOK)return;VEHX.t+=dt;const D=carA.dmg,R=D&&D.R,ty=carA.tyre;
+  const S=(D&&D.on)||ty?{zones:D&&D.on?D.zones:[0,0,0,0,0,0],fC:R?R.fC:0,rC:R?R.rC:0,sL:R?R.sL:0,sR:R?R.sR:0,fS:R?R.fS:0,hubs:R?R.hubs:[],engine:D&&D.on?D.engine:1,wl:D?D.wl:null,lampF:R?R.lampF:null,lampR:R?R.lampR:null,tyreF:ty?ty.f:null,tyreShred:ty?ty.shred:null}:null;
+  const ctx=IOW_DANNI.aggiorna(DANS,dt,S,VEH);VEHX.attritoDAN=VEH.mod.attritoExtra;
+  if(!inCar){VEH.v=0;IOW_FISICA.passo(VEH,dt,{acc:0,freno:1,iy:0},{pendenza:0,superficie:'asfalto',acqua:0,tempAria:VEHX.tempAria,quota:0,vento:0});VEH.v=0}
+  IOW_ECU.passo(ECUN,dt,{scivolamentoLaterale:inCar?VEHX.vl:0,danni:ctx,luci:inCar&&VEHX.notte(),notte:inCar&&VEHX.notte(),portaAperta:!!S_door(),escAttivo:true});
+  if(inCar&&VEH.carburante.vuoto&&!VEH.motore.acceso&&VEHX.toastT<VEHX.t&&Math.abs(cs.v)<.5){VEHX.toastT=VEHX.t+30;toast('Serbatoio vuoto: cerca un benzinaio (⛽ sulla minimappa) o apri il pannello 🚗')}
+  VEHX.hudT+=dt;if(VEHX.hudT>.25){VEHX.hudT=0;VEHX.hud();const poi=inCar&&Math.abs(cs.v)<2?(REAL.nearFuel?REAL.nearFuel(C.x,C.z):null):null;if(poi&&poi!==VEHX.ultimoPOI){VEHX.ultimoPOI=poi;toast((poi.cl==='car_repair'?'Officina':'Benzinaio')+(poi.name?' «'+poi.name+'»':'')+': apri il pannello 🚗 per '+(poi.cl==='car_repair'?'riparare':'fare rifornimento o riparare'))}}
+  if(VEHX.open){VEHX.panT+=dt;if(VEHX.panT>.5){VEHX.panT=0;VEHX.render()}}},
+ hud(){const q=$('#qd');if(!q)return;if(!inCar){if(!q.hidden)q.hidden=true;return}q.hidden=false;const m=VEH.motore,c=VEH.cambio,sp=ECUN.ecu.BCM.uscite.spie||[];
+  const mar=c.marcia<0?'R':c.marcia===0?'N':c.marcia+'ª';q.textContent=(m.acceso?mar+' · '+Math.round(m.rpm/10)*10:'MOTORE SPENTO · gas per avviare')+' · ⛽ '+Math.round(VEH.carburante.litri)+' L · 🌡 '+Math.round(m.Tacqua)+'°'+(sp.length?' · ⚠ '+sp.join(', '):'');
+  q.style.background=sp.includes('temperatura')||sp.includes('avaria motore')?'rgba(170,30,30,.88)':sp.length?'rgba(190,120,20,.88)':'';q.style.color=sp.length?'#fff':'';
+  const gb=$('#gbx');if(gb)gb.style.display=inCar&&c.modo==='man'?'flex':'none'},
+ /* --- pannello --- */
+ apri(o){VEHX.open=o;const p=$('#vp');if(p)p.hidden=!o;if(o){VEHX.panT=9;VEHX.render()}},
+ render(){const p=$('#vp');if(!p||!VEHOK)return;const T=VEHX.tab,tel=IOW_FISICA.telemetria(VEH),an=IOW_DANNI.analisi(DANS),h=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const tabs=[['quadro','Quadro'],['diagnosi','Diagnosi'],['danni','Danni e officina'],['lab','Laboratorio'],['scheda','Scheda'],['rapporto','Rapporto']];
+  let o='<div class="ph">🚗 Veicolo · '+h(VEH.par.nome)+'</div><div class="pr">'+tabs.map(t=>'<button class="b s'+(t[0]===T?' on':'')+'" data-vt="'+t[0]+'">'+t[1]+'</button>').join('')+'<button class="b s" id="vpx">Chiudi</button></div>';
+  const bar=(v,col)=>'<span class="vbar"><i style="width:'+Math.round(cl(v,0,1)*100)+'%;background:'+(col||(v>.7?'#3a9':v>.35?'#d93':'#c33'))+'"></i></span>';
+  if(T==='quadro'){const m=VEH.motore,c=VEH.cambio,R=VEH.ruote,fz=VEHX.pdv();
+   o+='<div class="vg"><b>'+tel.velocitaKmh+'</b> km/h · <b>'+(c.marcia<0?'R':c.marcia===0?'N':c.marcia+'ª')+'</b> · <b>'+tel.rpm+'</b> giri · cambio <b>'+(c.modo==='auto'?'automatico':'manuale')+'</b> · motore <b>'+(m.acceso?'acceso':'spento')+'</b></div>'
+   +'<div class="pr"><button class="b s" id="vmodo">Cambio: '+(c.modo==='auto'?'passa a manuale (Z/X)':'passa ad automatico')+'</button><button class="b s" id="vmot">'+(m.acceso?'Spegni motore':'Avvia motore')+'</button></div>'
+   +'<div class="vrow">Coppia '+tel.coppiaNm+' N·m · potenza '+tel.potenzaKW+' kW · carico '+Math.round(tel.carico*100)+'% · turbo '+tel.boostBar+' bar'+(tel.limitatore?' · <b>LIMITATORE</b>':'')+'</div>'
+   +'<div class="vrow">Refrigerante '+tel.Tacqua+' °C '+bar(1-(tel.Tacqua-60)/70,tel.Tacqua>108?'#c33':'#39c')+' · olio '+tel.Tolio+' °C</div>'
+   +'<div class="vrow">Carburante '+tel.carburanteL+' / '+VEH.par.serbatoio+' L '+bar(VEH.carburante.litri/VEH.par.serbatoio,tel.riserva?'#c33':'#3a9')+' · '+tel.consumoLh+' L/h'+(VEHX.consumoMedia!==null?' · media '+VEHX.consumoMedia.toFixed(1)+' L/100 km':'')+' · '+tel.odometroKm+' km</div>'
+   +'<div class="vrow">Gomme: pressione '+tel.pressioni.map(x=>x.toFixed(1)).join(' / ')+' bar · temperatura '+tel.Tgomme.join(' / ')+' °C · aderenza '+Math.round(tel.aderenza*100)+'%'+(tel.aquaplaning>.05?' · <b>AQUAPLANING</b>':'')+'</div>'
+   +'<div class="vrow">Superficie '+h(tel.superficie)+' · pendenza '+tel.pendenzaPct+'% · carichi assi '+tel.carichi.join(' / ')+' N · forze: trazione '+tel.forze.trazione+' N, freno '+tel.forze.freno+' N, aria '+tel.forze.aero+' N, rotolamento '+tel.forze.rotolamento+' N, pendenza '+tel.forze.pendenza+' N</div>'
+   +'<div class="vrow">ABS '+(VEH.ecu.abs?(tel.abs?'<b>IN REGOLAZIONE</b>':'pronto'):'<b>DISATTIVATO</b>')+' · ASR/ESC '+(VEH.ecu.asr?(R.slip>.11?'<b>INTERVIENE</b>':'pronto'):'<b>DISATTIVATO</b>')+(ECUN.ecu.ESC.uscite.intervento?' · <b>ESC taglia coppia</b>':'')+(tel.bloccate?' · <b>RUOTE BLOCCATE</b>':'')+(tel.slitta?' · <b>PATTINAMENTO</b>':'')+'</div>'
+   +'<div class="vrow">Spie: '+(ECUN.ecu.BCM.uscite.spie&&ECUN.ecu.BCM.uscite.spie.length?'<b>'+h(ECUN.ecu.BCM.uscite.spie.join(', '))+'</b>':'nessuna')+' · batteria '+ECUN.batteria.V.toFixed(1)+' V ('+Math.round(ECUN.batteria.soc*100)+'%)</div>'
+   +(fz?'<div class="pr"><button class="b s" id="vpieno">⛽ Fai il pieno ('+eur(Math.round((VEH.par.serbatoio-VEH.carburante.litri)*VEHX.prezzoL))+')</button><button class="b s" id="v20">⛽ 20 litri ('+eur(20*VEHX.prezzoL)+')</button></div><div class="vnote">Gasolio a '+eur(VEHX.prezzoL)+'/L (prezzo di gioco). Benzinaio di OpenStreetMap: '+h(fz.name||'senza nome')+'</div>':'<div class="vnote">Per fare rifornimento fermati a un benzinaio (⛽ sulla minimappa).</div>');}
+  else if(T==='diagnosi'){const dtc=IOW_ECU.leggiDTC(ECUN);
+   o+='<div class="vnote">Centraline <b>virtuali</b> (simulazione software: nessuna centralina fisica è collegata). Bus '+h(ECUN.bus.nome)+': stato <b>'+h(ECUN.bus.stato)+'</b>, messaggi '+ECUN.bus.messaggi+', errori '+Math.round(ECUN.bus.errori)+'.</div>';
+   o+='<table class="vt">'+Object.values(ECUN.ecu).map(e=>'<tr><td><b>'+h(e.id)+'</b><br><small>'+h(e.nome)+'</small></td><td>'+(e.online?'<span class="vok">online</span>':'<span class="vko">offline</span>')+'<br><small>'+h(e.stato)+'</small></td><td><small>'+h(e.modo)+'</small><br><small>SW '+h(e.versioneSW)+'</small></td></tr>').join('')+'</table>';
+   o+='<div class="pr"><button class="b s" id="vdtc">Tester: cancella codici memorizzati</button></div>';
+   o+=dtc.length?'<table class="vt">'+dtc.map(d=>'<tr><td><b>'+h(d.codice)+'</b><br><small>'+h(d.ecu)+'</small></td><td>'+(d.stato==='attivo'?'<span class="vko">ATTIVO</span>':'<span class="vmem">memorizzato</span>')+'<br><small>×'+d.conteggio+'</small></td><td><small>'+h(d.descrizione)+(d.freeze?'<br>freeze: '+d.freeze.rpm+' giri, '+d.freeze.kmh+' km/h, '+d.freeze.Tacqua+' °C, '+d.freeze.V+' V':'')+'</small></td></tr>').join('')+'</table>':'<div class="vrow">Nessun codice di guasto.</div>';
+   o+='<div class="vrow"><small>Ultimi messaggi sul bus:</small></div><pre class="vpre">'+h(ECUN.bus.log.slice(-8).map(f=>f.t.toFixed(2)+'s '+f.id+' '+f.nome+' ← '+f.mittente+' '+JSON.stringify(f.segnali)).join('\n'))+'</pre>';}
+  else if(T==='danni'){const pre=an.preventivo,off=VEHX.pdv(),fermo=inCar&&Math.abs(cs.v)<.5;
+   o+='<div class="vrow">Struttura <b>'+h(an.statoStrutturale)+'</b> ('+Math.round(an.integritaStrutturale*100)+'%) · meccanica <b>'+h(an.statoMeccanico)+'</b> ('+Math.round(an.integritaMeccanica*100)+'%) · deformazione max '+an.deformazioneMaxM+' m · urti '+an.nUrti+' · energia stimata '+an.energiaUrtiKJ+' kJ</div><div class="vnote">'+h(an.nota)+'</div>';
+   o+='<div class="vrow">Refrigerante '+Math.round(an.refrigerante*100)+'% '+bar(an.refrigerante)+' · danno termico motore '+Math.round(an.dannoTermicoMotore*100)+'%'+(an.perditaCarburanteLh>0?' · <b>perdita carburante '+an.perditaCarburanteLh+' L/h</b>':'')+'</div>';
+   o+='<table class="vt">'+an.componenti.map(c=>'<tr><td>'+h(c.nome)+'</td><td>'+(Array.isArray(c.integrita)?c.integrita.map(v=>bar(v)).join(' '):bar(c.integrita))+'</td><td><small>'+(Array.isArray(c.integrita)?c.integrita.map(v=>Math.round(v*100)+'%').join(' '):Math.round(c.integrita*100)+'%')+'</small></td></tr>').join('')+'</table>';
+   if(an.storico.length)o+='<div class="vrow"><small>Urti: '+h(an.storico.slice(-6).map(u=>u.faccia+' '+u.kmh+' km/h ('+u.energiaKJ+' kJ) contro '+u.contro).join(' · '))+'</small></div>';
+   o+='<div class="ph" style="margin-top:8px">Officina</div>';
+   if(!pre.voci.length)o+='<div class="vrow">Nessuna riparazione necessaria.</div>';
+   else{o+='<div class="vnote">'+(off?'Sei '+(off.cl==='car_repair'?'in officina':'da un benzinaio con officina')+': le riparazioni modificano davvero lo stato dell\'auto e costano.':'Per riparare a pagamento fermati da un benzinaio o in un\'officina (⛽/🔧 sulla minimappa). Il pulsante «Ripara l\'auto» resta la riparazione d\'emergenza gratuita: carrozzeria e gomme, meccanica solo fino al 70%.')+' Portafoglio: '+eur(S.cents)+'</div>';
+    o+='<div class="pr"><button class="b s" id="vtutto" '+(off&&fermo?'':'disabled')+'>Ripara tutto ('+eur(pre.totale)+')</button></div><table class="vt">'+pre.voci.map((q,i)=>'<tr><td>'+h(q.nome)+'</td><td><small>'+Math.round(q.integrita*100)+'%</small></td><td><button class="b s" data-vr="'+i+'" '+(off&&fermo?'':'disabled')+'>'+eur(q.costo)+'</button></td></tr>').join('')+'</table>';}}
+  else if(T==='lab'){const G=ECUN.guasti;
+   o+='<div class="vnote"><b>Laboratorio guasti virtuali.</b> I guasti vengono iniettati soltanto nei modelli software delle centraline di questa auto (nessun veicolo reale o centralina fisica). Servono a provare le reazioni delle ECU: codici, spie, modalità ridotta.</div>';
+   const B=[['Tacqua','perdita','Perdita sensore temperatura',null],['Tacqua','deriva','Sensore temperatura +40 °C (surriscaldamento apparente)',40],['pedale','implausibile','Pedale acceleratore implausibile',1.4],['giri','perdita','Perdita segnale giri (3 s)',null,3],['boost','implausibile','Sovralimentazione eccessiva',2.0],['ruotaAS','perdita','Perdita sensore ruota ant. sin.',null],['imbardata','perdita','Perdita sensore imbardata (ESC)',null],['ABS','timeout','Timeout centralina ABS (5 s)',null,5],['RETE','bus','Interruzione del bus CAN (4 s)',null,4],['tensione','implausibile','Tensione batteria 9 V (6 s)',9,6]];
+   o+='<div class="pr">'+B.map((b,i)=>'<button class="b s" data-vg="'+i+'">'+h(b[2])+'</button>').join('')+'<button class="b s" id="vgoff">Rimuovi tutti i guasti</button></div>';
+   o+='<div class="vrow">Guasti attivi: '+(G.length?h(G.map(g=>g.ecu+(g.sensore?'/'+g.sensore:'')+' '+g.tipo+(g.fino<Infinity?' (fino a '+(g.fino-ECUN.t).toFixed(0)+' s)':'')).join(', ')):'nessuno')+'</div>';
+   o+='<div class="vrow"><small>Registro eventi (ultimi):</small></div><pre class="vpre">'+h(ECUN.registro.slice(-10).map(e=>e.t+'s '+e.ecu+' '+e.tipo+' '+e.codice+' '+JSON.stringify(e.dati)).join('\n'))+'</pre>';
+   o+='<div class="vnote">Collegamento a centraline fisiche (HIL): <b>'+h(IOW_ECU.hardware.stato)+'</b> — '+h(IOW_ECU.hardware.collega().motivo)+'</div>';}
+  else if(T==='scheda'){const s=IOW_VEICOLI.VEICOLI[VEH.par.id],rows=[];const walk=(obj,pre)=>{for(const k in obj){const d=obj[k];if(d&&typeof d==='object'&&'att' in d){rows.push([pre+k,Array.isArray(d.v)?(Array.isArray(d.v[0])?'curva ('+d.v.length+' punti)':d.v.join(' – ')):String(d.v),d.u,d.att,d.ver,d.nota])}else if(d&&typeof d==='object')walk(d,pre+k+'.')}};walk(s,'');
+   o+='<div class="vrow"><b>'+h(s.marca+' '+s.modello+' '+s.versione)+'</b> · '+h(s.carrozzeria)+'<br><small>'+h(s.stato)+'</small></div><div class="vnote">Ogni dato riporta unità, fonte e attendibilità (alta = scheda ufficiale, media = più cataloghi concordi, bassa = una sola fonte o derivato, provvisoria = valore tipico di categoria da sostituire). Fonti in docs/VEICOLI.md.</div>';
+   o+='<table class="vt">'+rows.map(r=>'<tr><td><small>'+h(r[0])+'</small></td><td><b>'+h(r[1])+'</b> <small>'+h(r[2])+'</small></td><td><small class="'+(r[3]==='alta'?'vok':r[3]==='provvisoria'?'vko':'vmem')+'">'+h(r[3])+'</small><br><small>'+h(r[4])+'</small></td></tr>').join('')+'</table>';}
+  else if(T==='rapporto'){
+   o+='<div class="vnote">Il rapporto raccoglie: telemetria, centraline virtuali con codici e registro, danni e riparazioni, prove di calibrazione (confronto con i dati dichiarati), versioni dei moduli e un seme riproducibile. Tutto è <b>simulato</b>: nessuna misura su veicolo reale.</div><div class="pr"><button class="b s" id="vcal">Esegui prove di calibrazione (0-100, vmax, frenata, consumi)</button><button class="b s" id="vexp">Scarica rapporto JSON</button></div>';
+   if(VEHX.cal)o+='<pre class="vpre" style="max-height:40vh">'+h(IOW_CALIB.testo(VEHX.cal))+'</pre>';}
+  p.innerHTML=o;
+  p.querySelectorAll('[data-vt]').forEach(b=>b.onclick=e=>{e.stopPropagation();VEHX.tab=b.dataset.vt;VEHX.render()});
+  const on=(id,f)=>{const el=p.querySelector('#'+id);if(el)el.onclick=e=>{e.stopPropagation();f();VEHX.render()}};
+  on('vpx',()=>VEHX.apri(false));on('vmodo',()=>{VEH.cambio.modo=VEH.cambio.modo==='auto'?'man':'auto';toast(VEH.cambio.modo==='auto'?'Cambio automatico':'Cambio manuale: Z scala, X sale (o i pulsanti a destra)')});
+  on('vmot',()=>{if(VEH.motore.acceso){VEH.motore.acceso=false;toast('Motore spento')}else{VEHX.avviaManuale=true;VEH.motore.acceso=false;IOW_FISICA.passo(VEH,0.7,{acc:0,iy:0,avvia:true},VEHX.amb());toast(VEH.motore.acceso?'Motore avviato':'Il motore non parte')}});
+  on('vpieno',()=>VEHX.rifornisci(VEH.par.serbatoio));on('v20',()=>VEHX.rifornisci(20));on('vdtc',()=>{const n=IOW_ECU.cancellaDTC(ECUN);toast(n?'Cancellati '+n+' codici memorizzati':'Nessun codice cancellabile (quelli attivi restano finché c\'è la causa)')});
+  on('vtutto',()=>VEHX.ripara('tutto'));p.querySelectorAll('[data-vr]').forEach(b=>b.onclick=e=>{e.stopPropagation();const q=IOW_DANNI.preventivo(DANS).voci[+b.dataset.vr];if(q)VEHX.ripara(q.chiave,q.idx);VEHX.render()});
+  p.querySelectorAll('[data-vg]').forEach(b=>b.onclick=e=>{e.stopPropagation();const L=[['Tacqua','perdita','EMS'],['Tacqua','deriva','EMS',40],['pedale','implausibile','EMS',1.4],['giri','perdita','EMS',null,3],['boost','implausibile','EMS',2.0],['ruotaAS','perdita','ABS'],['imbardata','perdita','ESC'],['','timeout','ABS',null,5],['','bus','RETE',null,4],['tensione','implausibile','BMS',9,6]][+b.dataset.vg];IOW_ECU.iniettaGuasto(ECUN,{ecu:L[2],sensore:L[0],tipo:L[1],valore:L[3],durata:L[4]});toast('Guasto virtuale iniettato: '+L[2]+(L[0]?'/'+L[0]:'')+' '+L[1]);VEHX.render()});
+  on('vgoff',()=>{IOW_ECU.rimuoviGuasti(ECUN);toast('Guasti virtuali rimossi')});on('vcal',()=>{try{VEHX.cal=IOW_CALIB.esegui(VEH.par.id);toast('Prove eseguite in '+VEHX.cal.durataMs+' ms')}catch(e){toast('Errore nelle prove: '+e.message)}});on('vexp',()=>VEHX.esporta());},
+ /* punto di servizio vicino (benzinaio o officina) con auto ferma */
+ pdv(){if(!inCar||Math.abs(cs.v)>=.5||!REAL.nearFuel)return null;return REAL.nearFuel(C.x,C.z)},
+ rifornisci(litri){const need=Math.min(litri,VEH.par.serbatoio-VEH.carburante.litri);if(need<=.05){toast('Serbatoio già pieno');return}const costo=Math.round(need*VEHX.prezzoL);if(S.cents<=0){toast('Fondi insufficienti');return}const paga=Math.min(costo,S.cents),L=paga/VEHX.prezzoL;IOW_FISICA.rifornisci(VEH,L);S.cents-=paga;S.log.push({t:Date.now(),w:'Gasolio '+L.toFixed(1)+' L',c:-paga});if(S.log.length>30)S.log.shift();save();hud();toast('Rifornimento: '+L.toFixed(1)+' L (−'+eur(paga)+')')},
+ ripara(chiave,idx){const pre=IOW_DANNI.preventivo(DANS),voce=chiave==='tutto'?{costo:pre.totale,nome:'tutte le riparazioni'}:pre.voci.find(q=>q.chiave===chiave&&(idx===undefined||q.idx===idx));if(!voce)return;if(S.cents<voce.costo){toast('Fondi insufficienti: servono '+eur(voce.costo));return}
+  VEHX.inOfficina=true;try{const costo=IOW_DANNI.ripara(DANS,chiave,idx,VEH);S.cents-=costo;S.log.push({t:Date.now(),w:'Officina: '+voce.nome,c:-costo});if(S.log.length>30)S.log.shift();
+   if(chiave==='tutto'||chiave==='struttura'||chiave==='pneumatici'||chiave==='fari'||chiave==='fanali'){dmgRepair(carA);dmgDrive();dmgHud()}
+   if(chiave==='tutto'||chiave==='refrigerante'||chiave==='radiatore')VEH.mod.refrigerante=DANS.refrigerante;if(chiave==='tutto')IOW_ECU.cancellaDTC(ECUN);
+   save();hud();toast('Riparato: '+voce.nome+' (−'+eur(costo)+')')}finally{VEHX.inOfficina=false}},
+ esporta(){try{const rep={gioco:'ITALIA OPEN WORLD',versioneMotore:IOW_FISICA.versione,generato:new Date().toISOString(),natura:'SIMULAZIONE SOFTWARE: centraline virtuali, nessun dato da veicolo reale',telemetria:IOW_FISICA.telemetria(VEH),parametriVeicolo:VEH.par,ecu:IOW_ECU.rapporto(ECUN),danni:IOW_DANNI.analisi(DANS),calibrazione:VEHX.cal||IOW_CALIB.esegui(VEH.par.id),posizione:{x:+C.x.toFixed(1),z:+C.z.toFixed(1),luogo:REAL.hudText(C.x,C.z)}};
+   const b=new Blob([JSON.stringify(rep,null,1)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='rapporto-veicolo-'+Date.now()+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast('Rapporto scaricato')}catch(e){toast('Esportazione non riuscita: '+e.message)}},
+ /* --- salvataggio e ripristino (carburante, temperature, danni meccanici, codici, carrozzeria deformata, gomme) --- */
+ serializza(){if(!VEHOK)return null;const D=carA.dmg,sb=carA.sb;try{return{v:1,fisica:IOW_FISICA.serializza(VEH),danni:IOW_DANNI.serializza(DANS),dtc:IOW_ECU.leggiDTC(ECUN).map(d=>({ecu:d.ecu,codice:d.codice,conteggio:d.conteggio})),batteria:+ECUN.batteria.soc.toFixed(3),modo:VEH.cambio.modo,
+   sb:D&&D.on&&sb?{P:Array.from(sb.P,x=>Math.round(x*1000)/1000),br:Array.from(sb.br).join(''),free:Array.from(sb.free).join(''),W:sb.W,hits:sb.hits}:null,tyre:carA.tyre?{f:carA.tyre.f.slice(),tgt:carA.tyre.tgt.slice(),rate:carA.tyre.rate.slice(),shred:carA.tyre.shred.slice(),d:carA.tyre.d.slice()}:null}}catch(e){return null}},
+ ripristina(s){if(!VEHOK||!s||typeof s!=='object')return;try{if(s.fisica)IOW_FISICA.ripristina(VEH,s.fisica);if(s.danni)IOW_DANNI.ripristina(DANS,s.danni);if(Number.isFinite(s.batteria))ECUN.batteria.soc=cl(s.batteria,0,1);VEH.motore.acceso=false;VEH.motore.rpm=0;
+   if(Array.isArray(s.dtc))for(const d of s.dtc){if(ECUN.ecu[d.ecu]&&/^[PCBU]\d{4}$/.test(d.codice)){IOW_ECU.setDTC(ECUN,d.ecu,d.codice,true,null);IOW_ECU.setDTC(ECUN,d.ecu,d.codice,false);const q=ECUN.ecu[d.ecu].dtc[d.codice];if(q)q.conteggio=Math.max(1,d.conteggio|0)}}
+   if(s.tyre&&Array.isArray(s.tyre.f)&&s.tyre.f.length===4){const t=TYRE.st(carA);t.f=s.tyre.f.map(Number);t.tgt=s.tyre.tgt.map(Number);t.rate=s.tyre.rate.map(Number);t.shred=s.tyre.shred.map(x=>x?1:0);t.d=s.tyre.d.map(Number)}
+   if(s.sb&&Array.isArray(s.sb.P)&&s.sb.P.length===SBT.P0.length&&typeof s.sb.br==='string'&&s.sb.br.length===SBT.NB){const sb=sbNew(SBT);sb.P.set(s.sb.P);for(let i=0;i<SBT.NB;i++)sb.br[i]=s.sb.br[i]==='1'?1:0;if(typeof s.sb.free==='string'&&s.sb.free.length===SBT.N)for(let i=0;i<SBT.N;i++)sb.free[i]=s.sb.free[i]==='1'?1:0;sb.W=+s.sb.W||0;sb.hits=+s.sb.hits||0;carA.sb=sb;
+    const D=dmgPrep(carA,['l0','l1']);D.on=true;sbModel(carA,carA,{x:C.x,z:C.z,h:C.h,y:V.y,vx:0,vz:0,player:true},true);dmgDrive();dmgHud()}
+   IOW_DANNI.aggiorna(DANS,0,null,VEH)}catch(e){console.error('ripristino veicolo',e)}},
+};
+function S_door(){return !!(S&&S.door)}
+if(VEHOK){
+ /* urti del giocatore → storico e energia stimata (la deformazione la calcola già la rete del gioco) */
+ {const carHit0=carHit;carHit=function(a,car,wx,wz,dirx,dirz,imp,kind){carHit0(a,car,wx,wz,dirx,dirz,imp,kind);if(a===carA&&imp>=3.2){const c=Math.cos(car.h),s=Math.sin(car.h),dx=wx-car.x,dz=wz-car.z;IOW_DANNI.urto(DANS,{lx:dx*c-dz*s,lz:dx*s+dz*c,imp,kind:kind||'wall',massa:VEH.par.massa,t:VEHX.t})}}}
+ /* riparazione d'emergenza (pulsante esistente): carrozzeria e gomme come prima, meccanica solo al 70% */
+ {const dmgRepair0=dmgRepair;dmgRepair=function(a){dmgRepair0(a);if(a===carA&&!VEHX.inOfficina){IOW_DANNI.ripara(DANS,'emergenza',undefined,VEH);if(VEHX.open)VEHX.render()}}}
+ const exitCar0=exitCar;exitCar=function(){const was=inCar;exitCar0();if(was&&!inCar){VEH.motore.acceso=false;VEH.motore.rpm=0}};
+ VEHX.ripristina(S.veicolo);if(inCar)setTimeout(()=>VEHX.avvioAuto(),800);
+ {let km0=VEH.odometro,L0=VEH.carburante.consumoTot;setInterval(()=>{const dk=VEH.odometro-km0,dL=VEH.carburante.consumoTot-L0;if(dk>500){VEHX.consumoMedia=dL/dk*1e5;km0=VEH.odometro;L0=VEH.carburante.consumoTot}},5000)}
+ $('#vbtn').addEventListener('pointerdown',e=>{e.stopPropagation();VEHX.apri(!VEHX.open)});
+ $('#gup').addEventListener('pointerdown',e=>{e.stopPropagation();VEHX.cmd='su'});$('#gdn').addEventListener('pointerdown',e=>{e.stopPropagation();VEHX.cmd='giu'});
+ addEventListener('keydown',e=>{if(!inCar)return;const k=e.key.toLowerCase();if(k==='x')VEHX.cmd='su';else if(k==='z')VEHX.cmd='giu';else if(k==='n'){VEH.cambio.modo=VEH.cambio.modo==='auto'?'man':'auto';toast(VEH.cambio.modo==='auto'?'Cambio automatico':'Cambio manuale: Z scala, X sale')}});
+}
+function step(dt){const ts=performance.now()/1000;dmgDrive();dmgStep(dt);VEHX.step(dt);crStep(dt);if(inCar)dmgSmokeFor(carA,{x:C.x,z:C.z,h:C.h,y:V.y},dt);dmgUi(dt);if(RADIO.el&&!RADIO.el.paused){const tv=(VOICE.cur?.22:1)*RADIO.vol*(inCar?1:0);RADIO.el.volume+=(tv-RADIO.el.volume)*Math.min(1,dt*4)}
  const ix=cl(joy.x+(K.d||K.arrowright?1:0)-(K.a||K.arrowleft?1:0),-1,1),iy=cl(joy.y+(K.w||K.arrowup?1:0)-(K.s||K.arrowdown?1:0),-1,1);
  if(!menu&&!mapOpen){if(inCar)drive(dt,ix,iy);else walk(dt,ix,iy,!!K.shift)}if(!inCar)parked(dt);
  doorA+=((S.door?-PI/2:0)-doorA)*Math.min(1,dt*8);door.rotation.y=doorA;
@@ -19670,7 +19806,7 @@ function step(dt){const ts=performance.now()/1000;dmgDrive();dmgStep(dt);crStep(
  for(const a of [carA,CCa].concat(TR.map(t=>t.a))){const gp=a.g.position,nr=Math.hypot(cam.position.x-gp.x,cam.position.z-gp.z)<32;if(a.l0.visible!==nr){a.l0.visible=nr;a.l1.visible=!nr}}
  {const sv=$('#sp'),hh=$('#hb');if(sv.hidden===inCar){sv.hidden=!inCar;hh.hidden=!inCar}if(inCar)sv.textContent=Math.round(Math.hypot(V.vx,V.vz)*3.6)+' km/h'}
  const n=near(),lb=n?n.t:'—';if(lb!==lastLabel){lastLabel=lb;$('#act').textContent=lb;$('#act').classList.toggle('on',!!n)}}
-function savePos(){S.x=P.x;S.z=P.z;S.yaw=yaw;REAL.saveGeo()}
+function savePos(){S.x=P.x;S.z=P.z;S.yaw=yaw;REAL.saveGeo();if(VEHOK){const sv=VEHX.serializza();if(sv)S.veicolo=sv}}
 let last=performance.now();
 function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last)/1000);last=now;if(ARM.open){armView(dt)}else{step(dt*CINE.step(dt));R.render(sc,cam)}}
 function fit(){const w=window.innerWidth,h=window.innerHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
@@ -19692,7 +19828,7 @@ if(inCar&&RADIO.cur>0){const once=()=>{radioApply(false);removeEventListener('po
 $('#mx').addEventListener('pointerdown',e=>{e.stopPropagation();openMap(false)});
 addEventListener('keydown',e=>{if(e.key==='m'||e.key==='M')openMap(!mapOpen)});
 requestAnimationFrame(frame);
-window.__iow={ARM,ARMCAT,ARMGLB,GLBC,ARMV,AFX,ASND,armEquip,armUnequip,armShoot,armRay,armReload,armOpen,armClose,armSelect,armStep,armView,armBuild,armPose,armIK,armSnd,armBallistic,get yaw(){return yaw},set yaw(v){yaw=v},get pitch(){return pitch},set pitch(v){pitch=v},get fp(){return fp},set fp(v){fp=v},get inCar(){return inCar},R,AMBCFG,PD,DSP,VOICE,EV,RAD,pdAudio,ambUpdate,CARS,PEDS,CSOL,ADJ,WORLD,REAL,VITA,sc,CHK,CHS,CSO,worldUpdate,GY,drawMini,drawMap,openMap,MAPC,groundCar,rayBox,get mapOpen(){return mapOpen},get S(){return S},ITEMS,buy,step,near,push,solids,P,C,cs,doorS,joy,K,load,save,NP,TR,INB,VP,VN,VC,VI,CC,OF,CCa,ccS,ccStep,carA,doorS,V,placeCam,drive,cam,getView:()=>view,setView:v=>{view=v},look:()=>[lookYaw,lookPitch,lookT],lookBy,CARDMG,carHit,dmgApply,dmgRepair,dmgDrive,dmgPrep,DMGBOX,DEB,dmgRepairStart,get DMGREP(){return DMGREP},SBT,SBST,sbCrash,sbDerive,sbNew,sbBind,sbSkin,dmgKind,sbSync,dmgCrash,SBQ,SBF,sbQueueStep,dmgUnitCrash,get PO(){return PO}};
+window.__iow={ARM,ARMCAT,ARMGLB,GLBC,ARMV,AFX,ASND,armEquip,armUnequip,armShoot,armRay,armReload,armOpen,armClose,armSelect,armStep,armView,armBuild,armPose,armIK,armSnd,armBallistic,get yaw(){return yaw},set yaw(v){yaw=v},get pitch(){return pitch},set pitch(v){pitch=v},get fp(){return fp},set fp(v){fp=v},get inCar(){return inCar},R,AMBCFG,PD,DSP,VOICE,EV,RAD,pdAudio,ambUpdate,CARS,PEDS,CSOL,ADJ,WORLD,REAL,VITA,sc,CHK,CHS,CSO,worldUpdate,GY,drawMini,drawMap,openMap,MAPC,groundCar,rayBox,get mapOpen(){return mapOpen},get S(){return S},ITEMS,buy,step,near,push,solids,P,C,cs,doorS,joy,K,load,save,NP,TR,INB,VP,VN,VC,VI,CC,OF,CCa,ccS,ccStep,carA,doorS,V,placeCam,drive,cam,getView:()=>view,setView:v=>{view=v},look:()=>[lookYaw,lookPitch,lookT],lookBy,CARDMG,carHit,dmgApply,dmgRepair,dmgDrive,dmgPrep,DMGBOX,DEB,dmgRepairStart,get DMGREP(){return DMGREP},SBT,SBST,sbCrash,sbDerive,sbNew,sbBind,sbSkin,dmgKind,sbSync,dmgCrash,SBQ,SBF,sbQueueStep,dmgUnitCrash,get PO(){return PO},VEH,ECUN,DANS,VEHX};
 })();
 </script>
 </body>
