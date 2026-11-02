@@ -128,7 +128,7 @@
     r.bus.busOff = !!gBus || (D.elettrico !== undefined && D.elettrico < 0.15);
     r.bus.stato = r.bus.busOff ? 'bus-off' : (D.elettrico !== undefined && D.elettrico < 0.6 ? 'errori' : 'ok');
     if (r.bus.busOff) r.bus.errori += dt * 100;
-    for (const k in r.ecu) { const e = r.ecu[k]; e.alimentato = B.V > 6.5; const gt = guasto(r, k, '', 'timeout'); e.online = e.alimentato && !gt && !(D.elettrico !== undefined && D.elettrico < 0.3 && k !== 'EMS' && k !== 'GW') }
+    for (const k in r.ecu) { const e = r.ecu[k]; e.alimentato = B.V > 6.5; const gt = guasto(r, k, '', 'timeout'); e.online = e.alimentato && !gt && !(D.elettrico !== undefined && D.elettrico < 0.3 && k !== 'EMS' && k !== 'GW') && !(D.centraline !== undefined && D.centraline < 0.2 && k !== 'EMS' && k !== 'GW') }   // centraline: scatola delle ECU schiacciata (danni_meccanici.comp.centraline)
 
     /* --- BMS / batteria 12 V: alternatore a motore acceso, consumo con luci e avviamento, danni --- */
     {

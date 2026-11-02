@@ -2,6 +2,8 @@
 
 Gioco open world 3D per telefono (una sola pagina web, three.js) ambientato sulla mappa reale dell'Italia: città con i nomi veri delle vie, le insegne dei negozi veri, i numeri civici e le fermate dell'autobus di OpenStreetMap; facciate con balconi e finestre incassate, tetti a falde, strisce pedonali, semafori, binari del tram, gallerie stradali percorribili, guardrail, cartelli delle uscite autostradali, terreno con erba/roccia/terra, specie di alberi per zona (pini, cipressi, ulivi, pioppi), cielo con nuvole, lampioni, auto in sosta, traffico, passanti e polizia sulle strade vere.
 
+**Versione 30:** **Vehicle Damage Solver** — un solo risolutore coordina urti, deformazione, meccanica, sospensioni, ruote, pezzi staccati, grafica, audio e guida, usando i sistemi che c'erano già (rete deformabile, `danni_meccanici.js`, motore fisico, centraline) senza riscriverli: energia d'urto da massa effettiva, velocità normale, restituzione e materiale dell'ostacolo (muro, guardrail, palo, albero, altra auto, terreno), ripartita fra i due veicoli; mai la stessa energia due volte; 15 zone strutturali nominate (paraurti, cofano, muso, longheroni, vano motore, abitacolo, montanti, tetto, porte, bagagliaio, pianale, vetri, bracci) configurabili per veicolo (profili non certificati); frizione, differenziale e centraline danneggiabili con effetti reali; ruote con braccio, ammortizzatore, molla, mozzo e cerchio che cambiano aderenza, vibrazione, stabilità e tiro; pezzi staccabili con massa, resistenza, soglia e attacco; 56 test automatici sulla rete vera del gioco (`docs/DANNI.md`).
+
 **Versione 29.3:** correzione sistematica della mappa provata su classi di situazioni (città densa con strade sovrapposte, montagna con tornanti e gallerie, svincolo autostradale, periferia) con guida virtuale automatica: raccordo degli incroci continuo e iterato, lisciatura senza errore alle estremità, raster delle quote stradali a due strati senza gradini sulle discese, impalcati e gallerie senza scala, pulsante **📦 Dati zona** nella mappa per salvare i dati del posto in cui si vede un difetto (vedi `docs/IMPLEMENTATION_REPORT.md`, sezione 0).
 
 **Versione 29.2:** corretti i difetti della mappa visti sul telefono: niente più alberi, muri o erba sulla strada, niente asfalto sospeso né gradini agli incroci e fra un pezzo di mappa e l'altro, guardrail e parapetti che seguono la pendenza, sottopassi senza blocchi scuri, cavalcavia alti sopra le strade, rotatorie solo dove ci sono davvero (dettagli e misure prima/dopo nel rapporto).
@@ -30,8 +32,10 @@ Catalogo delle fonti e licenze: [docs/RESOURCE_CATALOG.md](docs/RESOURCE_CATALOG
 - `motore/fisica_veicolo.js` — motore fisico (motore, cambio, pneumatici, freni, termica, consumo)
 - `motore/ecu.js` — centraline virtuali, bus CAN simulato, diagnosi, laboratorio guasti
 - `motore/danni_meccanici.js` — danni meccanici per componente, officina, persistenza
+- `motore/danni_solver.js` — Vehicle Damage Solver: energia d'urto, registro degli eventi, stato per zona, ruote e sospensioni, componenti distaccabili
+- `motore/profili_danno.js` — zone strutturali nominate sulla rete deformabile e profili di danno per veicolo (importazione del JSON del progetto)
 - `motore/calibrazione.js` — prove riproducibili e confronto con i dati dichiarati (`node motore/calibrazione.js`)
-- `test/run.js` — test automatici dei moduli (`node test/run.js`: 38 test)
+- `test/run.js` — test automatici dei moduli e del solver sulla rete deformabile estratta da `index.html` (`node test/run.js`: 56 test)
 - `armi/modelli/*.json` — modelli 3D delle armi
 - `radio/` — brano della radio di bordo
 - `tex/` — texture del gioco (e `tex/manifest.json` con fonti e licenze)

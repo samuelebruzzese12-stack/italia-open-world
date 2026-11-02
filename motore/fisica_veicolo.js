@@ -92,7 +92,7 @@
       freni: { richiesta: 0, forza: 0, abs: false, mano: false, temperatura: 20 },
       forze: { trazione: 0, freno: 0, aero: 0, rotolamento: 0, pendenza: 0, extra: 0, netta: 0, massaEq: P.massa },
       /* modificatori imposti dall'esterno (danni meccanici, ECU). Tutti 1 = veicolo sano. */
-      mod: { potenza: 1, radiatore: 1, refrigerante: 1, freni: [1, 1, 1, 1], cambio: 1, trasmissione: 1, attritoExtra: 0, muMult: 1, massaExtra: 0, perditaCarburante: 0, alternatore: 1, avviamento: 1 },
+      mod: { potenza: 1, radiatore: 1, refrigerante: 1, freni: [1, 1, 1, 1], cambio: 1, trasmissione: 1, frizione: 1, differenziale: 1, muRuota: [1, 1, 1, 1], attritoExtra: 0, muMult: 1, massaExtra: 0, perditaCarburante: 0, alternatore: 1, avviamento: 1 },   // frizione/differenziale/muRuota: dal Vehicle Damage Solver e da danni_meccanici
       /* limiti imposti dalle ECU virtuali (vedi motore/ecu.js). */
       ecu: { accMax: 1, limitatore: P.limitatore, asr: !!P.esc, abs: !!P.abs, tagliaCoppia: 0, cambioBloccato: false, marciaMaxTCU: n, spegni: false },
       amb: { pendenza: 0, superficie: 'asfalto', acqua: 0, tempAria: 20, quota: 0, vento: 0 },
@@ -221,7 +221,7 @@
     // pneumatici: pressione, temperatura, usura → coefficiente di attrito per ruota; la media fra gli assi guida il modello
     const S = SUPERFICI[A.superficie] || SUPERFICI.asfalto;
     let muAnt = 0, muPos = 0, aq = 0;
-    for (let k = 0; k < 4; k++) { const q = muRuota(P.muMax, R.pressione[k], P.pressioneNom, R.temperatura[k], R.usura[k], A.superficie, A.acqua || 0, vel); R.mu[k] = q.mu * M.muMult; aq = Math.max(aq, q.aquaplaning); if (k < 2) muAnt += q.mu * M.muMult / 2; else muPos += q.mu * M.muMult / 2 }
+    for (let k = 0; k < 4; k++) { const q = muRuota(P.muMax, R.pressione[k], P.pressioneNom, R.temperatura[k], R.usura[k], A.superficie, A.acqua || 0, vel); const mk = M.muMult * (M.muRuota && Number.isFinite(M.muRuota[k]) ? M.muRuota[k] : 1); R.mu[k] = q.mu * mk; aq = Math.max(aq, q.aquaplaning); if (k < 2) muAnt += q.mu * mk / 2; else muPos += q.mu * mk / 2 }   // muRuota: aderenza per ruota dai danni (mozzo, cerchio, foratura)
     R.aquaplaning = aq; R.aderenza = cl((muAnt + muPos) / 2 / Math.max(0.05, P.muMax), 0, 1);
     const pMedia = (R.pressione[0] + R.pressione[1] + R.pressione[2] + R.pressione[3]) / 4;
     const crr = 0.011 * S.crr * Math.sqrt(P.pressioneNom / Math.max(0.3, pMedia)) * (1 + 0.5 * cl(v.ruote.usura[0], 0, 1) * 0);
@@ -234,7 +234,8 @@
     // coppia alle ruote motrici
     let Ftraz = 0; R.slitta = false;
     if (innestata) {
-      const Twheel = Teng * rap * P.rendimento * M.trasmissione * c.frizione;      // segno: retromarcia → negativo
+      const capF = M.frizione === undefined ? 1 : M.frizione, capD = M.differenziale === undefined ? 1 : M.differenziale;   // danni: frizione che slitta (limita la coppia), differenziale rotto (niente trazione)
+      const Twheel = Teng * rap * P.rendimento * M.trasmissione * c.frizione * capD * (Teng > 0 ? capF : 1);      // segno: retromarcia → negativo
       Ftraz = Twheel / r;
       const fwd = P.trazione === 'anteriore', awd = P.trazione === 'integrale';
       const Nmot = awd ? Nf + Nr : fwd ? Nf : Nr, muMot = awd ? (muAnt + muPos) / 2 : fwd ? muAnt : muPos;
@@ -329,5 +330,5 @@
   function serializza(v) { return { v: 2, carburante: +v.carburante.litri.toFixed(3), consumoTot: +v.carburante.consumoTot.toFixed(4), odometro: +v.odometro.toFixed(1), Tacqua: +v.motore.Tacqua.toFixed(1), Tolio: +v.motore.Tolio.toFixed(1), usura: v.ruote.usura.map(u => +u.toFixed(5)), pressione: v.ruote.pressione.map(p => +p.toFixed(3)), modo: v.cambio.modo, acceso: v.motore.acceso, stat: v.stat } }
   function ripristina(v, s) { if (!s || typeof s !== 'object') return false; const n = (x, fb) => Number.isFinite(x) ? x : fb; v.carburante.litri = cl(n(s.carburante, v.carburante.litri), 0, v.carburante.serbatoio); v.carburante.consumoTot = n(s.consumoTot, 0); v.odometro = n(s.odometro, 0); v.motore.Tacqua = n(s.Tacqua, 20); v.motore.Tolio = n(s.Tolio, 20); if (Array.isArray(s.usura) && s.usura.length === 4) v.ruote.usura = s.usura.map(u => cl(n(u, 0), 0, 1)); if (Array.isArray(s.pressione) && s.pressione.length === 4) v.ruote.pressione = s.pressione.map(p => cl(n(p, v.par.pressioneNom), 0, 5)); if (s.modo === 'man' || s.modo === 'auto') v.cambio.modo = s.modo; if (typeof s.acceso === 'boolean') { v.motore.acceso = s.acceso; if (!s.acceso) v.motore.rpm = 0 } if (s.stat && typeof s.stat === 'object') Object.assign(v.stat, s.stat); return true }
 
-  return { versione: '1.0.0', SUPERFICI, coppiaCurva, muRuota, densitaAria, crea, passo, cambia, rapportoTot, rpmDaVelocita, rifornisci, telemetria, serializza, ripristina, DB, G };
+  return { versione: '1.1.0', SUPERFICI, coppiaCurva, muRuota, densitaAria, crea, passo, cambia, rapportoTot, rpmDaVelocita, rifornisci, telemetria, serializza, ripristina, DB, G };
 });

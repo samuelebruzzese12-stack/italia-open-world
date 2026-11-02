@@ -1,6 +1,9 @@
-# ITALIA OPEN WORLD — Rapporto di implementazione (mappa reale, Versione 29.3)
+# ITALIA OPEN WORLD — Rapporto di implementazione (Versione 30)
 
-## 0. Versione 29.3 — correzione sistematica di tutta la mappa (2 novembre 2026)
+## 0. Versione 30 — Vehicle Damage Solver (2 novembre 2026)
+Risolutore unificato dei danni collegato ai sistemi esistenti senza riscriverli: `motore/danni_solver.js` (evento d'urto con massa effettiva, impulso, energia, restituzione, materiale, ripartizione fra i corpi, registro anti-duplicati; stato per zona; modello ruote; componenti distaccabili; persistenza), `motore/profili_danno.js` (15 zone strutturali nominate sulle 467 travi della rete esistente, profili per veicolo, importazione del JSON del progetto), ponte `VDS` in `index.html` (patch di costruzione `w2/patch_solver_v30.py`, 32 sostituzioni su ancore uniche: la costruzione si ferma se una manca). Aggiunte a `danni_meccanici.js` (frizione, differenziale, centraline, energia dal solver, integrità limitate), `fisica_veicolo.js` (`mod.frizione`, `mod.differenziale`, `mod.muRuota`), `ecu.js` (centraline danneggiate). Verifica: `node test/run.js` → 56 test superati, 0 falliti (18 nuovi, sulla rete deformabile estratta da `index.html`); Chromium senza GPU con la pagina costruita (`br/sc_v30.js`): moduli, urti frontale/albero/auto, duplicati, passo, salvataggio, riparazione, urto guidando contro un muro, funzionamento senza solver, 0 errori. Misure, architettura, interfacce e limiti dichiarati in `docs/DANNI.md` (sezione «Vehicle Damage Solver»). Non fatto, e dichiarato: calibrazione su prove d'urto reali (nessun dato), geometrie di rete diverse per veicolo (un solo modello 3D), terminale di scarico staccabile (non esiste come mesh), modello ruote per traffico e pattuglie (budget mobile).
+
+## 0.1 Versione 29.3 — correzione sistematica di tutta la mappa (2 novembre 2026)
 
 Dopo la 29.2 le foto (Diano Gorleri sull'A10, A3, e una strada degli Stati Uniti) mostravano ancora fasce di muro marrone, guardrail sospesi, strade su un argine di pietra, alberi dappertutto. Non si può controllare la mappa un angolo alla volta: in questa versione il generatore delle celle è stato messo alla prova su **classi di situazioni** con controlli automatici, e corretto finché i controlli non sono passati. Le classi: città densa con strade sovrapposte, gallerie e ponti (Monaco, dati OpenStreetMap veri e rilievo vero); strade di montagna vere con tornanti, ponti, gallerie e paesi (Andorra, dati OpenStreetMap veri; il rilievo non è scaricabile da qui ed è sintetico, con pendenze al massimo del 40 %); uno svincolo autostradale in collina inventato (sottopasso, cavalcavia con rampe e anello, viadotto, superstrada con tornante a due carreggiate, rotatoria, strade di campagna); una periferia residenziale su terreno "rumoroso". I controlli: misure numeriche su ogni cella (`metriche.js`), una **guida virtuale** che percorre tutte le strade metro per metro con la stessa funzione di quota dell'auto, sia in Node (`prova_guida.js`) sia nel gioco vero in Chromium, e fogli di immagini.
 
@@ -51,7 +54,7 @@ Dopo la 29.2 le foto (Diano Gorleri sull'A10, A3, e una strada degli Stati Uniti
 
 ---
 
-## 0.1 Versione 29.2 — correzione dei difetti della mappa visti sul telefono (2 novembre 2026)
+## 0.2 Versione 29.2 — correzione dei difetti della mappa visti sul telefono (2 novembre 2026)
 
 (Il motore fisico, le centraline virtuali e i danni meccanici della versione 29 sono descritti in `docs/CHANGELOG.md`, `docs/MOTORE_FISICO.md`, `docs/ECU.md` e `docs/DANNI.md`; queste correzioni non li toccano.)
 

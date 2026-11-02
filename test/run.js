@@ -148,6 +148,158 @@ test('danni: serializza/ripristina conserva lo stato (anche la perdita di carbur
 /* ------------------------------------------------------------ calibrazione */
 test('calibrazione: rapporto riproducibile, errore medio sotto il 15% sulle prove confrontabili, giudizio «non validato»', () => { const r = CAL.esegui(); ok(r.prove.length >= 12 && r.erroreMedioAssolutoPct < 15, 'errore medio ' + r.erroreMedioAssolutoPct); ok(/NON VALIDATO/.test(r.giudizio)); const vm = r.prove.find(p => /massima/.test(p.prova)); ok(Math.abs(vm.errorePct) < 5, 'vmax err ' + vm.errorePct); const r2 = CAL.esegui(); ok(JSON.stringify(r.prove) === JSON.stringify(r2.prove), 'riproducibile') });
 
+
+/* ------------------------------------------------------------ Vehicle Damage Solver (motore/danni_solver.js + motore/profili_danno.js) con la rete deformabile REALE del gioco
+   La rete (sbTemplate, sbNew, sbBeams, sbCrash, sbDerive…) viene estratta da index.html: i test girano sullo stesso codice che gira nel gioco. */
+const PRF = require(path.join(__dirname, '..', 'motore', 'profili_danno.js'));
+const SOL = require(path.join(__dirname, '..', 'motore', 'danni_solver.js'));
+const SB = (() => {
+  const fs = require('fs'), html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8'), a = html.indexOf('const SBK={'), b = html.indexOf('function dmgKind(');
+  if (a < 0 || b < 0) throw new Error('rete deformabile non trovata in index.html');
+  const src = html.slice(a, b);
+  return new Function('performance', src + '\nreturn {SBK,sbTemplate,sbNew,sbBeams,sbCrash,sbCrash3,sbDerive,sbNodeCrumple,sbFree,DMGBOX}')(require('perf_hooks').performance);
+})();
+const SBT = SB.sbTemplate(SB.DMGBOX); SBT.zona = PRF.classifica(SBT);
+const finiti = arr => { for (let i = 0; i < arr.length; i++) if (!Number.isFinite(arr[i])) return false; return true };
+const urtoRete = (T, S, st, kind, vn, opt) => {   // stessa catena del gioco: evento del solver → u → sbCrash → esito
+  opt = opt || {}; const nx = opt.nx !== undefined ? opt.nx : 0, nz = opt.nz !== undefined ? opt.nz : -1, lx = opt.lx || 0, lz = opt.lz !== undefined ? opt.lz : (nz < 0 ? SB.DMGBOX.z1 : SB.DMGBOX.z0);
+  const ev = SOL.evento(st, { t: opt.t !== undefined ? opt.t : st.t + 1, lx, lz, nx, nz, vn, m1: T.Mt || 1600, m2: opt.m2, kind, faccia: opt.faccia, facciaAltro: opt.facciaAltro, id: opt.id, Mt: PRF.massa(T, S), Fsnerv: 200000 });
+  const imp = { wall: { hw: 3, ylo: -1, yhi: 3, R: 0 }, car: { hw: .75, ylo: .18, yhi: 1.08, R: 0 }, pole: { hw: 0, ylo: -1, yhi: 3, R: .3 }, tree: { hw: 0, ylo: -1, yhi: 3, R: .26 }, rail: { hw: 3, ylo: .25, yhi: .95, R: 0 } }[kind] || { hw: 3, ylo: -1, yhi: 3, R: 0 };
+  const face = Math.abs(nz) >= Math.abs(nx) ? [Math.max(SB.DMGBOX.x0 + .15, Math.min(SB.DMGBOX.x1 - .15, lx)), nz < 0 ? SB.DMGBOX.z1 : SB.DMGBOX.z0] : [nx < 0 ? SB.DMGBOX.x1 : SB.DMGBOX.x0, Math.max(SB.DMGBOX.z0 + .2, Math.min(SB.DMGBOX.z1 - .2, lz))];
+  const res = ev.u > .3 ? SB.sbCrash(T, S, { n: [nx, nz], c: face, u: ev.u, hw: imp.hw, ylo: imp.ylo, yhi: imp.yhi, R: imp.R }) : null; SOL.esito(st, ev, res); return { ev, res };
+};
+const RIS = {};   // risultati numerici reali, stampati in fondo
+
+test('profili: ogni trave della rete ha una zona nominata; le zone richieste esistono e sono popolate', () => {
+  const r = PRF.riepilogo(SBT), byId = {}; r.forEach(z => byId[z.id] = z);
+  for (const id of ['paraurti_ant', 'cofano', 'muso', 'longheroni_ant', 'vano_motore', 'abitacolo', 'montanti', 'tetto', 'porte', 'longheroni_post', 'bagagliaio', 'pianale', 'paraurti_post', 'vetri', 'bracci']) ok(byId[id] && byId[id].travi > 0, 'zona vuota: ' + id);
+  ok(r.reduce((s, z) => s + z.travi, 0) === SBT.NB, 'somma delle travi diversa da NB');
+  ok(byId.longheroni_ant.FYkN < byId.abitacolo.FYkN && byId.paraurti_ant.FYkN < byId.longheroni_ant.FYkN, 'le zone di assorbimento devono essere più deboli dell\'abitacolo (' + byId.paraurti_ant.FYkN + ' < ' + byId.longheroni_ant.FYkN + ' < ' + byId.abitacolo.FYkN + ' kN)');
+  ok(byId.porte.FYkN < byId.montanti.FYkN, 'le porte devono essere più deboli dei montanti'); RIS.zone = r.map(z => z.id + ':' + z.travi + '/' + z.FYkN + 'kN').join(' ');
+});
+test('profili: il modello del profilo è una copia (geometria identica, parametri scalati, massa dal profilo); il JSON di esempio viene importato come «non certificato»', () => {
+  const p75 = PRF.PROFILI.alfa_romeo_75; ok(p75.certificato === false && p75.massa === 1200 && p75.zone.paraurti_ant.resistenza === 0.5 && p75.zone.paraurti_ant.rottura === 0.9 && p75.zone.muso.resistenza === 1.6 && p75.zone.longheroni_ant.rottura === 2, 'importazione JSON');
+  ok(p75.meccanici.includes('motore') && p75.meccanici.includes('sospensioni'), 'componenti meccanici importati');
+  const T = PRF.template(SBT, p75); ok(T.P0 === SBT.P0 && T.A === SBT.A && T.N === SBT.N && T.NB === SBT.NB, 'stessa geometria e topologia'); ok(T.FY !== SBT.FY && T.M !== SBT.M, 'parametri copiati, non condivisi');
+  let m = 0; for (let i = 0; i < T.N; i++) m += T.M[i]; vicino(m, 1200, 0.01, 'massa del profilo');
+  let n = 0; for (let b = 0; b < SBT.NB; b++) { if (SBT.zona[b] === PRF.ZID.paraurti_ant) { vicino(T.FY[b] / SBT.FY[b], 0.5, 1e-9); vicino(T.EB[b] / SBT.EB[b], 0.9, 1e-9); n++ } else if (SBT.zona[b] === PRF.ZID.abitacolo) vicino(T.FY[b], SBT.FY[b], 1e-9) } ok(n > 0);
+  const Tb = PRF.template(SBT, 'predefinito'); for (let b = 0; b < SBT.NB; b++) { vicino(Tb.FY[b], SBT.FY[b], 1e-9); vicino(Tb.EB[b], SBT.EB[b], 1e-9) }   // il profilo predefinito non cambia la rete del gioco
+});
+test('solver: urto contro muro — massa effettiva, impulso, energia, restituzione decrescente con la velocità, u coerente con ½·M·u² = E propria', () => {
+  const st = SOL.crea(); const e1 = SOL.evento(st, { t: 1, lx: 0, lz: 2.3, nx: 0, nz: -1, vn: 10, m1: 1600, m2: Infinity, kind: 'wall', Mt: 1600 });
+  vicino(e1.mEff, 1600, 1e-9); vicino(e1.En, 80000, 1e-6); vicino(e1.Ediss, 80000 * (1 - e1.e * e1.e), 1e-6); vicino(e1.Eown, e1.Ediss, 1e-6, 'muro: tutta l\'energia dissipata va all\'auto'); vicino(e1.J, (1 + e1.e) * 1600 * 10, 1e-6);
+  vicino(0.5 * 1600 * e1.u * e1.u, e1.Eown, 1e-3, 'u ricavata dall\'energia'); ok(e1.faccia === 'ant');
+  const lento = SOL.evento(st, { t: 5, lx: 0, lz: 2.3, nx: 0, nz: -1, vn: 1, m1: 1600, kind: 'wall', Mt: 1600 }), veloce = SOL.evento(st, { t: 9, lx: 0, lz: 2.3, nx: 0, nz: -1, vn: 25, m1: 1600, kind: 'wall', Mt: 1600 });
+  ok(lento.e > veloce.e && lento.e > 0.3 && veloce.e < 0.12, 'restituzione: ' + lento.e + ' > ' + veloce.e);
+  ok(st.nEventi === 3 && SOL.valido(st).length === 0);
+});
+test('solver: due veicoli — l\'energia dissipata si ripartisce fra i due (muso contro fianco: il fianco, più cedevole, ne assorbe di più) e la somma è quella dissipata', () => {
+  const A = SOL.crea(), B = SOL.crea(); const ea = SOL.evento(A, { t: 1, lx: 0, lz: 2.3, nx: 0, nz: -1, vn: 8, m1: 1600, m2: 1600, kind: 'car', faccia: 'ant', facciaAltro: 'lato', id: 'A|B', Mt: 1600 });
+  const eb = SOL.evento(B, { t: 1, lx: .9, lz: 0, nx: -1, nz: 0, vn: 8, m1: 1600, m2: 1600, kind: 'car', faccia: 'lato', facciaAltro: 'ant', id: 'A|B', Mt: 1600 });
+  vicino(ea.mEff, 800, 1e-9, 'massa effettiva'); vicino(ea.En, 0.5 * 800 * 64, 1e-6); vicino(ea.Eown + eb.Eown, ea.Ediss, 1e-6, 'somma delle energie proprie = energia dissipata'); ok(eb.Eown > ea.Eown, 'il fianco assorbe di più: ' + eb.Eown + ' > ' + ea.Eown);
+  const ef = SOL.evento(A, { t: 3, lx: 0, lz: 2.3, nx: 0, nz: -1, vn: 8, m1: 1600, m2: 1600, kind: 'car', faccia: 'ant', facciaAltro: 'ant', id: 'A|C', Mt: 1600 }); vicino(ef.Eown, ef.Ediss / 2, 1e-6, 'frontale fra uguali: metà ciascuno');
+  const pesante = SOL.evento(A, { t: 5, lx: 0, lz: 2.3, nx: 0, nz: -1, vn: 8, m1: 1600, m2: 12000, kind: 'car', faccia: 'ant', facciaAltro: 'ant', id: 'A|T', Mt: 1600 }); ok(pesante.En > ef.En && pesante.mEff > ef.mEff, 'contro un camion l\'energia cresce');
+});
+test('solver: palo, albero e guardrail assorbono parte dell\'energia (materiale), il muro nulla', () => {
+  const st = SOL.crea(), E = k => SOL.evento(st, { t: st.t + 1, lx: 0, lz: 2.3, nx: 0, nz: -1, vn: 12, m1: 1600, kind: k, Mt: 1600 });
+  const w = E('wall'), t = E('tree'), p = E('pole'), r = E('rail'); ok(w.Eown > t.Eown && t.Eown > p.Eown && p.Eown > r.Eown, 'ordine: muro > albero > palo > guardrail');
+  vicino(w.quotaOst, 0, 1e-9); vicino(t.quotaOst, 0.08, 1e-9); ok(p.quotaOst >= 0.3 && r.quotaOst >= 0.45);
+});
+test('solver: registro degli eventi — lo stesso contatto ripetuto entro 0,12 s non conta due volte (solo l\'energia in più), un contatto diverso sì', () => {
+  const st = SOL.crea(), base = { lx: 0, lz: 2.3, nx: 0, nz: -1, vn: 10, m1: 1600, kind: 'wall', Mt: 1600 };
+  const a = SOL.evento(st, Object.assign({ t: 1 }, base)), b = SOL.evento(st, Object.assign({ t: 1.05 }, base)), c = SOL.evento(st, Object.assign({}, base, { t: 1.08, vn: 14 })), d = SOL.evento(st, Object.assign({ t: 1.5 }, base));
+  ok(!a.duplicato && b.duplicato && b.u === 0 && c.duplicato && c.Eown > 0 && c.Eown < c.Ediss && !d.duplicato, 'duplicati'); ok(st.nEventi === 2 && st.nDuplicati === 2);
+  vicino(st.energia.propria, a.Eown + d.Eown, 1e-6, 'energia contata una sola volta per evento (l\'evento ripetuto si fonde nel primo)'); ok(a.ripetuto === 2 && a.Eown > c.Ediss - 1e-6, 'l\'evento fuso porta l\'energia massima vista');
+});
+test('rete + solver: urto frontale contro muro a 50 km/h — deformazione permanente, progressiva, concentrata sulle zone di assorbimento; nessun NaN', () => {
+  const T = PRF.template(SBT, 'predefinito'), S = SB.sbNew(T), st = SOL.crea(); const r30 = urtoRete(T, S, st, 'wall', 30 / 3.6), R30 = SB.sbDerive(T, S), f30 = R30.fC;
+  ok(r30.res && r30.res.Wp > 0 && r30.res.crush > 0, 'urto a 30 km/h simulato'); ok(f30 > 0.02, 'muso arretrato a 30 km/h: ' + f30);
+  const P1 = Float64Array.from(S.P); ok(SB.sbCrash(T, S, { n: [0, -1], c: [0, SB.DMGBOX.z1], u: 0.1, hw: 3, ylo: -1, yhi: 3, R: 0 }) === null, 'sotto 0,3 m/s la rete non viene toccata'); for (let i = 0; i < P1.length; i++) if (P1[i] !== S.P[i]) throw new Error('la deformazione non è permanente');
+  const r50 = urtoRete(T, S, st, 'wall', 50 / 3.6), R50 = SB.sbDerive(T, S); ok(R50.fC > f30 + 0.05, 'progressiva: ' + R50.fC + ' > ' + f30); ok(finiti(S.P) && finiti(S.V) && finiti(S.L0), 'NaN/Infinity nella rete');
+  const z = SOL.stato(T, S, PRF.ZONE); ok(z.abitacolo.integrita > 0.9 && z.tetto.integrita > 0.95 && z.pianale.integrita > 0.9, 'abitacolo/tetto/pianale integri: ' + JSON.stringify([z.abitacolo, z.tetto, z.pianale]));
+  ok(z.paraurti_ant.integrita < 0.6 || z.muso.integrita < 0.8 || z.longheroni_ant.integrita < 0.9, 'zone anteriori deformate: ' + JSON.stringify([z.paraurti_ant, z.muso, z.longheroni_ant]));
+  ok(R50.rC < 0.01 && Math.max(R50.sL, R50.sR) < 0.05, 'coda e fianchi intatti in un frontale');
+  RIS.frontale = { fC30: +f30.toFixed(3), fC50: +R50.fC.toFixed(3), Wp50kJ: +(r50.res.Wp / 1000).toFixed(2), E50kJ: +(r50.ev.Eown / 1000).toFixed(2), passi: r50.res.steps, zone: z };
+});
+test('rete + solver: urto laterale a 40 km/h — intrusione sul fianco colpito, porte e montanti più colpiti dell\'abitacolo centrale, muso intatto', () => {
+  const T = PRF.template(SBT, 'predefinito'), S = SB.sbNew(T), st = SOL.crea(); const r = urtoRete(T, S, st, 'car', 40 / 3.6, { nx: -1, nz: 0, lx: SB.DMGBOX.x1, lz: 0.1, faccia: 'lato', facciaAltro: 'ant', m2: 1600, id: 'x' }), R = SB.sbDerive(T, S);
+  ok(r.res && r.res.Wp > 0, 'urto simulato'); ok(R.sL > 0.03 && R.sR < 0.01, 'intrusione a sinistra: sL=' + R.sL + ' sR=' + R.sR); ok(R.fC < 0.02 && R.rC < 0.02, 'muso e coda intatti');
+  const z = SOL.stato(T, S, PRF.ZONE); ok(z.porte.integrita < z.pianale.integrita, 'porte più danneggiate del pianale: ' + z.porte.integrita + ' < ' + z.pianale.integrita); ok(finiti(S.P)); RIS.laterale = { sL: +R.sL.toFixed(3), porte: z.porte, montanti: z.montanti, pianale: z.pianale };
+});
+test('rete + solver: due veicoli (frontale a 60 km/h relativi) — ognuno dissipa la propria quota, nessuna energia applicata due volte', () => {
+  const T = PRF.template(SBT, 'predefinito'), SA = SB.sbNew(T), SBb = SB.sbNew(T), A = SOL.crea(), B = SOL.crea();
+  const a = urtoRete(T, SA, A, 'car', 60 / 3.6, { faccia: 'ant', facciaAltro: 'ant', m2: 1600, id: 'A|B', t: 1 }), b = urtoRete(T, SBb, B, 'car', 60 / 3.6, { faccia: 'ant', facciaAltro: 'ant', m2: 1600, id: 'A|B', t: 1 });
+  vicino(a.ev.Eown + b.ev.Eown, a.ev.Ediss, 1e-6, 'energia ripartita'); ok(a.res && b.res && a.res.Wp > 0 && b.res.Wp > 0, 'entrambe le reti deformate');
+  const a2 = urtoRete(T, SA, A, 'car', 60 / 3.6, { faccia: 'ant', facciaAltro: 'ant', m2: 1600, id: 'A|B', t: 1.04 }); ok(a2.ev.duplicato && a2.res === null, 'il contatto ripetuto nel fotogramma dopo non deforma di nuovo');
+  ok(a.res.Wp <= a.ev.Eown * 1.05 && b.res.Wp <= b.ev.Eown * 1.05, 'la rete non dissipa più dell\'energia ricevuta: ' + a.res.Wp + ' / ' + a.ev.Eown); RIS.dueVeicoli = { EownKJ: +(a.ev.Eown / 1000).toFixed(2), WpAkJ: +(a.res.Wp / 1000).toFixed(2), WpBkJ: +(b.res.Wp / 1000).toFixed(2), fCA: +SB.sbDerive(T, SA).fC.toFixed(3) };
+});
+test('rete + solver: bilancio energetico su una sequenza di urti — il lavoro plastico della rete resta fra il 25% e il 105% dell\'energia propria calcolata', () => {
+  const T = PRF.template(SBT, 'predefinito'), S = SB.sbNew(T), st = SOL.crea(); const casi = [['wall', 20 / 3.6, {}], ['wall', 45 / 3.6, {}], ['pole', 35 / 3.6, { lx: .3 }], ['car', 50 / 3.6, { nx: 0, nz: 1, lz: SB.DMGBOX.z0, faccia: 'post', facciaAltro: 'ant', m2: 1600, id: 'q' }]];
+  let Wp = 0, E = 0; for (const [k, v, o] of casi) { const r = urtoRete(T, S, st, k, v, o); if (r.res) { Wp += r.res.Wp; E += r.ev.Eown } }
+  const rap = Wp / E; ok(rap > 0.25 && rap < 1.05, 'rapporto lavoro plastico / energia propria = ' + rap.toFixed(3)); vicino(st.energia.rete, Wp, 1e-6); ok(finiti(S.P) && SOL.valido(st).length === 0); RIS.bilancio = { EpropriaKJ: +(E / 1000).toFixed(2), WpKJ: +(Wp / 1000).toFixed(2), rapporto: +rap.toFixed(3) };
+});
+test('sospensioni e ruote: palo sul fianco all\'altezza della ruota a 40 km/h — mozzo spostato, braccio/cerchio danneggiati, aderenza e stabilità ridotte, vibrazione con la velocità', () => {
+  const T = PRF.template(SBT, 'predefinito'), S = SB.sbNew(T), st = SOL.crea(); urtoRete(T, S, st, 'pole', 40 / 3.6, { nx: -1, nz: 0, lx: SB.DMGBOX.x1, lz: 1.3, faccia: 'lato' }); const R = SB.sbDerive(T, S), h = R.hubs[0];
+  ok(Math.hypot(h.dx, h.dy, h.dz) > 0.02 || Math.abs(h.camber) > 0.03 || Math.abs(h.toe) > 0.03 || h.lost, 'mozzo anteriore sinistro colpito: ' + JSON.stringify(h));
+  const E0 = SOL.passo(st, 1 / 60, { R, D: { wl: [false, false, false, false] }, tyre: null, v: 0 }), v0 = E0.vibrazione; const E = SOL.passo(st, 1 / 60, { R, D: { wl: [false, false, false, false] }, tyre: null, v: 25 });
+  ok(st.ruote[0].braccio < 1 || st.ruote[0].mozzo < 1 || st.ruote[0].cerchio < 1, 'componenti della ruota 0 danneggiati: ' + JSON.stringify(st.ruote[0])); ok(E.aderenza[0] < 1 && E.aderenza[3] >= E.aderenza[0], 'aderenza ridotta sulla ruota colpita: ' + JSON.stringify(E.aderenza));
+  ok(E.vibrazione >= v0 && E.stabilita <= 1, 'vibrazione cresce con la velocità'); ok(finiti(E.aderenza) && Number.isFinite(E.vibrazione) && Number.isFinite(E.stabilita) && Number.isFinite(E.tiro));
+  const v = nuovo(); SOL.applicaMod(st, v.mod); ok(Array.isArray(v.mod.muRuota) && v.mod.muRuota[0] === E.aderenza[0], 'mod.muRuota passato al motore fisico');
+  corri(v, 2, { acc: 0.6, iy: 0.6 }, { pendenza: 0, superficie: 'asfalto', acqua: 0, tempAria: 20, quota: 0, vento: 0 }); ok(Number.isFinite(v.v) && v.ruote.mu[0] <= v.ruote.mu[3], 'μ per ruota applicato: ' + v.ruote.mu.map(x => x.toFixed(2)));
+  RIS.ruota = { mozzo: h, ruota0: st.ruote[0], effetti: E };
+});
+test('meccanica: urto frontale grave → interfaccia S del solver → motore, frizione, differenziale, centraline e radiatore danneggiati con effetti reali sulla fisica', () => {
+  const T = PRF.template(SBT, 'predefinito'), S = SB.sbNew(T), st = SOL.crea(); urtoRete(T, S, st, 'wall', 70 / 3.6); const R = SB.sbDerive(T, S), zone = SOL.stato(T, S, PRF.ZONE);
+  const D = { on: true, zones: [0.8, 0.8, 0, 0, 0, 0], engine: R.engine, wl: [false, false, false, false] }, Sx = SOL.statoStruttura(st, R, D, null, zone); ok(Sx && Sx.zone && Sx.fC === R.fC && Sx.hubs === R.hubs, 'interfaccia S');
+  const dan = DAN.crea(), v = nuovo(); DAN.aggiorna(dan, 0, Sx, v); const C = dan.comp;
+  ok(C.motore < 1 && C.radiatore < 1, 'motore e radiatore: ' + C.motore + ' ' + C.radiatore); ok(C.frizione < 1 && C.differenziale < 1 && C.centraline < 1, 'frizione/differenziale/centraline: ' + [C.frizione, C.differenziale, C.centraline]);
+  ok(v.mod.potenza < 1 && v.mod.frizione < 1 && v.mod.differenziale < 1 && v.mod.radiatore < 1, 'modificatori: ' + JSON.stringify({ potenza: v.mod.potenza, frizione: v.mod.frizione, differenziale: v.mod.differenziale }));
+  const amb = { pendenza: 0, superficie: 'asfalto', acqua: 0, tempAria: 20, quota: 0, vento: 0 }, sano = nuovo(); corri(sano, 6, { acc: 1, iy: 1 }, amb); const rotto = nuovo(); rotto.mod.frizione = 0.4; rotto.mod.differenziale = 0.6; corri(rotto, 6, { acc: 1, iy: 1 }, amb);
+  ok(rotto.v < sano.v * 0.9, 'frizione che slitta e differenziale danneggiato: accelera meno (' + rotto.v.toFixed(1) + ' < ' + sano.v.toFixed(1) + ' m/s)');
+  const ctx = DAN.ctxECU(dan); ok(Number.isFinite(ctx.centraline), 'centraline passate alle ECU'); RIS.meccanica = { fC: +R.fC.toFixed(3), engine: +R.engine.toFixed(3), comp: { motore: C.motore, radiatore: C.radiatore, frizione: C.frizione, differenziale: C.differenziale, centraline: C.centraline, cambio: C.cambio } };
+});
+test('componenti distaccabili: dopo un frontale forte gli attacchi del paraurti cedono (integrità dalla zona) e lo stato di distacco segue il gioco; configurazione con massa, attacco, soglia', () => {
+  const cfg = PRF.componenti('predefinito'); for (const k of ['fb', 'rb', 'hood', 'dFL', 'mL', 'ws', 'w0', 'scarico']) ok(cfg[k] && cfg[k].massa > 0 && cfg[k].attacco && Number.isFinite(cfg[k].soglia) && cfg[k].resistenza > 0, 'componente ' + k);
+  const T = PRF.template(SBT, 'predefinito'), S = SB.sbNew(T), st = SOL.crea(); urtoRete(T, S, st, 'wall', 65 / 3.6); const R = SB.sbDerive(T, S), zone = SOL.stato(T, S, PRF.ZONE);
+  const comp = SOL.componenti(st, cfg, zone, { cut: {}, gcut: {}, wl: [false, false, false, false] }, {}), fb0 = Object.assign({}, comp.fb), hood0 = Object.assign({}, comp.hood); ok(comp.fb.integrita < 1 && !comp.fb.staccato, 'paraurti anteriore indebolito ma ancora attaccato: ' + comp.fb.integrita);
+  ok(comp.rb.integrita === 1, 'paraurti posteriore intatto'); const c2 = SOL.componenti(st, cfg, zone, { cut: { fb: true }, gcut: { ws: true }, wl: [true, false, false, false] }, { hood: { st: 'gone' } });
+  ok(c2.fb.staccato && c2.fb.integrita === 0 && c2.ws.staccato && c2.w0.staccato && c2.hood.staccato, 'stato di distacco dal gioco'); RIS.componenti = { fb: fb0, hood: hood0, paraurti_ant: zone.paraurti_ant, R_fb: R.fb };
+});
+test('riparazione: il solver riporta ruote, componenti ed effetti; «emergenza» solo al 70%; danni_meccanici ripara anche frizione/differenziale/centraline', () => {
+  const st = SOL.crea(); st.ruote[1].braccio = 0.2; st.ruote[1].cerchio = 0.1; st.ruote[2].braccio = 0.3; st.effetti.aderenza[1] = 0.4; st.comp.fb = { integrita: 0.2, staccato: true }; ok(SOL.ripara(st, 'sospensioni', 2) && st.ruote[2].braccio === 1 && st.ruote[1].braccio === 0.2, 'riparazione di una sola ruota'); ok(!SOL.ripara(st, 'radiatore'), 'il radiatore non riguarda il solver'); SOL.ripara(st, 'emergenza'); vicino(st.ruote[1].braccio, 0.7, 1e-9); ok(!st.comp.fb.staccato && st.comp.fb.integrita === 0.7 && st.effetti.aderenza[1] === 1);
+  SOL.ripara(st, 'tutto'); ok(st.ruote[1].braccio === 1 && st.ruote[1].cerchio === 1 && st.comp.fb.integrita === 1);
+  const dan = DAN.crea(), v = nuovo(); dan.comp.frizione = 0.3; dan.comp.differenziale = 0.2; dan.comp.centraline = 0.1; DAN.aggiorna(dan, 0, null, v); ok(v.mod.frizione < 1 && v.mod.differenziale < 1);
+  const pre = DAN.preventivo(dan); ok(pre.voci.some(q => q.chiave === 'frizione') && pre.voci.some(q => q.chiave === 'differenziale') && pre.voci.some(q => q.chiave === 'centraline'), 'voci del preventivo');
+  DAN.ripara(dan, 'frizione', undefined, v); ok(dan.comp.frizione === 1 && v.mod.frizione === 1); DAN.ripara(dan, 'tutto', undefined, v); ok(DAN.preventivo(dan).totale === 0 && v.mod.differenziale === 1 && dan.comp.centraline === 1);
+});
+test('salvataggio e ripristino: serializza → JSON → ripristina conserva energia, eventi, ruote, componenti ed effetti; dati non validi rifiutati', () => {
+  const T = PRF.template(SBT, 'predefinito'), S = SB.sbNew(T), st = SOL.crea(); urtoRete(T, S, st, 'wall', 40 / 3.6); urtoRete(T, S, st, 'pole', 30 / 3.6, { lx: -.7 }); SOL.passo(st, 1 / 60, { R: SB.sbDerive(T, S), D: { wl: [false, false, false, false] }, tyre: null, v: 20 });
+  const cfg = PRF.componenti('predefinito'); SOL.componenti(st, cfg, SOL.stato(T, S, PRF.ZONE), { cut: {}, gcut: {}, wl: [false, false, false, false] }, {});
+  const j = JSON.parse(JSON.stringify(SOL.serializza(st))), st2 = SOL.crea(); ok(SOL.ripristina(st2, j), 'ripristino'); vicino(st2.energia.propria, st.energia.propria, 1e-6); ok(st2.nEventi === st.nEventi && st2.eventi.length === st.eventi.length);
+  for (let k = 0; k < 4; k++) { vicino(st2.ruote[k].braccio, st.ruote[k].braccio, 1e-9); vicino(st2.effetti.aderenza[k], st.effetti.aderenza[k], 1e-9) } ok(st2.comp.fb && st2.comp.fb.integrita === st.comp.fb.integrita);
+  ok(!SOL.ripristina(SOL.crea(), null) && !SOL.ripristina(SOL.crea(), { v: 7 }) && SOL.valido(st2).length === 0);
+  const sdan = DAN.crea(); sdan.comp.frizione = 0.4; const sj = JSON.parse(JSON.stringify(DAN.serializza(sdan))), d2 = DAN.crea(); DAN.ripristina(d2, sj); vicino(d2.comp.frizione, 0.4, 1e-9, 'danni_meccanici: nuovi componenti salvati');
+});
+test('ribaltamento (sbCrash3 dall\'alto) con evento «ground» registrato: tetto e montanti deformati, nessun NaN', () => {
+  const T = PRF.template(SBT, 'predefinito'), S = SB.sbNew(T), st = SOL.crea(); const ev = SOL.evento(st, { t: 1, lx: -.78, lz: 0, nx: -1, nz: 0, vn: 5, m1: T.Mt || 1600, m2: Infinity, kind: 'ground', faccia: 'tetto', Mt: PRF.massa(T, S) });
+  ok(ev.kind === 'ground' && ev.Eown > 0 && ev.quotaOst === 0.15); const res = SB.sbCrash3(T, S, { n3: [0, -1, 0], c3: [0, SB.DMGBOX.y1 + .02, 0], u: 6, ky: .12, reach: .65 }); SOL.esito(st, ev, res);
+  ok(res && finiti(S.P), 'ribaltamento simulato'); const z = SOL.stato(T, S, PRF.ZONE); ok(z.tetto.integrita < 1 || z.montanti.integrita < 1 || z.vetri.integrita < 1, 'tetto/montanti/vetri colpiti: ' + JSON.stringify([z.tetto, z.montanti, z.vetri])); RIS.ribaltamento = { tetto: z.tetto, montanti: z.montanti, vetri: z.vetri, Wp: res.Wp };
+});
+test('prestazioni: costo del solver trascurabile rispetto alla rete (passo per fotogramma, stato per zona, evento)', () => {
+  const T = PRF.template(SBT, 'predefinito'), S = SB.sbNew(T), st = SOL.crea(); const hr = require('perf_hooks').performance; urtoRete(T, S, st, 'wall', 50 / 3.6); const R = SB.sbDerive(T, S);
+  let t0 = hr.now(); for (let i = 0; i < 2000; i++) SOL.passo(st, 1 / 60, { R, D: { wl: [false, false, false, false] }, tyre: null, v: 20 }); const msPasso = (hr.now() - t0) / 2000;
+  t0 = hr.now(); for (let i = 0; i < 200; i++) SOL.stato(T, S, PRF.ZONE); const msStato = (hr.now() - t0) / 200;
+  t0 = hr.now(); for (let i = 0; i < 2000; i++) SOL.evento(st, { t: 100 + i, lx: 0, lz: 2.3, nx: 0, nz: -1, vn: 5, m1: 1600, kind: 'wall', Mt: 1600 }); const msEv = (hr.now() - t0) / 2000;
+  t0 = hr.now(); const S2 = SB.sbNew(T), r = urtoRete(T, S2, SOL.crea(), 'wall', 50 / 3.6); const msRete = hr.now() - t0;
+  ok(msPasso < 0.05 && msStato < 2 && msEv < 0.05, 'passo ' + msPasso.toFixed(4) + ' ms, stato ' + msStato.toFixed(3) + ' ms, evento ' + msEv.toFixed(4) + ' ms'); RIS.prestazioni = { msPasso: +msPasso.toFixed(4), msStatoZone: +msStato.toFixed(3), msEvento: +msEv.toFixed(4), msReteFrontale50: +msRete.toFixed(1), passiRete: r.res.steps };
+});
+test('compatibilità: la pagina index.html collega il solver (script, VDS, dmgCrash con evento) e non ha più il doppio conteggio dell\'urto nel wrapper', () => {
+  const fs = require('fs'), html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  for (const s of ['motore/danni_solver.js', 'motore/profili_danno.js', 'const VDS=', 'function dmgCrash(own,lx,lz,Dx,Dz,imp,kind,ev)', 'VDS.evento(a,car,lx,lz,Dx,Dz,imp,kind,xtra)', 'IOW_SOLVER.applicaMod(VDS.st,VEH.mod)', 'solver:VDS.serializza()']) ok(html.includes(s), 'manca nella pagina: ' + s);
+  ok(!html.includes("carHit0(a,car,wx,wz,dirx,dirz,imp,kind);if(a===carA&&imp>=3.2)"), 'vecchio wrapper di carHit ancora attivo'); ok(!/Math\.random\(\)<Math\.min\(\.4,\.12/.test(html), 'serrature ancora casuali');
+});
+
+console.log('\nRISULTATI REALI (rete di gioco + solver):'); console.log(JSON.stringify(RIS, null, 1));
 console.log(esiti.join('\n'));
 console.log('\n' + passati + ' test superati, ' + falliti + ' falliti');
 if (typeof process !== 'undefined') process.exit(falliti ? 1 : 0);

@@ -2309,7 +2309,7 @@ onmessage = async e => { const m = e.data;
 <div id="rld"><div id="rlt">Caricamento della mappa reale…</div><div id="rlp"></div><div id="rle"></div><button class="b" id="rlr" hidden>Riprova</button><div id="rla">Mappa © OpenStreetMap contributors · OpenMapTiles · OpenFreeMap · Rilievo Mapterhorn (INGV TINITALY e fonti regionali)</div></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="motore/veicoli_db.js"></script><script src="motore/fisica_veicolo.js"></script><script src="motore/ecu.js"></script><script src="motore/danni_meccanici.js"></script><script src="motore/calibrazione.js"></script>
+<script src="motore/veicoli_db.js"></script><script src="motore/fisica_veicolo.js"></script><script src="motore/ecu.js"></script><script src="motore/danni_meccanici.js"></script><script src="motore/calibrazione.js"></script><script src="motore/profili_danno.js"></script><script src="motore/danni_solver.js"></script>
 <script>
 ( function () {
 
@@ -17146,7 +17146,7 @@ function pdCollide(){const bs=[];if(inCar)bs.push({p:1,x:C.x,z:C.z,h:C.h,vx:V.vx
   for(const oa of (held(A)?OF5:OF3))for(const ob of (held(B)?OF5:OF3)){const ax=A.x+Math.sin(A.h)*oa,az=A.z+Math.cos(A.h)*oa,bx=B.x+Math.sin(B.h)*ob,bz=B.z+Math.cos(B.h)*ob,dx=ax-bx,dz=az-bz,d=Math.hypot(dx,dz);if(d<1.9&&d>1e-4){const i2=pdContact(A,B,(ax+bx)/2,(az+bz)/2,dx/d,dz/d,1.9-d);if(i2>imp){imp=i2;cpx=(ax+bx)/2;cpz=(az+bz)/2;cnx=dx/d;cnz=dz/d}hit++}}
   if(hit){out.push([A,B,imp,cpx,cpz,cnx,cnz]);if(imp>0)crScrape(cpx,(A.p?V.y:A.u.y)+.45,cpz,-cnz,cnx,(A.vx-B.vx)*-cnz+(A.vz-B.vz)*cnx,imp)}}
  for(const b of bs){if(b.p){C.x=b.x;C.z=b.z;P.x=b.x;P.z=b.z;V.vx=b.vx;V.vz=b.vz;V.yw=pdClamp(b.w,-2.6,2.6);if(Math.abs(V.yw)>1.1&&Math.hypot(V.vx,V.vz)>7)V.slipT=PD.t+1.3}else{const u=b.u;u.x=b.x;u.z=b.z;u.vx=b.vx;u.vz=b.vz;u.yw=pdClamp(b.w,-2.6,2.6)}}
- for(const o of out){const A=o[0],B=o[1],imp=o[2];if(imp<2)continue;dmgPair(A,o[3],o[4],o[5],o[6],imp);dmgPair(B,o[3],o[4],-o[5],-o[6],imp);const ids=[A.p?'giocatore':A.u.name,B.p?'giocatore':B.u.name];if(imp>5){if(!A.p)pdDamage(A.u,imp*.7,'collisione');if(!B.p)pdDamage(B.u,imp*.7,'collisione')}
+ for(const o of out){const A=o[0],B=o[1],imp=o[2];if(imp<2)continue;dmgPair(A,o[3],o[4],o[5],o[6],imp,B);dmgPair(B,o[3],o[4],-o[5],-o[6],imp,A);const ids=[A.p?'giocatore':A.u.name,B.p?'giocatore':B.u.name];if(imp>5){if(!A.p)pdDamage(A.u,imp*.7,'collisione');if(!B.p)pdDamage(B.u,imp*.7,'collisione')}
   if(A.p&&!B.p)B.u.hitT=PD.t;if(B.p&&!A.p)A.u.hitT=PD.t;
   EV.emit('collision',{a:A.p?0:A.u.id,b:B.p?0:B.u.id,names:ids,imp,withPlayer:!!(A.p||B.p)})}}
 /* unità lontane: movimento semplificato lungo il percorso o la rete (nessuna fisica, ma posizioni e tempi reali) */
@@ -18282,7 +18282,7 @@ function rlStep(o,dt){const r=o.rol,g=9.8,st=Math.max(1,Math.ceil(dt/.0025)),h=d
 // urto del ribaltamento sulla rete: il suolo spinge verso l'alto del mondo, cioè (sin φ, cos φ) nella sezione dell'auto;
 // nel modello la x è verso la sinistra (si inverte) e l'altezza parte da terra (baricentro a 0,55 m)
 function rlCrash(own,r){const e=r.ev;if(!e||e.v<2.2)return null;const n3=[-Math.sin(r.phi),Math.cos(r.phi),0],pv=RPOLY[e.k],c3=[-pv[0],pv[1]+RCGY,0];
- const S=sbState(own),t0=performance.now(),res=sbCrash3(SBT,S,{n3,c3,u:Math.min(11,e.v*1.6),ky:.12,reach:.65}),ms=performance.now()-t0;SBST.n++;SBST.ms+=ms;SBF.ms+=ms;return res}
+ const S=sbState(own),ev=VDS.eventoRib(own,r),t0=performance.now(),res=sbCrash3(VDS.tpl(own),S,{n3,c3,u:Math.min(11,e.v*1.6),ky:.12,reach:.65}),ms=performance.now()-t0;SBST.n++;SBST.ms+=ms;SBF.ms+=ms;VDS.esito(own,ev,res);return res}
 // posa del modello durante il ribaltamento: rotazione attorno al baricentro (il modello ha l'origine a terra, al centro del pianale)
 function crRollPose(g,x,z,h,gy,r){const s=Math.sin(r.phi),c=Math.cos(r.phi),ch=Math.cos(h),sh=Math.sin(h),cgy=gy+r.y;g.rotation.order='YXZ';g.rotation.set(0,h,-r.phi);g.position.set(x-ch*RCGY*s,cgy-RCGY*c,z+sh*RCGY*s)}
 // lato di un cerchio a terra (ruota persa, gomma a terra o battistrada staccato) sul lato verso cui l'auto scivola
@@ -18293,7 +18293,7 @@ function crTrip(o,a,vl,sp,dt,flat){if(o.rol||Math.abs(vl)<6.5||sp<9)return false
 function crRollHit(a,own,car,r){const e=r.ev;if(!e)return;const vol=crVol(car.x,car.z);crBang(vol*Math.min(1,e.v/7),500+e.v*90,.45);
  const now=performance.now()/1000;if(e.v>2.2&&(!own.sbRollT||now-own.sbRollT>.08)){own.sbRollT=now;rlCrash(own,r);if(a){const D=dmgPrep(a,car.player?['l0','l1']:['l1']);D.on=true;sbModel(a,own,car,false);dmgSound(e.v*2.2,D.glass>0);
   // fiancata che batte forte: le serrature possono saltare (lato a terra: x della sezione verso destra → porte di destra)
-  const sd=Math.sin(r.phi);if(Math.abs(sd)>.7&&e.v>3.2){const keys=sd<0?['dFR','dRR']:['dFL','dRL'];for(const k of keys)if(!(a.cr&&a.cr.parts[k])&&Math.random()<.14)crUnlatch(a,car,k,'free',.06,0)}}}
+  const sd=Math.sin(r.phi);if(Math.abs(sd)>.7&&e.v>3.2){const keys=sd<0?['dFR','dRR']:['dFL','dRL'];for(const k of keys)if(!(a.cr&&a.cr.parts[k])&&e.v>VDS.soglia(k,'soglia',.32)*15)crUnlatch(a,car,k,'free',.06,0)}}}   /* fiancata a terra oltre ~4,8 m/s: la serratura salta (soglia del profilo, non casuale) */
  const p=rlRot(e.k,r.phi),ch=Math.cos(car.h),sh=Math.sin(car.h),wx=car.x-ch*p[0],wz=car.z+sh*p[0];FX.sparks(wx,car.y+.05,wz,car.vx*.3,car.vz*.3,Math.min(14,4+Math.round(e.v*1.5)),3+e.v*.4)}
 // guida del giocatore durante il ribaltamento (la guida normale è sospesa): avanti con attrito, di lato con la sezione che rotola
 function crRollDrive(dt){const r=V.rol,sn=Math.sin(C.h),cn=Math.cos(C.h);let vf=V.rlF||0;const up=Math.cos(r.phi)>.8&&r.y<RCGY+.06;vf-=Math.sign(vf)*Math.min(Math.abs(vf),(up?1.1:5.4)*dt);V.rlF=vf;
@@ -18482,10 +18482,10 @@ function crFireStep(a,car,dt,D,C0){const F=C0.fire||(C0.fire={t:0,stage:0,em:0})
 
 /* ---------- dopo ogni urto (da sbEffects): cerniere, paraurti, vapore, olio, gomme, parabrezza ---------- */
 function crAfterCrash(a,own,car,R,replay){if(replay)return;const C0=crSt(a),D=a.dmg;
- if(!D.cut.hood){const p=C0.parts.hood;if(!p&&R.fC>.28){const free=R.fC>.5;crUnlatch(a,car,'hood',free?'free':'ajar',Math.min(.16,.04+(R.fC-.28)*.3),free?0:.2)}else if(p&&p.st==='ajar'&&(R.fC>.5||R.fC>(p.fC0||0)+.1)){p.st='free';p.tmax=CRP.hood.tmax}if(C0.parts.hood&&C0.parts.hood.fC0===undefined)C0.parts.hood.fC0=R.fC}
- if(!C0.parts.trunk&&R.rC>.22)crUnlatch(a,car,'trunk','free',.02,0);
+ if(!D.cut.hood){const p=C0.parts.hood,hA=VDS.soglia('hood','apre',.28),hL=VDS.soglia('hood','libera',.5);if(!p&&R.fC>hA){const free=R.fC>hL;crUnlatch(a,car,'hood',free?'free':'ajar',Math.min(.16,.04+(R.fC-hA)*.3),free?0:.2)}else if(p&&p.st==='ajar'&&(R.fC>hL||R.fC>(p.fC0||0)+.1)){p.st='free';p.tmax=CRP.hood.tmax}if(C0.parts.hood&&C0.parts.hood.fC0===undefined)C0.parts.hood.fC0=R.fC}
+ if(!C0.parts.trunk&&R.rC>VDS.soglia('trunk','apre',.22))crUnlatch(a,car,'trunk','free',.02,0);
  const S=own.sb;if(S){const P=S.P,P0=SBT.P0,nb=SBT.nb,intr=(st,j)=>{let m=0;for(const i of st)for(const l of [0,1]){const k=nb(i,j,l);m=Math.max(m,Math.abs(P[k*3]-P0[k*3]))}return m};
-  for(const [key,st,j] of [['dFL',[3,4],3],['dRL',[5,6],3],['dFR',[3,4],0],['dRR',[5,6],0]]){if(C0.parts[key])continue;const m=intr(st,j);if(m>.09&&m<.32&&Math.random()<Math.min(.4,.12+(m-.09)*1.6))crUnlatch(a,car,key,'free',Math.min(.18,.03+(m-.05)*.4),0)}}
+  for(const [key,st,j] of [['dFL',[3,4],3],['dRL',[5,6],3],['dFR',[3,4],0],['dRR',[5,6],0]]){if(C0.parts[key])continue;const m=intr(st,j);if(m<VDS.soglia(key,'libera',.32)&&VDS.cedeCerniera(key,m))crUnlatch(a,car,key,'free',Math.min(.18,.03+(m-.05)*.4),0)}}   /* serratura che salta: intrusione oltre la soglia del profilo (prima: probabilità casuale) */
  if(R.fC>.12&&!C0.steam0){C0.steam0=1;C0.steam=25+35*Math.min(1,R.fC);CR.stat.steam++}
  if(D.engine<.8||R.fC>.3)C0.leak=1;
  for(let h=0;h<4;h++){const hb=R.hubs[h];if(hb.lost)continue;if(Math.hypot(hb.dx,hb.dz)>.06||Math.abs(hb.camber)>.12)crBurst(a,car,h,'urto')}
@@ -18894,31 +18894,66 @@ function dmgPrep(a,lods){if(a.dmg)return a.dmg;const D={on:false,zones:new Float
  return D}
 /* --- urto: punto e direzione nel mondo → deformazione, zone, parti che si staccano, vetri, rumore --- */
 /* tipo di ostacolo dal solido che ha fermato l'auto: palo (piccolo), guardrail (basso), auto, muro/edificio */
-function dmgKind(s){if(!s)return'wall';if(s.amb||s.nc)return'car';if(s.lo)return'rail';const l=s.c===undefined?Math.max(s.x1-s.x0,s.z1-s.z0)/2:Math.max(s.hx,s.hz);return l<.45?'pole':'wall'}
-function carHit(a,car,wx,wz,dirx,dirz,imp,kind){if(!a||imp<3.2)return;kind=kind||(PO.hit&&PO.s?dmgKind(PO.s):'wall');const c=Math.cos(car.h),s=Math.sin(car.h),dx=wx-car.x,dz=wz-car.z,lx=dx*c-dz*s,lz=dx*s+dz*c,Dx=dirx*c-dirz*s,Dz=dirx*s+dirz*c;
- dmgApply(a,car,lx,lz,Dx,Dz,imp,false,kind)}
+function dmgKind(s){if(!s)return'wall';if(s.amb||s.nc)return'car';if(s.lo)return'rail';if(s.tree)return'tree';const l=s.c===undefined?Math.max(s.x1-s.x0,s.z1-s.z0)/2:Math.max(s.hx,s.hz);return l<.45?'pole':'wall'}
+function carHit(a,car,wx,wz,dirx,dirz,imp,kind,xtra){if(!a||imp<3.2)return;kind=kind||(PO.hit&&PO.s?dmgKind(PO.s):'wall');const c=Math.cos(car.h),s=Math.sin(car.h),dx=wx-car.x,dz=wz-car.z,lx=dx*c-dz*s,lz=dx*s+dz*c,Dx=dirx*c-dirz*s,Dz=dirx*s+dirz*c;
+ const ev=VDS.evento(a,car,lx,lz,Dx,Dz,imp,kind,xtra);dmgApply(a,car,lx,lz,Dx,Dz,imp,false,kind,false,ev)}
 /* --- carrozzeria a nodi e travi (stessa rete per tutte le Alfa) + ammaccature locali della lamiera --- */
 const SBT=sbTemplate(DMGBOX),SBBIND=new Map();
+/* --- Vehicle Damage Solver (motore/danni_solver.js + motore/profili_danno.js): un solo punto per energia d'urto, profilo del veicolo, ruote, componenti, effetti.
+   Non sostituisce nulla: dmgCrash/sbCrash deformano la rete, sbDerive misura, danni_meccanici.js decide la meccanica, sbEffects/crash.js gli effetti. --- */
+const VDS={ok:!!(window.IOW_SOLVER&&window.IOW_PROFILI),st:null,T:null,cfg:null,prof:null,
+ ready(){if(!VDS.ok)return null;if(VDS.st)return VDS.st;const P=IOW_PROFILI;SBT.zona=P.classifica(SBT);const id=(typeof VEH!=='undefined'&&VEH&&VEH.par&&VEH.par.id)||'predefinito';VDS.prof=P.profilo(id);
+  if(VDS.prof.id!=='predefinito'&&typeof VEH!=='undefined'&&VEH&&VEH.par&&Number.isFinite(VEH.par.massa))VDS.prof=Object.assign({},VDS.prof,{massa:VEH.par.massa});   /* la massa viene dal database dei veicoli (motore/veicoli_db.js) */
+  VDS.T=P.template(SBT,VDS.prof);VDS.cfg=P.componenti(VDS.prof);VDS.st=IOW_SOLVER.crea({profilo:VDS.prof.id,facce:VDS.prof.facce});carA.sbT=VDS.T;VDS.fsn={};for(const f of ['ant','post','lato'])VDS.fsn[f]=VDS.forzaFaccia(VDS.T,f);return VDS.st},
+ /* forza di snervamento di una faccia: somma delle travi longitudinali della prima stazione (o dei traversi delle porte di un lato) — dal modello della rete, non da dati reali */
+ forzaFaccia(T,f){let s=0;const st=i=>i<72?i>>3:-1;for(let b=0;b<T.NB;b++){const ty=T.TY[b],i0=Math.min(st(T.A[b]),st(T.B[b])),i1=Math.max(st(T.A[b]),st(T.B[b]));if(f==='ant'&&ty===0&&i0===1)s+=T.FY[b];else if(f==='post'&&ty===3&&i1===7)s+=T.FY[b];else if(f==='lato'&&ty===4&&(i0===4||i0===5)&&T.zona[b]===IOW_PROFILI.ZID.porte)s+=T.FY[b]*.5}return s},
+ tpl(own){return own&&own.sbT||SBT},
+ stDi(own){if(own===carA)return VDS.ready();return own.vds||(own.vds=IOW_SOLVER.crea({profilo:'predefinito'}))},   /* pattuglie e traffico: solo il registro degli eventi (niente modello ruote) */
+ massaDi(car){const m=VDS.T?VDS.T.Mt:1500;return car&&car.player?m:(car&&car.u&&Number.isFinite(car.u.mass)?car.u.mass*m:m)},   /* le altre auto hanno lo stesso modello; u.mass è relativa al giocatore */
+ facciaDi(b,px,pz,nx,nz){const h=b.p?C.h:b.u.h,c=Math.cos(h),s=Math.sin(h),Dx=nx*c-nz*s,Dz=nx*s+nz*c;return IOW_SOLVER.faccia(Dx,Dz)},
+ idCoppia(a,b){const k=o=>o.p?'P':(o.u&&o.u.name||'u');return k(a)<k(b)?k(a)+'|'+k(b):k(b)+'|'+k(a)},
+ /* evento d'urto: dai dati del contatto all'energia propria e alla velocità equivalente u per la rete */
+ evento(a,car,lx,lz,Dx,Dz,imp,kind,xtra){if(!VDS.ok||!VDS.ready())return null;const own=car.u||a,T=VDS.tpl(own),Mt=IOW_PROFILI.massa(T,own.sb),m1=VDS.massaDi(car),m2=kind==='car'?(xtra&&Number.isFinite(xtra.m2)?xtra.m2:m1):Infinity;
+  const fa=IOW_SOLVER.faccia(Dx,Dz),st=VDS.stDi(own),ev=IOW_SOLVER.evento(st,{t:performance.now()/1000,lx,lz,nx:Dx,nz:Dz,vn:imp,m1,m2,kind,faccia:fa,facciaAltro:xtra&&xtra.facciaAltro,id:xtra&&xtra.id,Mt,Fsnerv:VDS.fsn?VDS.fsn[fa]:0});
+  if(own===carA&&typeof VEHOK!=='undefined'&&VEHOK&&imp>=3.2)IOW_DANNI.urto(DANS,{lx,lz,imp,kind,massa:m1,t:VEHX.t,energia:ev.Eown,duplicato:ev.duplicato});   /* storico ed energia nel modulo meccanico (una sola volta per evento) */
+  return ev},
+ /* ribaltamento: evento registrato (energia dalla velocità di caduta); la rete la schiaccia rlCrash con la sua taratura */
+ eventoRib(own,r){if(!VDS.ok||!VDS.ready()||!r.ev)return null;const e=r.ev,m1=own===carA?VDS.T.Mt:VDS.massaDi({u:own}),pv=RPOLY[e.k],st=VDS.stDi(own);const ev=IOW_SOLVER.evento(st,{t:performance.now()/1000,lx:-pv[0],lz:0,nx:-Math.sin(r.phi),nz:0,vn:e.v,m1,m2:Infinity,kind:'ground',faccia:Math.cos(r.phi)<-.7?'tetto':'lato',Mt:IOW_PROFILI.massa(VDS.tpl(own),own.sb)});
+  if(own===carA&&typeof VEHOK!=='undefined'&&VEHOK)IOW_DANNI.urto(DANS,{lx:-pv[0],lz:0,imp:e.v,kind:'ground',massa:m1,t:VEHX.t,energia:ev.Eown,duplicato:ev.duplicato});return ev},
+ esito(own,ev,r){if(ev&&VDS.ok)IOW_SOLVER.esito(VDS.stDi(own),ev,r)},
+ /* soglie configurabili dei componenti (profili_danno.COMPONENTI, modificate dal profilo) */
+ soglia(key,campo,fb){const c=VDS.cfg&&VDS.cfg[key];if(!c)return fb;const r=c.resistenza||1;if(campo==='soglia')return (Number.isFinite(c.soglia)?c.soglia:fb)*r;const v=c.cerniera&&c.cerniera[campo];return (Number.isFinite(v)?v:fb)*r},
+ cedeCerniera(key,m){return m>VDS.soglia(key,'apre',.12)},
+ /* ogni fotogramma (dal passo del veicolo): stato per zona, componenti, modello ruote → interfaccia S per danni_meccanici */
+ step(dt){const st=VDS.ready();if(!st)return null;const D=carA.dmg,R=D&&D.R,ty=carA.tyre,S=carA.sb;
+  if(S&&st.dirty){st.zone=IOW_SOLVER.stato(VDS.T,S,IOW_PROFILI.ZONE);st.dirty=false;IOW_SOLVER.componenti(st,VDS.cfg,st.zone,D,carA.cr&&carA.cr.parts)}
+  IOW_SOLVER.passo(st,dt,{R,D,tyre:ty,v:cs.v});return IOW_SOLVER.statoStruttura(st,R,D,ty,st.zone)},
+ /* effetti sulla guida del gioco (dopo dmgDrive0 e TYRE.apply: nessuna voce calcolata due volte) */
+ guida(){CARDMG.vib=0;CARDMG.soft=1;if(!VDS.st)return;const E=VDS.st.effetti;CARDMG.vib=E.vibrazione;CARDMG.soft=1+(1-E.ammortizzazione)*1.6;CARDMG.pull=pdClamp(CARDMG.pull+E.tiro,-.1,.1);CARDMG.grip=(CARDMG.grip||1)*(.6+.4*E.stabilita);
+  if(typeof inCar!=='undefined'&&inCar){if(E.vibrazione>.02)crLoop('rattle',Math.min(.5,E.vibrazione*.6),70+Math.abs(cs.v)*5);if(typeof VEHOK!=='undefined'&&VEHOK&&DANS.comp.scarico<.5&&VEH.motore.acceso)crLoop('scarico',(1-DANS.comp.scarico)*.3,70+VEH.motore.rpm/30)}},
+ ripara(chiave,idx){if(VDS.st)IOW_SOLVER.ripara(VDS.st,chiave,idx)},
+ serializza(){return VDS.st?IOW_SOLVER.serializza(VDS.st):null},ripristina(s){if(s&&VDS.ready())IOW_SOLVER.ripristina(VDS.st,s)},
+ analisi(){return VDS.st?IOW_SOLVER.analisi(VDS.st):null}};
 // ostacoli: semilarghezza dell'impronta, altezze toccate, raggio (palo); per le ammaccature: altezza del centro e raggio
-const SBIMP={wall:{hw:3,ylo:-1,yhi:3,R:0,dy:.42,dr:.7},rail:{hw:3,ylo:.25,yhi:.95,R:0,dy:.3,dr:.55},pole:{hw:0,ylo:-1,yhi:3,R:.3,dy:.42,dr:.3},car:{hw:.75,ylo:.18,yhi:1.08,R:0,dy:.34,dr:.5}};
+const SBIMP={wall:{hw:3,ylo:-1,yhi:3,R:0,dy:.42,dr:.7},rail:{hw:3,ylo:.25,yhi:.95,R:0,dy:.3,dr:.55},pole:{hw:0,ylo:-1,yhi:3,R:.3,dy:.42,dr:.3},tree:{hw:0,ylo:-1,yhi:3,R:.26,dy:.42,dr:.32},car:{hw:.75,ylo:.18,yhi:1.08,R:0,dy:.34,dr:.5}};
 function sbState(o){return o.sb||(o.sb=sbNew(SBT))}
 /* punto della superficie colpito (faccia dell'auto secondo la direzione dell'urto) */
 function dmgFace(lx,lz,Dx,Dz){const B=DMGBOX;if(Math.abs(Dz)>=Math.abs(Dx))return[Math.max(B.x0+.15,Math.min(B.x1-.15,lx)),Dz<0?B.z1:B.z0];return[Dx<0?B.x1:B.x0,Math.max(B.z0+.2,Math.min(B.z1-.2,lz))]}
 /* urto sulla rete: la simulazione dinamica dei nodi e delle travi (anche per le pattuglie senza modello vicino) */
-function dmgCrash(own,lx,lz,Dx,Dz,imp,kind){const S=sbState(own),dl=Math.hypot(Dx,Dz)||1,nx=Dx/dl,nz=Dz/dl,f=dmgFace(lx,lz,nx,nz),k=SBIMP[kind]?kind:'wall',u=k==='car'?imp*.5:imp*.92;
- const t0=performance.now(),r=sbCrash(SBT,S,{n:[nx,nz],c:f,u,hw:SBIMP[k].hw,ylo:SBIMP[k].ylo,yhi:SBIMP[k].yhi,R:SBIMP[k].R}),ms=performance.now()-t0;SBST.n++;SBST.ms+=ms;SBF.ms+=ms;return r}
+function dmgCrash(own,lx,lz,Dx,Dz,imp,kind,ev){const S=sbState(own),dl=Math.hypot(Dx,Dz)||1,nx=Dx/dl,nz=Dz/dl,f=dmgFace(lx,lz,nx,nz),k=SBIMP[kind]?kind:'wall',u=ev&&Number.isFinite(ev.u)?ev.u:(k==='car'?imp*.5:imp*.92);   /* u: dal solver (energia propria ripartita) oppure i fattori storici se il solver manca */
+ if(!(u>.3))return null;const T=VDS.tpl(own),t0=performance.now(),r=sbCrash(T,S,{n:[nx,nz],c:f,u,hw:SBIMP[k].hw,ylo:SBIMP[k].ylo,yhi:SBIMP[k].yhi,R:SBIMP[k].R}),ms=performance.now()-t0;SBST.n++;SBST.ms+=ms;SBF.ms+=ms;VDS.esito(own,ev,r);return r}
 const SBST={n:0,ms:0};
 // tetto di calcolo per fotogramma: negli incidenti a catena fra pattuglie le simulazioni in eccesso passano ai fotogrammi successivi
 const SBF={ms:0},SBQ=[];
-function sbQueueStep(){SBF.ms=0;while(SBQ.length&&SBF.ms<6){const e=SBQ.shift();if(e[0]==='u')dmgUnitCrash(e[1],e[2],e[3],e[4],e[5],e[6],e[7],true);else dmgApply(e[1],e[2],e[3],e[4],e[5],e[6],e[7],false,e[8],true)}}
+function sbQueueStep(){SBF.ms=0;while(SBQ.length&&SBF.ms<6){const e=SBQ.shift();if(e[0]==='u')dmgUnitCrash(e[1],e[2],e[3],e[4],e[5],e[6],e[7],true,e[8]);else dmgApply(e[1],e[2],e[3],e[4],e[5],e[6],e[7],false,e[8],true,e[9])}}
 // la prima simulazione compila il codice: la si fa subito dopo il caricamento su una rete di prova (niente scatto al primo urto vero)
 setTimeout(()=>{try{const S=sbNew(SBT);sbCrash(SBT,S,{n:[0,-1],c:[0,DMGBOX.z1],u:6,hw:3,ylo:-1,yhi:3,R:0})}catch(e){}},2500);
-function dmgApply(a,car,lx,lz,Dx,Dz,imp,replay,kind,queued){if(!car.player&&!replay&&!queued&&SBF.ms>6){if(SBQ.length<40)SBQ.push(['a',a,car,lx,lz,Dx,Dz,imp,kind]);return}const now=performance.now()/1000;const lods=car.player?['l0','l1']:['l1'];const D=dmgPrep(a,lods);   /* il giocatore: anche il modello lontano (vista da oltre 32 m) mostra i danni */
- if(!replay&&now-D.last<.12&&imp<(D.lastImp||0)*1.4)return;D.last=now;D.lastImp=imp;const B=DMGBOX,own=car.u||a;
+function dmgApply(a,car,lx,lz,Dx,Dz,imp,replay,kind,queued,ev){if(!car.player&&!replay&&!queued&&SBF.ms>6){if(SBQ.length<40)SBQ.push(['a',a,car,lx,lz,Dx,Dz,imp,kind,ev]);return}const now=performance.now()/1000;const lods=car.player?['l0','l1']:['l1'];const D=dmgPrep(a,lods);   /* il giocatore: anche il modello lontano (vista da oltre 32 m) mostra i danni */
+ if(!replay&&!ev&&now-D.last<.12&&imp<(D.lastImp||0)*1.4)return;if(ev&&ev.duplicato&&!(ev.u>.3))return;D.last=now;D.lastImp=imp;const B=DMGBOX,own=car.u||a;   /* con il solver decide il registro degli eventi (stessa energia mai due volte) */
  const k=SBIMP[kind]?kind:'wall',dl=Math.hypot(Dx,Dz)||1,f=dmgFace(lx,lz,Dx/dl,Dz/dl),px=f[0],pz=f[1],py=B.y0+SBIMP[k].dy*(B.y1-B.y0)/1.18;
- D.on=true;{const cs0=crSt(a);cs0.hit=Math.max(cs0.hit||0,imp);cs0.hitT=performance.now()}dmgCrash(own,lx,lz,Dx,Dz,imp,k);
+ D.on=true;{const cs0=crSt(a);cs0.hit=Math.max(cs0.hit||0,imp);cs0.hitT=performance.now()}dmgCrash(own,lx,lz,Dx,Dz,imp,k,ev);
  // ammaccatura locale della lamiera (anche negli urti leggeri, che la struttura assorbe senza piegarsi)
- const dep=Math.min(k==='pole'?.1:.075,Math.max(0,imp-2.5)*(k==='pole'?.0065:.0045)),R=SBIMP[k].dr,Dv=[Dx/dl,0,Dz/dl];
+ const loc=k==='pole'||k==='tree',dep=Math.min(loc?.1:.075,Math.max(0,imp-2.5)*(loc?.0065:.0045)),R=SBIMP[k].dr,Dv=[Dx/dl,0,Dz/dl];
  if(dep>.003){const seed=Math.floor(lx*97+lz*31+imp*7)%1000;for(const q of D.meshes){const b=q.bb,mg=R+.8;if(px<b[0]-mg||px>b[1]+mg||py<b[2]-mg||py>b[3]+mg||pz<b[4]-mg||pz>b[5]+mg)continue;dmgDeform(q.dpos,q.orig,q.chg,[px,py,pz],Dv,dep,R,seed)}D.dent=(D.dent||0)+dep}
  sbModel(a,own,car,replay);
  if(!replay){dmgSound(imp,D.glass>0&&imp>8.5);if(car.player)dmgHud(true)}}
@@ -18946,12 +18981,12 @@ function sbEffects(a,own,car,replay){const D=a.dmg,S=own.sb,R=sbDerive(SBT,S),B=
  if(R.fb&&!D.cut.fb&&!crHangTry(a,car,'fb',own,replay))dmgDetach(a,car,'fb',(x,y,z)=>z>B.z1-.34&&y<B.y0+H*.42,[0,0,-1],14,replay);
  if(R.rb&&!D.cut.rb&&!crHangTry(a,car,'rb',own,replay))dmgDetach(a,car,'rb',(x,y,z)=>z<B.z0+.34&&y<B.y0+H*.44,[0,0,1],14,replay);
  if(R.hood&&!D.cut.hood&&a.cr&&a.cr.parts.hood){D.cut.hood=true;crPartGone(a,car,'hood','urto')}else if(R.hood&&!D.cut.hood)dmgDetach(a,car,'hood',(x,y,z)=>z>B.z1-1.45&&z<B.z1-.25&&y>B.y0+H*.46&&Math.abs(x)<B.x1-.12,[0,.9,-.3],22,replay);
- for(const [sd,key,sv] of [[1,'mL',R.sL],[-1,'mR',R.sR]])if(!D.cut[key]&&sv>.1)dmgDetach(a,car,key,(x,y,z)=>(sd>0?x>B.x1-.06:x<B.x0+.06)&&y>B.y0+H*.55&&y<B.y0+H*.78&&z>.25&&z<1.05,[-sd,0,0],16,replay);
+ for(const [sd,key,sv] of [[1,'mL',R.sL],[-1,'mR',R.sR]])if(!D.cut[key]&&sv>VDS.soglia(key,'soglia',.1))dmgDetach(a,car,key,(x,y,z)=>(sd>0?x>B.x1-.06:x<B.x0+.06)&&y>B.y0+H*.55&&y<B.y0+H*.78&&z>.25&&z<1.05,[-sd,0,0],16,replay);
  // ruote: mozzo spostato (campanatura e convergenza storte) o strappato
  const HW=[0,2,1,3];for(let h=0;h<4;h++){const hb=R.hubs[h],k=HW[h];if(hb.lost&&!D.wl[k]){dmgWheel(a,car,k,[0,0,0],replay);continue}
   for(const L of [0,1]){const w=a.wh[k+L*4],st=w&&w.parent;if(!st)continue;if(!st.userData.p0)st.userData.p0=st.position.clone();const p0=st.userData.p0;st.position.set(p0.x+hb.dx,p0.y+hb.dy,p0.z+hb.dz);st.rotation.z=hb.camber;st.userData.toe=hb.toe;if(h>=2)st.rotation.y=hb.toe}}crAfterCrash(a,own,car,R,replay)}
 /* pattuglia senza modello vicino: l'urto agisce solo sulla rete; il modello verrà deformato quando comparirà */
-function dmgUnitCrash(u,lx,lz,Dx,Dz,imp,kind,queued){if(!queued&&SBF.ms>6){if(SBQ.length<40)SBQ.push(['u',u,lx,lz,Dx,Dz,imp,kind]);return}const now=PD.t;if(!queued&&now-(u.sbLast||-9)<.12&&imp<(u.sbImp||0)*1.4)return;u.sbLast=now;u.sbImp=imp;dmgCrash(u,lx,lz,Dx,Dz,imp,kind);u.sbDirty=true}
+function dmgUnitCrash(u,lx,lz,Dx,Dz,imp,kind,queued,ev){if(!queued&&SBF.ms>6){if(SBQ.length<40)SBQ.push(['u',u,lx,lz,Dx,Dz,imp,kind,ev]);return}const now=PD.t;if(!queued&&!ev&&now-(u.sbLast||-9)<.12&&imp<(u.sbImp||0)*1.4)return;if(ev&&ev.duplicato&&!(ev.u>.3))return;u.sbLast=now;u.sbImp=imp;if(dmgCrash(u,lx,lz,Dx,Dz,imp,kind,ev))u.sbDirty=true}
 /* nuovo modello per una pattuglia già danneggiata: si allinea alla sua rete */
 function sbSync(a,u){if(!u.sb)return;const D=dmgPrep(a,['l1']);D.on=true;sbModel(a,u,{x:u.x,z:u.z,h:u.h,y:u.y,vx:0,vz:0,u},true)}
 function pdRndD(){return Math.random()}
@@ -18994,8 +19029,8 @@ function dmgSound(imp,glass){const c=pdAudio&&pdAudio.ctx;if(!c)return;try{const
   const src=c.createBufferSource();src.buffer=b;const f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=380+imp*25;const g=c.createGain();g.gain.value=Math.min(.9,imp/30);src.connect(f);f.connect(g);g.connect(c.destination);src.start(t);
   if(glass){const s2=c.createBufferSource();s2.buffer=b;const f2=c.createBiquadFilter();f2.type='highpass';f2.frequency.value=3500;const g2=c.createGain();g2.gain.value=.35;s2.connect(f2);f2.connect(g2);g2.connect(c.destination);s2.start(t+.03)}}catch(e){}}
 /* --- effetti sulla guida del giocatore --- */
-const CARDMG={ef:1,pull:0,lk:1,drag:0,vmax:56,tp:0,tr:0};
-function dmgDrive(){dmgDrive0();TYRE.apply()}
+const CARDMG={ef:1,pull:0,lk:1,drag:0,vmax:56,tp:0,tr:0,vib:0,soft:1};
+function dmgDrive(){dmgDrive0();TYRE.apply();VDS.guida()}
 function dmgDrive0(){const D=carA.dmg;if(!D||!D.on){CARDMG.ef=1;CARDMG.pull=0;CARDMG.lk=1;CARDMG.drag=0;CARDMG.vmax=56;CARDMG.tp=0;CARDMG.tr=0;return}let tp=0,tr=0;for(let k=0;k<4;k++){if(!D.wl[k])continue;const w=carA.wh[k],p=w&&w.parent?w.parent.position:{x:0,z:0};tp+=p.z>0?.05:-.05;tr+=p.x>0?-.07:.07}CARDMG.tp=tp;CARDMG.tr=tr;
  const z=D.zones,lost=D.wl.filter(Boolean).length,R=D.R;CARDMG.ef=D.engine<.06?0:.3+.7*D.engine;CARDMG.pull=Math.max(-.05,Math.min(.05,(z[1]-z[0])*.03+(R?(R.hubs[0].toe+R.hubs[1].toe)*.5:0)));   /* tira da un lato soprattutto se la rete ha davvero storto i mozzi (convergenza); prima bastava il muso ammaccato per sterzare di 0,08 rad */for(let k=0;k<4;k++){if(!D.wl[k])continue;const w=carA.wh[k],p=w&&w.parent?w.parent.position:{x:0,z:0};CARDMG.pull+=(p.x>0?-1:1)*(p.z>0?.16:.07)}CARDMG.lk=1-Math.min(.45,(z[0]+z[1])*.22);CARDMG.drag=lost*1.8+(R?R.hubs.reduce((s,q)=>s+Math.abs(q.toe)+Math.abs(q.camber)*.5,0)*2.5:0);CARDMG.vmax=lost?14:56-Math.round((1-D.engine)*16)}
 function dmgHud(force){const el=$('#dmg');if(!el)return;const D=carA.dmg,ty=carA.tyre,nf=ty?ty.f.filter(v=>v>.3).length:0,ns=ty?ty.shred.filter(Boolean).length:0;if((!D||!D.on)&&!nf){el.style.display='none';return}el.style.display='block';const p=D&&D.on?Math.round(Math.min(1,D.total)*100):0;el.textContent='🔧 '+p+'%'+(D&&D.on&&D.engine<.06?' · motore KO':D&&D.on&&D.engine<.5?' · motore':'')+(D&&D.on&&D.wl.some(Boolean)?' · ruota':'')+(ns?' · cerchi a terra '+ns:nf?' · gomme a terra '+nf:'');el.style.background=p>70||ns?'rgba(170,30,30,.85)':p>35||nf?'rgba(190,120,20,.85)':'rgba(20,24,30,.78)'}
@@ -19009,7 +19044,8 @@ function dmgRepairStart(){if(!inCar)return;const D=carA.dmg,fl=!!(carA.tyre&&car
 function dmgRepairStep(dt){if(!DMGREP)return;const b=$('#rep');if(!inCar||Math.hypot(V.vx,V.vz)>1.5){DMGREP=null;toast('Riparazione interrotta');if(b)b.textContent='🔧 Ripara l\'auto';return}DMGREP.t+=dt;const p=Math.min(1,DMGREP.t/DMGREP.dur);if(b)b.textContent='🔧 '+Math.round(p*100)+'%';if(p>=1){DMGREP=null;dmgRepair(carA);dmgDrive();dmgHud();if(b)b.textContent='🔧 Ripara l\'auto';toast('Auto riparata')}}
 let DMGRT=0;function dmgUi(dt){dmgRepairStep(dt);const b=$('#rep');if(!b)return;DMGRT+=dt;if(DMGRT<.25)return;DMGRT=0;const D=carA.dmg,show=!!(inCar&&((D&&D.on)||(carA.tyre&&carA.tyre.f.some(v=>v>0))||V.flip))||!!DMGREP;b.style.display=show?'block':'none'}
 /* urto fra due auto (giocatore o pattuglia) da pdCollide: punto di contatto, direzione verso l'interno dell'auto, velocità d'urto */
-function dmgPair(b,px,pz,nx,nz,imp){if(imp*.8<3.2)return;if(b.p){carHit(carA,{x:C.x,z:C.z,h:C.h,y:V.y,vx:V.vx,vz:V.vz,player:true},px,pz,nx,nz,imp,'car')}else if(b.u){const u=b.u;if(u.mdl)carHit(u.mdl,{x:u.x,z:u.z,h:u.h,y:u.y,vx:u.vx,vz:u.vz,u},px,pz,nx,nz,imp,'car');else{const c=Math.cos(u.h),s=Math.sin(u.h),dx=px-u.x,dz=pz-u.z;dmgUnitCrash(u,dx*c-dz*s,dx*s+dz*c,nx*c-nz*s,nx*s+nz*c,imp,'car')}}}
+function dmgPair(b,px,pz,nx,nz,imp,other){if(imp*.8<3.2)return;const xtra=other&&VDS.ok?{m2:VDS.massaDi(other.p?{player:true}:{u:other.u}),facciaAltro:VDS.facciaDi(other,px,pz,-nx,-nz),id:VDS.idCoppia(b,other)}:null;
+ if(b.p){carHit(carA,{x:C.x,z:C.z,h:C.h,y:V.y,vx:V.vx,vz:V.vz,player:true},px,pz,nx,nz,imp,'car',xtra)}else if(b.u){const u=b.u;if(u.mdl)carHit(u.mdl,{x:u.x,z:u.z,h:u.h,y:u.y,vx:u.vx,vz:u.vz,u},px,pz,nx,nz,imp,'car',xtra);else{const c=Math.cos(u.h),s=Math.sin(u.h),dx=px-u.x,dz=pz-u.z,lx=dx*c-dz*s,lz=dx*s+dz*c,Dx=nx*c-nz*s,Dz=nx*s+nz*c,ev=VDS.evento(null,{u},lx,lz,Dx,Dz,imp,'car',xtra);dmgUnitCrash(u,lx,lz,Dx,Dz,imp,'car',false,ev)}}}
 
 /* Pattuglia dei Carabinieri: ogni tanto arriva, parcheggia, i due agenti entrano a prendere un caffè e poi ripartono */
 const CCa=mkAlfa(1,0x0d1b48),ccS={x0:2.1,x1:4.1,z0:2.6,z1:7.4,on:0,nc:1};solids.push(ccS);CCa.g.visible=false;
@@ -19096,7 +19132,7 @@ function drive(dt,ix,iy){const hb=!!(K[' ']||K.hb);if(V.rol){crRollDrive(dt);ret
  for(const o of [1.3,-1.3]){const fx=nx+sn*o,fz=nz+cn*o,q=push(fx,fz,1),ux=q[0]-fx,uz=q[1]-fz;if(q[2]&&(ux||uz)){const l=Math.hypot(ux,uz),mx=ux/l,mz=uz/l,vn=V.vx*mx+V.vz*mz;try{VITA.carHitBy(PO.s,-vn)}catch(e){}nx+=ux;nz+=uz;{const so=PO.s,lo=!!(so&&so.lo),vt=V.vx*-mz+V.vz*mx;crScrape(fx-mx,V.y+(lo?.48:.38),fz-mz,-mz,mx,vt,Math.max(0,-vn));const lat=-cn*mx+sn*mz,vl0=V.vz*sn-V.vx*cn;if(lo&&Math.abs(lat)>.75&&vl0*lat<-10&&!V.rol){V.rlF=V.vx*sn+V.vz*cn;rlStart(V,vl0,.3,'guardrail',.6,0)}}if(vn<0){if(vn<-3.2)carHit(carA,{x:C.x,z:C.z,h:C.h,y:V.y,vx:V.vx,vz:V.vz,player:true},fx-mx,fz-mz,mx,mz,-vn);const e=vn<-8?1.05:vn<-4?1.15:1.25,ox=V.vx,oz=V.vz;V.vx=(V.vx-e*vn*mx)*.97;V.vz=(V.vz-e*vn*mz)*.97;if(vn<-2){const rx=fx-mx-C.x,rz=fz-mz-C.z;V.ywW=cl(V.ywW+(rz*(V.vx-ox)-rx*(V.vz-oz))*.16,-2.4,2.4)}}}}
  if(WORLD.wet(nx,nz)||!WORLD.inside(nx,nz,40)){nx=C.x;nz=C.z;V.vx*=-.3;V.vz*=-.3}
  C.x=nx;C.z=nz;P.x=nx;P.z=nz;groundCar(dt);P.y=V.y;vf=V.vx*sn+V.vz*cn;cs.v=vf;
- V.af=(vf-f0)/Math.max(dt,1e-3);V.al=w*vf;const k=Math.min(1,dt*6);V.pt+=(cl(-V.af*.005,-.06,.06)-V.pt)*k;V.rl+=(cl(-V.al*.01,-.07,.07)-V.rl)*k}
+ V.af=(vf-f0)/Math.max(dt,1e-3);V.al=w*vf;const sf=CARDMG.soft||1,k=Math.min(1,dt*6/sf);V.pt+=(cl(-V.af*.005*sf,-.09,.09)-V.pt)*k;V.rl+=(cl(-V.al*.01*sf,-.1,.1)-V.rl)*k}   /* ammortizzatori danneggiati (solver): beccheggio e rollio più ampi e lenti */
 function parked(dt){const k=Math.exp(-2.2*dt);V.vx*=k;V.vz*=k;if(Math.hypot(V.vx,V.vz)<.05){V.vx=V.vz=0}else{const q=push(C.x+V.vx*dt,C.z+V.vz*dt,1.2);C.x=q[0];C.z=q[1]}cs.v=V.vx*Math.sin(C.h)+V.vz*Math.cos(C.h);V.st*=k;V.pt*=k;V.rl*=k;groundCar(dt)}
 let camYaw=S.car.h,lookYaw=0,lookPitch=0,lookT=0,view=0,orbYaw=0,orbPitch=.35;
 function placeCam(dt){let d=9;
@@ -19685,8 +19721,8 @@ const VEHX={t:0,cmd:null,vl:0,attritoDAN:0,tempAria:18,hudT:0,panT:0,tab:'quadro
   const acceso0=VEH.motore.acceso;IOW_FISICA.passo(VEH,dt,inp,VEHX.amb());if(!acceso0&&VEH.motore.acceso)toast('Motore avviato');return VEH.v},
  /* ogni fotogramma: danni → fisica, ECU, quadro, pannello */
  step(dt){if(!VEHOK)return;VEHX.t+=dt;const D=carA.dmg,R=D&&D.R,ty=carA.tyre;
-  const S=(D&&D.on)||ty?{zones:D&&D.on?D.zones:[0,0,0,0,0,0],fC:R?R.fC:0,rC:R?R.rC:0,sL:R?R.sL:0,sR:R?R.sR:0,fS:R?R.fS:0,hubs:R?R.hubs:[],engine:D&&D.on?D.engine:1,wl:D?D.wl:null,lampF:R?R.lampF:null,lampR:R?R.lampR:null,tyreF:ty?ty.f:null,tyreShred:ty?ty.shred:null}:null;
-  const ctx=IOW_DANNI.aggiorna(DANS,dt,S,VEH);VEHX.attritoDAN=VEH.mod.attritoExtra;
+  const S=VDS.ok?VDS.step(dt):((D&&D.on)||ty?{zones:D&&D.on?D.zones:[0,0,0,0,0,0],fC:R?R.fC:0,rC:R?R.rC:0,sL:R?R.sL:0,sR:R?R.sR:0,fS:R?R.fS:0,hubs:R?R.hubs:[],engine:D&&D.on?D.engine:1,wl:D?D.wl:null,lampF:R?R.lampF:null,lampR:R?R.lampR:null,tyreF:ty?ty.f:null,tyreShred:ty?ty.shred:null}:null);   /* interfaccia rete → meccanica costruita dal solver (zone nominate comprese) */
+  const ctx=IOW_DANNI.aggiorna(DANS,dt,S,VEH);if(VDS.st)IOW_SOLVER.applicaMod(VDS.st,VEH.mod);VEHX.attritoDAN=VEH.mod.attritoExtra;
   if(!inCar){VEH.v=0;IOW_FISICA.passo(VEH,dt,{acc:0,freno:1,iy:0},{pendenza:0,superficie:'asfalto',acqua:0,tempAria:VEHX.tempAria,quota:0,vento:0});VEH.v=0}
   IOW_ECU.passo(ECUN,dt,{scivolamentoLaterale:inCar?VEHX.vl:0,danni:ctx,luci:inCar&&VEHX.notte(),notte:inCar&&VEHX.notte(),portaAperta:!!S_door(),escAttivo:true});
   if(inCar&&VEH.carburante.vuoto&&!VEH.motore.acceso&&VEHX.toastT<VEHX.t&&Math.abs(cs.v)<.5){VEHX.toastT=VEHX.t+30;toast('Serbatoio vuoto: cerca un benzinaio (⛽ sulla minimappa) o apri il pannello 🚗')}
@@ -19754,28 +19790,29 @@ const VEHX={t:0,cmd:null,vl:0,attritoDAN:0,tempAria:18,hudT:0,panT:0,tab:'quadro
  pdv(){if(!inCar||Math.abs(cs.v)>=.5||!REAL.nearFuel)return null;return REAL.nearFuel(C.x,C.z)},
  rifornisci(litri){const need=Math.min(litri,VEH.par.serbatoio-VEH.carburante.litri);if(need<=.05){toast('Serbatoio già pieno');return}const costo=Math.round(need*VEHX.prezzoL);if(S.cents<=0){toast('Fondi insufficienti');return}const paga=Math.min(costo,S.cents),L=paga/VEHX.prezzoL;IOW_FISICA.rifornisci(VEH,L);S.cents-=paga;S.log.push({t:Date.now(),w:'Gasolio '+L.toFixed(1)+' L',c:-paga});if(S.log.length>30)S.log.shift();save();hud();toast('Rifornimento: '+L.toFixed(1)+' L (−'+eur(paga)+')')},
  ripara(chiave,idx){const pre=IOW_DANNI.preventivo(DANS),voce=chiave==='tutto'?{costo:pre.totale,nome:'tutte le riparazioni'}:pre.voci.find(q=>q.chiave===chiave&&(idx===undefined||q.idx===idx));if(!voce)return;if(S.cents<voce.costo){toast('Fondi insufficienti: servono '+eur(voce.costo));return}
-  VEHX.inOfficina=true;try{const costo=IOW_DANNI.ripara(DANS,chiave,idx,VEH);S.cents-=costo;S.log.push({t:Date.now(),w:'Officina: '+voce.nome,c:-costo});if(S.log.length>30)S.log.shift();
+  VEHX.inOfficina=true;try{const costo=IOW_DANNI.ripara(DANS,chiave,idx,VEH);VDS.ripara(chiave,idx);S.cents-=costo;S.log.push({t:Date.now(),w:'Officina: '+voce.nome,c:-costo});if(S.log.length>30)S.log.shift();
    if(chiave==='tutto'||chiave==='struttura'||chiave==='pneumatici'||chiave==='fari'||chiave==='fanali'){dmgRepair(carA);dmgDrive();dmgHud()}
    if(chiave==='tutto'||chiave==='refrigerante'||chiave==='radiatore')VEH.mod.refrigerante=DANS.refrigerante;if(chiave==='tutto')IOW_ECU.cancellaDTC(ECUN);
    save();hud();toast('Riparato: '+voce.nome+' (−'+eur(costo)+')')}finally{VEHX.inOfficina=false}},
- esporta(){try{const rep={gioco:'ITALIA OPEN WORLD',versioneMotore:IOW_FISICA.versione,generato:new Date().toISOString(),natura:'SIMULAZIONE SOFTWARE: centraline virtuali, nessun dato da veicolo reale',telemetria:IOW_FISICA.telemetria(VEH),parametriVeicolo:VEH.par,ecu:IOW_ECU.rapporto(ECUN),danni:IOW_DANNI.analisi(DANS),calibrazione:VEHX.cal||IOW_CALIB.esegui(VEH.par.id),posizione:{x:+C.x.toFixed(1),z:+C.z.toFixed(1),luogo:REAL.hudText(C.x,C.z)}};
+ esporta(){try{const rep={gioco:'ITALIA OPEN WORLD',versioneMotore:IOW_FISICA.versione,generato:new Date().toISOString(),natura:'SIMULAZIONE SOFTWARE: centraline virtuali, nessun dato da veicolo reale',telemetria:IOW_FISICA.telemetria(VEH),parametriVeicolo:VEH.par,ecu:IOW_ECU.rapporto(ECUN),danni:IOW_DANNI.analisi(DANS),solverDanni:VDS.analisi(),profiloDanno:VDS.prof?{id:VDS.prof.id,nome:VDS.prof.nome,certificato:VDS.prof.certificato,nota:VDS.prof.nota}:null,calibrazione:VEHX.cal||IOW_CALIB.esegui(VEH.par.id),posizione:{x:+C.x.toFixed(1),z:+C.z.toFixed(1),luogo:REAL.hudText(C.x,C.z)}};
    const b=new Blob([JSON.stringify(rep,null,1)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='rapporto-veicolo-'+Date.now()+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast('Rapporto scaricato')}catch(e){toast('Esportazione non riuscita: '+e.message)}},
  /* --- salvataggio e ripristino (carburante, temperature, danni meccanici, codici, carrozzeria deformata, gomme) --- */
- serializza(){if(!VEHOK)return null;const D=carA.dmg,sb=carA.sb;try{return{v:1,fisica:IOW_FISICA.serializza(VEH),danni:IOW_DANNI.serializza(DANS),dtc:IOW_ECU.leggiDTC(ECUN).map(d=>({ecu:d.ecu,codice:d.codice,conteggio:d.conteggio})),batteria:+ECUN.batteria.soc.toFixed(3),modo:VEH.cambio.modo,
+ serializza(){if(!VEHOK)return null;const D=carA.dmg,sb=carA.sb;try{return{v:1,fisica:IOW_FISICA.serializza(VEH),danni:IOW_DANNI.serializza(DANS),dtc:IOW_ECU.leggiDTC(ECUN).map(d=>({ecu:d.ecu,codice:d.codice,conteggio:d.conteggio})),batteria:+ECUN.batteria.soc.toFixed(3),modo:VEH.cambio.modo,solver:VDS.serializza(),
    sb:D&&D.on&&sb?{P:Array.from(sb.P,x=>Math.round(x*1000)/1000),br:Array.from(sb.br).join(''),free:Array.from(sb.free).join(''),W:sb.W,hits:sb.hits}:null,tyre:carA.tyre?{f:carA.tyre.f.slice(),tgt:carA.tyre.tgt.slice(),rate:carA.tyre.rate.slice(),shred:carA.tyre.shred.slice(),d:carA.tyre.d.slice()}:null}}catch(e){return null}},
  ripristina(s){if(!VEHOK||!s||typeof s!=='object')return;try{if(s.fisica)IOW_FISICA.ripristina(VEH,s.fisica);if(s.danni)IOW_DANNI.ripristina(DANS,s.danni);if(Number.isFinite(s.batteria))ECUN.batteria.soc=cl(s.batteria,0,1);VEH.motore.acceso=false;VEH.motore.rpm=0;
    if(Array.isArray(s.dtc))for(const d of s.dtc){if(ECUN.ecu[d.ecu]&&/^[PCBU]\d{4}$/.test(d.codice)){IOW_ECU.setDTC(ECUN,d.ecu,d.codice,true,null);IOW_ECU.setDTC(ECUN,d.ecu,d.codice,false);const q=ECUN.ecu[d.ecu].dtc[d.codice];if(q)q.conteggio=Math.max(1,d.conteggio|0)}}
    if(s.tyre&&Array.isArray(s.tyre.f)&&s.tyre.f.length===4){const t=TYRE.st(carA);t.f=s.tyre.f.map(Number);t.tgt=s.tyre.tgt.map(Number);t.rate=s.tyre.rate.map(Number);t.shred=s.tyre.shred.map(x=>x?1:0);t.d=s.tyre.d.map(Number)}
    if(s.sb&&Array.isArray(s.sb.P)&&s.sb.P.length===SBT.P0.length&&typeof s.sb.br==='string'&&s.sb.br.length===SBT.NB){const sb=sbNew(SBT);sb.P.set(s.sb.P);for(let i=0;i<SBT.NB;i++)sb.br[i]=s.sb.br[i]==='1'?1:0;if(typeof s.sb.free==='string'&&s.sb.free.length===SBT.N)for(let i=0;i<SBT.N;i++)sb.free[i]=s.sb.free[i]==='1'?1:0;sb.W=+s.sb.W||0;sb.hits=+s.sb.hits||0;carA.sb=sb;
     const D=dmgPrep(carA,['l0','l1']);D.on=true;sbModel(carA,carA,{x:C.x,z:C.z,h:C.h,y:V.y,vx:0,vz:0,player:true},true);dmgDrive();dmgHud()}
-   IOW_DANNI.aggiorna(DANS,0,null,VEH)}catch(e){console.error('ripristino veicolo',e)}},
+   if(s.solver)VDS.ripristina(s.solver);IOW_DANNI.aggiorna(DANS,0,null,VEH)}catch(e){console.error('ripristino veicolo',e)}},
 };
 function S_door(){return !!(S&&S.door)}
 if(VEHOK){
  /* urti del giocatore → storico e energia stimata (la deformazione la calcola già la rete del gioco) */
- {const carHit0=carHit;carHit=function(a,car,wx,wz,dirx,dirz,imp,kind){carHit0(a,car,wx,wz,dirx,dirz,imp,kind);if(a===carA&&imp>=3.2){const c=Math.cos(car.h),s=Math.sin(car.h),dx=wx-car.x,dz=wz-car.z;IOW_DANNI.urto(DANS,{lx:dx*c-dz*s,lz:dx*s+dz*c,imp,kind:kind||'wall',massa:VEH.par.massa,t:VEHX.t})}}}
+ /* (V30) lo storico degli urti lo scrive il solver dentro carHit → VDS.evento (energia propria ripartita, mai contata due volte) */
+ if(!VDS.ok){const carHit0=carHit;carHit=function(a,car,wx,wz,dirx,dirz,imp,kind,xtra){carHit0(a,car,wx,wz,dirx,dirz,imp,kind,xtra);if(a===carA&&imp>=3.2){const c=Math.cos(car.h),s=Math.sin(car.h),dx=wx-car.x,dz=wz-car.z;IOW_DANNI.urto(DANS,{lx:dx*c-dz*s,lz:dx*s+dz*c,imp,kind:kind||'wall',massa:VEH.par.massa,t:VEHX.t})}}}else VDS.ready();
  /* riparazione d'emergenza (pulsante esistente): carrozzeria e gomme come prima, meccanica solo al 70% */
- {const dmgRepair0=dmgRepair;dmgRepair=function(a){dmgRepair0(a);if(a===carA&&!VEHX.inOfficina){IOW_DANNI.ripara(DANS,'emergenza',undefined,VEH);if(VEHX.open)VEHX.render()}}}
+ {const dmgRepair0=dmgRepair;dmgRepair=function(a){dmgRepair0(a);if(a===carA&&!VEHX.inOfficina){IOW_DANNI.ripara(DANS,'emergenza',undefined,VEH);VDS.ripara('emergenza');if(VEHX.open)VEHX.render()}}}
  const exitCar0=exitCar;exitCar=function(){const was=inCar;exitCar0();if(was&&!inCar){VEH.motore.acceso=false;VEH.motore.rpm=0}};
  VEHX.ripristina(S.veicolo);if(inCar)setTimeout(()=>VEHX.avvioAuto(),800);
  {let km0=VEH.odometro,L0=VEH.carburante.consumoTot;setInterval(()=>{const dk=VEH.odometro-km0,dL=VEH.carburante.consumoTot-L0;if(dk>500){VEHX.consumoMedia=dL/dk*1e5;km0=VEH.odometro;L0=VEH.carburante.consumoTot}},5000)}
@@ -19799,7 +19836,7 @@ function step(dt){const ts=performance.now()/1000;dmgDrive();dmgStep(dt);VEHX.st
  for(const t of TR){const a=(pz-t.z)*t.d,cz=(CCa.g.position.z-t.z)*t.d,ca=(C.z-t.z)*t.d,tv=((Math.abs(px-t.x)<2&&a>0&&a<9)||(!inCar&&Math.abs(C.x-t.x)<2&&ca>0&&ca<9)||(CCa.g.visible&&Math.abs(CCa.g.position.x-t.x)<2&&cz>0&&cz<9))?0:9;t.v+=(tv-t.v)*Math.min(1,dt*3);t.z+=t.d*t.v*dt;if(Math.abs(t.z)>62)t.z=-t.d*62;t.m.position.set(t.x,0,t.z);t.s.x0=t.x-1;t.s.x1=t.x+1;t.s.z0=t.z-2.4;t.s.z1=t.z+2.4;t.a.wh.forEach(w=>{w.rotation.x+=t.v*dt/.332})}
  if(itemT>0){itemT-=dt;if(itemT<=0)for(const k in IM)if(IM[k].isGroup)IM[k].visible=false}
  walkA(P.m,ts*8,Math.min(1,P.sp/4.2)*.8);
- P.m.position.set(P.x,P.y,P.z);carG.position.set(C.x,V.y,C.z);carG.rotation.set(V.pt+V.tp+CARDMG.tp,C.h,V.rl+V.tr+CARDMG.tr);if(V.rol)crRollPose(carG,C.x,C.z,C.h,V.y,V.rol);else if(V.flip)crRollPose(carG,C.x,C.z,C.h,V.y,V.flip);
+ P.m.position.set(P.x,P.y,P.z);carG.position.set(C.x,V.y,C.z);{const vb=CARDMG.vib>.01&&!V.rol&&!V.flip?CARDMG.vib*.011:0,ph=vb?performance.now()*.001*Math.max(2,Math.abs(cs.v)/2.02)*6.283:0;carG.rotation.set(V.pt+V.tp+CARDMG.tp+(vb?Math.sin(ph)*vb:0),C.h,V.rl+V.tr+CARDMG.tr+(vb?Math.cos(ph*1.3)*vb*.7:0))}if(V.rol)crRollPose(carG,C.x,C.z,C.h,V.y,V.rol);else if(V.flip)crRollPose(carG,C.x,C.z,C.h,V.y,V.flip);
  carA.wh.forEach(w=>{w.rotation.x+=cs.v*dt/.332});if(carA.tyre)TYRE.step(carA,dt,cs.v);carA.st.forEach(w=>{w.rotation.y=-V.st+(w.userData.toe||0)});
  const py=inCar?V.y:P.y;sun.target.position.set(px,py,pz);REAL.sunPos(px,py,pz);worldUpdate(px,pz,0);VITA.update(dt,px,pz);mmT-=dt;if(mmT<=0){mmT=.07;drawMini()}znT-=dt;if(znT<=0){znT=.5;const zz=REAL.hudText(px,pz);if(zz!==znLast){znLast=zz;$('#zn').textContent=zz;$('#zn').style.display=zz?'block':'none'}}
  placeCam(dt);armStep(dt);
@@ -19828,7 +19865,7 @@ if(inCar&&RADIO.cur>0){const once=()=>{radioApply(false);removeEventListener('po
 $('#mx').addEventListener('pointerdown',e=>{e.stopPropagation();openMap(false)});
 addEventListener('keydown',e=>{if(e.key==='m'||e.key==='M')openMap(!mapOpen)});
 requestAnimationFrame(frame);
-window.__iow={ARM,ARMCAT,ARMGLB,GLBC,ARMV,AFX,ASND,armEquip,armUnequip,armShoot,armRay,armReload,armOpen,armClose,armSelect,armStep,armView,armBuild,armPose,armIK,armSnd,armBallistic,get yaw(){return yaw},set yaw(v){yaw=v},get pitch(){return pitch},set pitch(v){pitch=v},get fp(){return fp},set fp(v){fp=v},get inCar(){return inCar},R,AMBCFG,PD,DSP,VOICE,EV,RAD,pdAudio,ambUpdate,CARS,PEDS,CSOL,ADJ,WORLD,REAL,VITA,sc,CHK,CHS,CSO,worldUpdate,GY,drawMini,drawMap,openMap,MAPC,groundCar,rayBox,get mapOpen(){return mapOpen},get S(){return S},ITEMS,buy,step,near,push,solids,P,C,cs,doorS,joy,K,load,save,NP,TR,INB,VP,VN,VC,VI,CC,OF,CCa,ccS,ccStep,carA,doorS,V,placeCam,drive,cam,getView:()=>view,setView:v=>{view=v},look:()=>[lookYaw,lookPitch,lookT],lookBy,CARDMG,carHit,dmgApply,dmgRepair,dmgDrive,dmgPrep,DMGBOX,DEB,dmgRepairStart,get DMGREP(){return DMGREP},SBT,SBST,sbCrash,sbDerive,sbNew,sbBind,sbSkin,dmgKind,sbSync,dmgCrash,SBQ,SBF,sbQueueStep,dmgUnitCrash,get PO(){return PO},VEH,ECUN,DANS,VEHX};
+window.__iow={VDS,SBT,sbNew,sbCrash,sbDerive,dmgCrash,carHit,dmgPair,CARDMG,ARMCAT,ARMGLB,GLBC,ARMV,AFX,ASND,armEquip,armUnequip,armShoot,armRay,armReload,armOpen,armClose,armSelect,armStep,armView,armBuild,armPose,armIK,armSnd,armBallistic,get yaw(){return yaw},set yaw(v){yaw=v},get pitch(){return pitch},set pitch(v){pitch=v},get fp(){return fp},set fp(v){fp=v},get inCar(){return inCar},R,AMBCFG,PD,DSP,VOICE,EV,RAD,pdAudio,ambUpdate,CARS,PEDS,CSOL,ADJ,WORLD,REAL,VITA,sc,CHK,CHS,CSO,worldUpdate,GY,drawMini,drawMap,openMap,MAPC,groundCar,rayBox,get mapOpen(){return mapOpen},get S(){return S},ITEMS,buy,step,near,push,solids,P,C,cs,doorS,joy,K,load,save,NP,TR,INB,VP,VN,VC,VI,CC,OF,CCa,ccS,ccStep,carA,doorS,V,placeCam,drive,cam,getView:()=>view,setView:v=>{view=v},look:()=>[lookYaw,lookPitch,lookT],lookBy,CARDMG,carHit,dmgApply,dmgRepair,dmgDrive,dmgPrep,DMGBOX,DEB,dmgRepairStart,get DMGREP(){return DMGREP},SBT,SBST,sbCrash,sbDerive,sbNew,sbBind,sbSkin,dmgKind,sbSync,dmgCrash,SBQ,SBF,sbQueueStep,dmgUnitCrash,get PO(){return PO},VEH,ECUN,DANS,VEHX};
 })();
 </script>
 </body>

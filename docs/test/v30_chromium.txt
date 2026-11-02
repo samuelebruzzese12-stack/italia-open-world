@@ -1,0 +1,17 @@
+# Registro della prova in Chromium senza GPU (Playwright, pagina costruita servita in locale, mappa non caricata: nessuna rete). Scena: test/browser_solver.js. 2 novembre 2026.
+carico 6672
+caricata 12902
+init: {"ok":true}
+v0: "attendo"
+v1_moduli: {"solver":"object","profili":"object","vdsOk":true,"prof":"alfa_159_19_jtdm_150","certificato":false,"Mt":1610,"fsn":{"ant":204000,"post":252000,"lato":90000},"zone":467,"NB":467,"sbT":true,"massaVEH":1610,"mod":"potenza,radiatore,refrigerante,freni,cambio,trasmissione,frizione,differenziale,muRuota,attritoExtra,muMult,massaExtra,perditaCarburante,alternatore,avviamento,vibrazione,stabilita"}
+v2_sali: {"inCar":true,"azione":"Sali in auto"}
+v3_frontale50: {"ms":134.1,"ev":{"kind":"wall","faccia":"ant","vn":13.89,"mEff":1610,"e":0.111,"EnKJ":155.3,"EownKJ":153.4,"u":13.8,"WpKJ":138.3,"crush":0.54,"dup":false},"nEv":1,"storico":1,"nUrti":1,"energiaTotKJ":153.4,"fC":0.54,"engine":0.628,"zones":[1,1,0.01,0.01,0.01,0.01]}
+v4_meccanica: {"comp":{"motore":0.6282511075551171,"radiatore":0,"cambio":0.1360226602015947,"frizione":0.3526865008961725,"differenziale":0.3930648307116297,"centraline":0},"mod":{"potenza":0.739775775288582,"radiatore":0.1,"frizione":0.5468805506273207,"differenziale":0.6054921399625592,"muRuota":[0.981,0.981,1,1],"vibrazione":0},"zone":{"paraurti_ant":{"travi":8,"rotte":0,"snervate":1,"integrita":0.4},"muso":{"travi":52,"rotte":0.038,"snervate":0.22,"integrita":0.841},"abitacolo":{"travi":76,"rotte":0.026,"snervate":0.032,"integrita":0.963}},"comp_fb":{"integrita":0.4,"staccato":false,"massa":12,"attacco":"paraurti_ant","nome":"Paraurti anteriore"},"effetti":{"aderenza":[0.981,0.981,1,1],"vibrazione":0
+v5_duplicato: {"eventiPrima":1,"eventiDopo":2,"duplicati":2,"urtiMecc":1,"energiaAggiuntaKJ":54.75}
+v6_albero_auto: {"albero":{"kind":"tree","quotaOst":0.08,"EownKJ":69.4,"u":9.28,"locale":true},"auto":{"kind":"car","faccia":"lato","mEff":802,"quotaOst":0.375,"EownKJ":16.3,"u":4.51},"eventi":2,"sL":0.01,"sR":0.007}
+v7_passo: {"msPerPasso":0.01,"S":{"fC":0.738,"zone":true,"hubs":4},"analisi":{"cinetica":315.14,"dissipata":309.68,"propria":293.85,"ostacoli":15.84,"rete":190.3},"valido":[]}
+v8_salva: {"hasSolver":true,"eventiSalvati":4,"bytes":8354,"E0":293.85,"E1":293.85,"n0":4,"n1":4}
+v9_ripara: {"on":false,"ruote":[0.7,0.7,0.9792461343157937,0.9867486451753807],"fb":{"integrita":0.7,"staccato":false,"massa":12,"attacco":"paraurti_ant","nome":"Paraurti anteriore"},"aderenza":[1,1,1,1],"motore":0.7,"frizione":0.7}
+v10_muro_guidando: {"inCar":true,"muro":["0.0","14.0"],"passi":15,"tr":[[14,0.2],[14,2.6]],"eventi":1,"energiaKJ":154.9,"duplicati":2,"ultimo":{"kind":"wall","faccia":"ant","vn":13.96,"EownKJ":154.9,"u":13.87,"WpKJ":137.8},"fC":0.535,"v":-0.68,"storico":[{"t":0.2,"faccia":"anteriore","kmh":50,"energiaKJ":154.9,"contro":"wall","lx":0,"lz":2.53}]}
+v12_senza_solver: {"err":null,"fC":0.319,"on":true,"nUrtiMecc":5}
+errori nella pagina: 0 

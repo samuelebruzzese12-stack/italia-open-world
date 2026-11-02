@@ -5,8 +5,8 @@
    Questo modulo aggiunge lo strato MECCANICO: da quella deformazione (misurata, non casuale) ricava lo stato di
    ogni componente e lo collega al motore fisico (motore/fisica_veicolo.js) e alle ECU virtuali (motore/ecu.js).
 
-   Componenti: radiatore, motore, cambio, sterzo, sospensioni ×4, freni ×4, batteria, scarico, serbatoio, impianto
-   elettrico, sensori ruota ×4, fari ×2, fanali ×2, pneumatici ×4 (stato dal gioco), struttura (zone ×6).
+   Componenti: radiatore, motore, cambio, frizione, differenziale, sterzo, sospensioni ×4, freni ×4, batteria, scarico,
+   serbatoio, impianto elettrico, centraline, sensori ruota ×4, fari ×2, fanali ×2, pneumatici ×4 (stato dal gioco), struttura (zone ×6).
    Ogni componente ha integrità 0..1, soglie configurabili (SOGLIE), stato testuale, collegamenti (quale dato
    strutturale lo governa) e costo di riparazione.
 
@@ -14,6 +14,8 @@
      radiatore → scambio termico ridotto e perdita progressiva di refrigerante → temperatura sale → protezione EMS → danno termico al motore
      motore    → potenza ridotta fino all'arresto (deriva dalla rete deformabile + danno termico accumulato)
      cambio    → cambiate più lente; la TCU limita le marce o blocca il cambio
+     frizione  → coppia trasmissibile ridotta (slitta sotto carico); differenziale → trazione ridotta fino a nulla
+     centraline → con la scatola delle ECU nel vano motore schiacciata le centraline non essenziali vanno fuori linea
      sterzo    → corsa dello sterzo ridotta e tiraggio laterale (il gioco usa già la convergenza dei mozzi)
      sospensioni → attrito di avanzamento, assetto storto (il gioco inclina già l'auto con i mozzi piegati)
      freni     → forza frenante ridotta per ruota (ripartizione reale nel motore fisico)
@@ -21,7 +23,10 @@
      scarico   → nessun effetto sulla potenza oltre il 20% (rumore non modellato); scarico staccato segnalato
      serbatoio → perdita di carburante proporzionale alla deformazione posteriore/laterale
    Ciò che NON è modellato: temperatura dei freni, usura meccanica nel tempo, elettronica di dettaglio.
-   L'energia d'urto è una STIMA del modello (½·m·v_n²), non una misura di crash test. */
+   L'energia d'urto è una STIMA del modello (½·m·v_n², oppure l'energia propria calcolata dal Vehicle Damage Solver,
+   motore/danni_solver.js, quando viene passata), non una misura di crash test.
+   Interfaccia con la rete deformabile: l'oggetto S di aggiorna() (documentato sotto) lo costruisce il solver
+   (IOW_SOLVER.statoStruttura) dalle grandezze di sbDerive; questo modulo non legge mai la rete direttamente. */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
   else root.IOW_DANNI = factory();
@@ -34,24 +39,26 @@
   const SOGLIE = {
     radiatore: { inizio: 0.05, fine: 0.38 }, cambio: { inizio: 0.30, fine: 0.85 }, batteria: { inizio: 0.18, fine: 0.60 }, elettrico: { inizio: 0.22, fine: 0.75 },
     scarico: { inizio: 0.10, fine: 0.50 }, serbatoio: { inizio: 0.40, fine: 0.80 }, sospCamber: 0.4, sterzoToe: 0.45, sensoreRuotaToe: 0.18, sensoreRuotaCamber: 0.25,
-    termico: { inizio: 118, fine: 135 },
+    termico: { inizio: 118, fine: 135 }, frizione: { inizio: 0.34, fine: 0.9 }, differenziale: { inizio: 0.36, fine: 0.9 }, centraline: { inizio: 0.26, fine: 0.7 },
   };
-  const COSTI = { struttura: 90000, radiatore: 35000, motore: 420000, cambio: 260000, sterzo: 65000, sospensione: 42000, freno: 26000, batteria: 15000, scarico: 32000, serbatoio: 55000, elettrico: 48000, sensoreRuota: 9000, faro: 18000, fanale: 12000, pneumatico: 12000, refrigerante: 4000 };
-  const NOMI = { radiatore: 'Radiatore', motore: 'Motore', cambio: 'Cambio e trasmissione', sterzo: 'Sterzo', sospensioni: 'Sospensioni', freni: 'Freni', batteria: 'Batteria', scarico: 'Scarico', serbatoio: 'Serbatoio', elettrico: 'Impianto elettrico', sensoriRuota: 'Sensori ruota (ABS)', fari: 'Fari', fanali: 'Fanali', pneumatici: 'Pneumatici', struttura: 'Struttura e carrozzeria' };
+  const COSTI = { struttura: 90000, radiatore: 35000, motore: 420000, cambio: 260000, frizione: 75000, differenziale: 120000, centraline: 90000, sterzo: 65000, sospensione: 42000, freno: 26000, batteria: 15000, scarico: 32000, serbatoio: 55000, elettrico: 48000, sensoreRuota: 9000, faro: 18000, fanale: 12000, pneumatico: 12000, refrigerante: 4000 };
+  const NOMI = { radiatore: 'Radiatore', motore: 'Motore', cambio: 'Cambio e trasmissione', frizione: 'Frizione', differenziale: 'Differenziale', centraline: 'Centraline elettroniche', sterzo: 'Sterzo', sospensioni: 'Sospensioni', freni: 'Freni', batteria: 'Batteria', scarico: 'Scarico', serbatoio: 'Serbatoio', elettrico: 'Impianto elettrico', sensoriRuota: 'Sensori ruota (ABS)', fari: 'Fari', fanali: 'Fanali', pneumatici: 'Pneumatici', struttura: 'Struttura e carrozzeria' };
   const RUOTE = ['ant. sin.', 'ant. des.', 'post. sin.', 'post. des.'];
 
   function crea() {
     return {
-      v: 1, comp: { radiatore: 1, motore: 1, cambio: 1, sterzo: 1, sospensioni: [1, 1, 1, 1], freni: [1, 1, 1, 1], batteria: 1, scarico: 1, serbatoio: 1, elettrico: 1, sensoriRuota: [1, 1, 1, 1], fari: [1, 1], fanali: [1, 1], pneumatici: [1, 1, 1, 1], struttura: [1, 1, 1, 1, 1, 1] },
+      v: 1, comp: { radiatore: 1, motore: 1, cambio: 1, frizione: 1, differenziale: 1, centraline: 1, sterzo: 1, sospensioni: [1, 1, 1, 1], freni: [1, 1, 1, 1], batteria: 1, scarico: 1, serbatoio: 1, elettrico: 1, sensoriRuota: [1, 1, 1, 1], fari: [1, 1], fanali: [1, 1], pneumatici: [1, 1, 1, 1], struttura: [1, 1, 1, 1, 1, 1] },
       refrigerante: 1, termico: 1, perditaCarburante: 0, storico: [], energiaTot: 0, deformazioneMax: 0, nUrti: 0, riparazioni: [], ultimo: null,
     };
   }
 
-  /* registra un urto (dal gioco): lx,lz punto in coordinate auto; imp velocità normale d'urto [m/s]; kind 'wall'|'car'|'pole'|'rail' */
+  /* registra un urto (dal gioco o dal solver): lx,lz punto in coordinate auto; imp velocità normale d'urto [m/s]; kind 'wall'|'car'|'pole'|'tree'|'rail'|'ground';
+     energia [J] opzionale = energia propria già ripartita dal solver (altrimenti ½·m·imp²); duplicato = evento già contato (non si somma) */
   function urto(st, u) {
-    const m = u.massa || 1600, E = 0.5 * m * u.imp * u.imp;   // J: energia cinetica associata alla componente normale della velocità (stima)
+    const m = u.massa || 1600, E = Number.isFinite(u.energia) ? Math.max(0, u.energia) : 0.5 * m * u.imp * u.imp;   // J: energia (stima)
     const faccia = Math.abs(u.lz) >= Math.abs(u.lx) ? (u.lz > 0 ? 'anteriore' : 'posteriore') : (u.lx > 0 ? 'lato sinistro' : 'lato destro');
     const e = { t: u.t !== undefined ? +u.t.toFixed(1) : null, faccia, kmh: +(u.imp * 3.6).toFixed(0), energiaKJ: +(E / 1000).toFixed(1), contro: u.kind || 'ostacolo', lx: +u.lx.toFixed(2), lz: +u.lz.toFixed(2) };
+    if (u.duplicato) { st.energiaTot += E; if (st.ultimo) st.ultimo.energiaKJ = +((st.ultimo.energiaKJ * 1000 + E) / 1000).toFixed(1); return st.ultimo }
     st.storico.push(e); if (st.storico.length > 40) st.storico.splice(0, 10); st.energiaTot += E; st.nUrti++; st.ultimo = e;
     return e;
   }
@@ -67,6 +74,12 @@
       C.radiatore = min(C.radiatore, 1 - smooth(SOGLIE.radiatore.inizio, SOGLIE.radiatore.fine, fC) - 0.4 * smooth(0.06, 0.2, S.fS || 0));
       C.motore = min(C.motore, cl(S.engine === undefined ? 1 : S.engine, 0, 1));
       C.cambio = min(C.cambio, 1 - 0.9 * smooth(SOGLIE.cambio.inizio, SOGLIE.cambio.fine, fC) - 0.5 * smooth(0.25, 0.6, z[0] || 0));   // cambio trasversale a sinistra del motore
+      // frizione (campana fra motore e cambio) e differenziale (nel cambio a trazione anteriore; nel ponte posteriore a trazione posteriore)
+      const vano = S.zone && S.zone.vano_motore ? 1 - S.zone.vano_motore.integrita : 0, post = veh && veh.par && veh.par.trazione === 'posteriore';
+      C.frizione = min(C.frizione, 1 - 0.85 * smooth(SOGLIE.frizione.inizio, SOGLIE.frizione.fine, fC) - 0.4 * smooth(0.3, 0.7, z[0] || 0) - 0.3 * smooth(0.5, 0.9, vano));
+      C.differenziale = min(C.differenziale, post ? 1 - 0.9 * smooth(SOGLIE.differenziale.inizio, SOGLIE.differenziale.fine, rC) - 0.4 * smooth(0.4, 0.8, Math.max(z[4] || 0, z[5] || 0))
+        : 1 - 0.8 * smooth(SOGLIE.differenziale.inizio, SOGLIE.differenziale.fine, fC) - 0.4 * smooth(0.35, 0.75, Math.max(z[0] || 0, z[1] || 0)));
+      C.centraline = min(C.centraline, 1 - 0.8 * smooth(SOGLIE.centraline.inizio, SOGLIE.centraline.fine, fC) - 0.5 * smooth(0.4, 0.8, Math.max(z[0] || 0, z[1] || 0)) - 0.5 * smooth(0.6, 1, vano));
       C.batteria = min(C.batteria, 1 - 0.7 * smooth(SOGLIE.batteria.inizio, SOGLIE.batteria.fine, fC) - 0.5 * smooth(0.2, 0.6, z[0] || 0));
       C.elettrico = min(C.elettrico, 1 - 0.8 * smooth(SOGLIE.elettrico.inizio, SOGLIE.elettrico.fine, fC) - 0.3 * smooth(0.3, 0.7, Math.max(z[0] || 0, z[1] || 0)));
       C.scarico = min(C.scarico, 1 - 0.8 * smooth(SOGLIE.scarico.inizio, SOGLIE.scarico.fine, rC) - 0.3 * smooth(0.2, 0.5, Math.max(sL, sR)));
@@ -84,6 +97,7 @@
       C.sterzo = min(C.sterzo, 1 - cl(toeF / SOGLIE.sterzoToe, 0, 1) * 0.9 - (H[0] && H[0].lost || H[1] && H[1].lost ? 0.5 : 0));
       if (S.lampF) { C.fari[0] = S.lampF[0] ? 0 : C.fari[0]; C.fari[1] = S.lampF[1] ? 0 : C.fari[1] }
       if (S.lampR) { C.fanali[0] = S.lampR[0] ? 0 : C.fanali[0]; C.fanali[1] = S.lampR[1] ? 0 : C.fanali[1] }
+      for (const k in C) { if (Array.isArray(C[k])) { for (let i = 0; i < C[k].length; i++) C[k][i] = cl(C[k][i], 0, 1) } else C[k] = cl(C[k], 0, 1) }   // integrità sempre in 0..1 (le somme dei contributi possono scendere sotto zero)
     }
     /* processi nel tempo */
     if (veh && dt > 0) {
@@ -98,6 +112,8 @@
       M.potenza = motore < 0.06 ? 0 : 0.3 + 0.7 * motore;
       M.radiatore = 0.1 + 0.9 * C.radiatore; M.refrigerante = st.refrigerante;
       M.cambio = C.cambio; M.trasmissione = 0.85 + 0.15 * C.cambio;
+      M.frizione = C.frizione < 0.08 ? 0 : 0.3 + 0.7 * C.frizione;            // coppia massima trasmissibile (frizione che slitta sotto carico)
+      M.differenziale = C.differenziale < 0.08 ? 0 : 0.35 + 0.65 * C.differenziale;   // trazione: coppia che arriva alle ruote
       M.freni = C.freni.map(f => 0.15 + 0.85 * f);
       M.attritoExtra = (4 - C.sospensioni.reduce((a, b) => a + b, 0)) * 220;   // N per sospensione piegata
       M.perditaCarburante = st.perditaCarburante;
@@ -107,7 +123,7 @@
     return ctxECU(st);
   }
   /* contesto per le ECU virtuali */
-  function ctxECU(st) { const C = st.comp; return { elettrico: C.elettrico, batteria: C.batteria, cambio: C.cambio, sensoriRuota: C.sensoriRuota.map(s => s < 0.5), lampF: [C.fari[0] < 0.5, C.fari[1] < 0.5], lampR: [C.fanali[0] < 0.5, C.fanali[1] < 0.5], absPompa: C.elettrico } }
+  function ctxECU(st) { const C = st.comp; return { elettrico: C.elettrico, batteria: C.batteria, cambio: C.cambio, centraline: C.centraline, frizione: C.frizione, sensoriRuota: C.sensoriRuota.map(s => s < 0.5), lampF: [C.fari[0] < 0.5, C.fari[1] < 0.5], lampR: [C.fanali[0] < 0.5, C.fanali[1] < 0.5], absPompa: C.elettrico } }
 
   /* effetti sulla guida del gioco (oltre a quelli già calcolati dal gioco con la rete) */
   function effettiGuida(st) { const C = st.comp; return { sterzoCorsa: 0.45 + 0.55 * C.sterzo, sterzoTiro: (1 - C.sterzo) * 0.04 * ((C.sospensioni[0] - C.sospensioni[1]) >= 0 ? 1 : -1) } }
@@ -118,7 +134,7 @@
     C.struttura.forEach((v, i) => add('struttura', 'Carrozzeria zona ' + ['ant. sin.', 'ant. des.', 'centr. sin.', 'centr. des.', 'post. sin.', 'post. des.'][i], v, COSTI.struttura, i));
     add('radiatore', NOMI.radiatore, C.radiatore, COSTI.radiatore); if (st.refrigerante < 0.98) out.push({ chiave: 'refrigerante', nome: 'Rabbocco refrigerante', integrita: +st.refrigerante.toFixed(2), costo: Math.round(COSTI.refrigerante * (1 - st.refrigerante)) });
     add('motore', NOMI.motore + (st.termico < 0.999 ? ' (anche danno termico)' : ''), Math.min(C.motore, st.termico), COSTI.motore);
-    add('cambio', NOMI.cambio, C.cambio, COSTI.cambio); add('sterzo', NOMI.sterzo, C.sterzo, COSTI.sterzo);
+    add('cambio', NOMI.cambio, C.cambio, COSTI.cambio); add('frizione', NOMI.frizione, C.frizione, COSTI.frizione); add('differenziale', NOMI.differenziale, C.differenziale, COSTI.differenziale); add('centraline', NOMI.centraline, C.centraline, COSTI.centraline); add('sterzo', NOMI.sterzo, C.sterzo, COSTI.sterzo);
     C.sospensioni.forEach((v, i) => add('sospensioni', 'Sospensione ' + RUOTE[i], v, COSTI.sospensione, i)); C.freni.forEach((v, i) => add('freni', 'Freno ' + RUOTE[i], v, COSTI.freno, i));
     add('batteria', NOMI.batteria, C.batteria, COSTI.batteria); add('scarico', NOMI.scarico, C.scarico, COSTI.scarico); add('serbatoio', NOMI.serbatoio, C.serbatoio, COSTI.serbatoio); add('elettrico', NOMI.elettrico, C.elettrico, COSTI.elettrico);
     C.sensoriRuota.forEach((v, i) => add('sensoriRuota', 'Sensore ruota ' + RUOTE[i], v, COSTI.sensoreRuota, i)); C.fari.forEach((v, i) => add('fari', 'Faro ' + (i ? 'destro' : 'sinistro'), v, COSTI.faro, i)); C.fanali.forEach((v, i) => add('fanali', 'Fanale ' + (i ? 'destro' : 'sinistro'), v, COSTI.fanale, i));
@@ -141,7 +157,7 @@
   /* analisi per il pannello */
   function analisi(st) {
     const C = st.comp, media = a => a.reduce((s, v) => s + v, 0) / a.length;
-    const strutt = media(C.struttura), mecc = media([C.motore * 0.3 + st.termico * 0.7 * 0 + Math.min(C.motore, st.termico) * 0.7, C.cambio, C.sterzo, media(C.sospensioni), media(C.freni), C.radiatore]);
+    const strutt = media(C.struttura), mecc = media([C.motore * 0.3 + st.termico * 0.7 * 0 + Math.min(C.motore, st.termico) * 0.7, C.cambio, C.frizione, C.differenziale, C.sterzo, media(C.sospensioni), media(C.freni), C.radiatore]);
     return {
       nota: 'Stime del modello di gioco (rete deformabile + regole di questo modulo): non sono risultati di prove d\'urto reali.',
       integritaStrutturale: +strutt.toFixed(2), integritaMeccanica: +mecc.toFixed(2), deformazioneMaxM: +st.deformazioneMax.toFixed(2), energiaUrtiKJ: +(st.energiaTot / 1000).toFixed(1), nUrti: st.nUrti,
@@ -161,5 +177,5 @@
     return true;
   }
 
-  return { versione: '1.0.0', SOGLIE, COSTI, NOMI, RUOTE, crea, urto, aggiorna, ctxECU, effettiGuida, preventivo, ripara, analisi, serializza, ripristina };
+  return { versione: '1.1.0', SOGLIE, COSTI, NOMI, RUOTE, crea, urto, aggiorna, ctxECU, effettiGuida, preventivo, ripara, analisi, serializza, ripristina };
 });

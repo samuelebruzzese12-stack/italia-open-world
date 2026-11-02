@@ -62,4 +62,4 @@ IOW_FISICA.passo(v, dt, { iy: 1, frenoMano: false }, { pendenza: 0.05, superfici
 IOW_FISICA.telemetria(v);      // oggetto con velocità, marcia, giri, coppia, temperature, consumi, forze...
 IOW_FISICA.serializza(v); IOW_FISICA.ripristina(v, dati);
 ```
-`v.mod` (danni: potenza, radiatore, refrigerante, freni[4], cambio, attrito extra, perdita carburante, alternatore, avviamento) e `v.ecu` (limiti imposti dalle centraline: accMax, limitatore, abs, asr, tagliaCoppia, marciaMaxTCU, cambioBloccato, spegni) sono i due punti di ingresso degli altri moduli.
+`v.mod` (danni: potenza, radiatore, refrigerante, freni[4], cambio, trasmissione, **frizione** (coppia trasmissibile), **differenziale** (coppia alle ruote), **muRuota[4]** (aderenza per ruota, dal Vehicle Damage Solver), attrito extra, perdita carburante, alternatore, avviamento; versione 1.1.0) e `v.ecu` (limiti imposti dalle centraline: accMax, limitatore, abs, asr, tagliaCoppia, marciaMaxTCU, cambioBloccato, spegni) sono i due punti di ingresso degli altri moduli.
