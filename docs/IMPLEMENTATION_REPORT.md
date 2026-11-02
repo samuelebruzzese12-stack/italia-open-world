@@ -1,4 +1,55 @@
-# ITALIA OPEN WORLD — Rapporto di implementazione (Versione 28)
+# ITALIA OPEN WORLD — Rapporto di implementazione (mappa reale, Versione 29.2)
+
+## 0. Versione 29.2 — correzione dei difetti della mappa visti sul telefono (2 novembre 2026)
+
+(Il motore fisico, le centraline virtuali e i danni meccanici della versione 29 sono descritti in `docs/CHANGELOG.md`, `docs/MOTORE_FISICO.md`, `docs/ECU.md` e `docs/DANNI.md`; queste correzioni non li toccano.)
+
+Le foto dall'A3 (Nocera Superiore, Cava de' Tirreni) mostravano alberi e muri in mezzo alla strada, erba sull'asfalto, pezzi di asfalto sospesi, barriere a dente di sega e blocchi scuri sulla carreggiata, in tutta la mappa. Le cause erano nel codice che costruisce le celle (alcune vecchie, alcune introdotte dalla versione 28). Tutte le misure qui sotto sono fatte sulle **tile vere di Monaco** (24 celle) con lo script `sorgenti/mappa_reale/metriche.js`, prima e dopo.
+
+**Limite importante:** le tile dell'A3 non sono scaricabili dall'ambiente di sviluppo (il proxy blocca `tiles.openfreemap.org`, verificato oggi), quindi l'A3 vera non è stata provata. Al suo posto c'è uno **svincolo sintetico in collina** costruito apposta come quello delle foto (`sorgenti/mappa_reale/svincolo.js`): autostrada a due carreggiate in salita, sottopasso, cavalcavia con rampe anche ad anello, viadotto, strada di servizio, tornante di superstrada, rotatoria, strade di campagna, copertura WorldCover finta.
+
+| Difetto | Causa trovata | Prima (v28) | Dopo |
+|---|---|---|---|
+| Alberi sulla strada | gli alberi non controllavano le strade; con WorldCover i "boschi" a 10 m coprivano anche le carreggiate | 8,9 % degli alberi sulla carreggiata (7,7 % con WorldCover) | 0 su 2091 (0 su 9146 con WorldCover) |
+| Erba sull'asfalto | il terreno (griglia di 9,4 m) sporgeva sopra l'asfalto ai bordi; i ciuffi usavano una maschera di 3,6 m con buchi | terreno sopra l'asfalto nel 15,3 % dei punti; 1857 ciuffi sulla carreggiata | 0 % e 0 ciuffi |
+| Gradini agli incroci | ogni strada aveva quote lisciate per conto suo | 1420 incroci su 2617 oltre 30 cm, massimo 5,8 m | 51 su 2691 (oltre 1 m: 15, tutti sentieri pedonali) |
+| Gradini fra due pezzi di mappa | ogni cella calcolava le quote solo con il proprio tratto di strada | 95 bordi su 189 oltre 30 cm, massimo 3,5 m | 3 su 181 (massimo 1,4 m, un sentiero) |
+| Barriere a dente di sega | guardrail, parapetti, bordi, cordoli, muretti e siepi erano rettangoli orizzontali ogni 6 m: su ogni pendenza diventavano scalini | su tutte le strade in pendenza | seguono la pendenza |
+| Blocchi scuri e "portoni" in mezzo alla strada | sottopassi e gallerie artificiali avevano la scatola della galleria (5,2 m) fuori dal terreno | tetto fuori terra nel 72 % dei tratti di galleria | 0 su 434 tratti disegnati |
+| Frecce staccate dall'asfalto | frecce e denti di squalo alla quota dell'incrocio anche 30 m prima | 84 % staccate | 1 su 3757 |
+| Muretti e siepi dentro altre strade | controllo su un raster di 3,6 m | 1049 vertici | 0 (misura fatta prima di aggiungere i bordi in pietra, vedi sotto) |
+| Colline bianche e chiazze grigie | WorldCover "edificato" diventava lastricato dappertutto; "neve" e "suolo nudo" diventavano neve e roccia anche a 100 m di quota | — | "edificato" non si usa più; neve solo sopra 2200 m, roccia sopra 1300 m |
+| Ponti a terra | il cavalcavia stava a 1 m dal suolo e la strada sotto lo attraversava (l'auto poteva anche "saltarci sopra") | franco di circa 1 m | almeno 5,8 m (6,6 sui binari), con rampe |
+| Rotatorie finte | riconosciute da qualsiasi curva a senso unico, anche i tornanti a due carreggiate | 6 a Monaco | solo anelli chiusi percorsi in senso antiorario e senza strade dentro l'aiuola: 2 a Monaco |
+
+**Correzioni (file `sorgenti/mappa_reale/cella.js`, stesse parti dentro `index.html`):**
+1. Le strade si calcolano anche per 160 m oltre il bordo della cella, poi si ritaglia il tratto interno: le due celle vicine trovano la stessa quota al bordo.
+2. Raccordo agli incroci: le estremità che toccano un'altra strada allo stesso livello, e gli incroci a raso, hanno una sola quota. La strada principale comanda, la correzione si spegne entro 130 m.
+3. Gallerie poco profonde (il tetto supera il terreno quasi ovunque e non passano sotto gli edifici) diventano strade in superficie. Le altre gallerie hanno pareti e volta solo dove stanno sotto terra e i portali dove la scatola comincia.
+4. Ponti sopra strade e binari: impalcato almeno 5,8 m sopra (6,6 sui binari). Una strada piccola sotto un ponte più importante scende un po', come nei sottopassi veri.
+5. Il terreno si abbassa sotto tutta la carreggiata, la banchina dell'autostrada e i marciapiedi. I bordi della strada scendono fino al terreno: muro in pietra se il dislivello supera 1,8 m, mai dentro un'altra strada.
+6. Guardrail (che girano anche intorno alle piazzole SOS), parapetti, cordoli, pareti di galleria, muretti, muri di sostegno e siepi sono quadrilateri inclinati che seguono la pendenza.
+7. Alberi, viali alberati, muretti, siepi ed erba fitta controllano la distanza vera da ogni strada, binario e ponte: la chioma resta fuori dalla carreggiata. L'erba usa una maschera nuova di 1,8 m che esclude anche marciapiedi, piazze, edifici e piazzali. Le chiome giganti sono ridotte (pini fino a 1,55, latifoglie fino a 1,9 volte).
+8. Muretti e siepi solo lungo strade di campagna vere (non lungo le strade di servizio, gli anelli o i tratti sotto i 40 m), mai a meno di 3,5 m da un'altra strada. Muri di sostegno al massimo di 2,6 m.
+9. Frecce, linee e denti di squalo prendono la quota dell'asfalto vertice per vertice. Le frecce seguono la curva della strada.
+10. Nel gioco (`real_main.js`) la quota del suolo è calcolata sugli stessi triangoli disegnati. L'auto resta sull'asfalto anche dove la strada è più alta del terreno. Sulle strade strette e ripide niente gradini, perché la quota dell'asfalto è una media dei soli pixel di strada.
+
+**Prove visive:** [`img/v29_confronto_svincolo_1.jpg`](img/v29_confronto_svincolo_1.jpg), [`img/v29_confronto_svincolo_2.jpg`](img/v29_confronto_svincolo_2.jpg) (svincolo sintetico, stessa inquadratura prima e dopo), [`img/v29_confronto_monaco.jpg`](img/v29_confronto_monaco.jpg) (Monaco vero).
+
+**Guida virtuale** (si percorrono tutte le strade a passi di 1 m con la stessa funzione di quota dell'auto):
+- **Monaco:** ostacoli con collisione sulla carreggiata: 1, contro 1 della versione 28. È la parete lunga di un edificio di OpenStreetMap che tocca la strada, non un albero né un muretto, ed era già così. Alberi sulla strada: 0. Salti di quota oltre 0,7 m al metro: 194 su 32 500 m, contro 198, sulle vie più ripide.
+- **Svincolo sintetico:** salti di quota 15 contro 72; nessun ostacolo.
+
+**Costo:** la costruzione di una cella nel Web Worker richiede circa il 45 % di tempo in più (Monaco: 917 → circa 1300 ms per 24 celle in Node). I triangoli disegnati sono gli stessi (circa 950 000 nella vista di partenza) e le chiamate di disegno passano da 176 a 187. La maschera dell'erba occupa 256 KB per cella vicina.
+
+**Che cosa resta:**
+- A Monaco, in alcuni incroci ripidissimi, il bordo della strada più alta sporge di più di 25 cm sopra la strada più bassa che si sovrappone. Sono 441 vertici su 76 000, quasi tutti da 2 a 4 m di altezza, cioè sopra le auto.
+- I viadotti che attraversano il confine fra due tile z14 possono avere ancora un piccolo scalino: la tile vicina non è disponibile.
+- Telefono vero e A3 vera non provati: vanno verificati da te.
+
+---
+
+## Versione 28
 
 Questo documento dice che cosa è stato fatto davvero nella seconda fase di sviluppo, con quali risorse e strumenti, che cosa è stato verificato e che cosa no. Dove qualcosa non è stato possibile, è scritto il motivo.
 
@@ -77,7 +128,7 @@ Peso totale delle texture del gioco dopo la lavorazione: **circa 2,3 MB** (28 fi
 
 | File | Che cosa |
 |---|---|
-| `index.html` | il gioco (Versione 28) |
+| `index.html` | il gioco (Versione 29.2) |
 | `tex/*.jpg`, `tex/ciuffi.png`, `tex/manifest.json` | texture del gioco e manifesto con fonti, licenze, lavorazione |
 | `tools/texture/prepara_texture.py`, `tools/texture/sorgenti.json` | script di preparazione e elenco delle sorgenti con impronte |
 | `sorgenti/mappa_reale/*.js` | codice della mappa reale (costruttore delle celle, caricatore, materiali, cielo, traffico) e i due script di prova |
@@ -126,7 +177,7 @@ Nel codice (dentro `index.html`; le stesse parti sono in `sorgenti/mappa_reale/`
 - **Telefono vero non provato**: le prove sono in un Chromium senza schermo con WebGL software. Le prestazioni su Android vanno verificate da te. Gli shader nuovi usano più letture di texture (terreno: 8, facciate: 5); se il telefono soffre, si possono ridurre.
 - **Copernicus a runtime non provato sul server vero** (vedi 1.2).
 - La ripetizione delle texture si vede ancora un po' su grandi superfici d'erba e di asfalto viste dall'alto.
-- Rotatorie: riconosciute dalla forma, quindi può sfuggirne qualcuna (anelli molto irregolari o divisi fra due celle) o essere scambiata una curva circolare a senso unico; le rampe autostradali sono escluse.
+- Rotatorie: riconosciute dalla forma (dalla versione 29 solo anelli chiusi in senso antiorario), quindi può sfuggirne qualcuna con l'anello disegnato in modo irregolare.
 - Chiese: servono il punto d'interesse dentro la pianta e una pianta abbastanza rettangolare; le chiese a croce complessa usano il rettangolo che le contiene. Campanile e cupola sono in posizioni plausibili, non misurate.
 - Piazzole SOS stimate; frecce e corsie calcolate dalla geometria (le tile non hanno `turn:lanes`); le corsie di svolta vere (allargamenti) non sono disegnate.
 - Gli alberi sono ancora geometrie semplici (con fogliame in texture): i modelli 3D veri di alberi sono troppo pesanti per migliaia di istanze su telefono.

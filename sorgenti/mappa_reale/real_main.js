@@ -245,7 +245,7 @@ function plan(px,pz){const m=g2m(px,pz),cx=Math.floor((m[0]+MH)/S15),cy=Math.flo
 function geom(o,uv){const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(o.P,3));g.setAttribute('normal',new T.BufferAttribute(o.N,3));g.setAttribute('color',new T.BufferAttribute(o.C,3));if(uv&&o.U)g.setAttribute('uv',new T.BufferAttribute(o.U,2));if(o.W)g.setAttribute('tw',new T.BufferAttribute(o.W,4));g.setIndex(new T.BufferAttribute(o.I,1));g.computeBoundingSphere();return g}
 const _m4=new T.Matrix4(),_v=new T.Vector3(),_s=new T.Vector3(),_q=new T.Quaternion(),_y=new T.Vector3(0,1,0),_c=new T.Color();
 function mkCell(j,r){const mxL=-MH+j.x*S15,myT=MH-j.y*S15,g0=m2g(mxL,myT),X=g0[0],Z=g0[1],g=new T.Group();g.position.set(X,0,Z);g.updateMatrix();g.matrixAutoUpdate=false;
- const c={x:j.x,y:j.y,key:j.key,lod:j.lod,g,X,Z,S:r.S,NG:r.NG,d:r.S/(r.NG-1),H:r.H,cls:r.cls,CR:r.CR,wm:r.wmask,WM:r.WM,RH:r.RH,RHN:r.RHN,keys:new Set(),bk:new Set(),places:[],pois:[],mini:r.mini,tri:0};
+ const c={x:j.x,y:j.y,key:j.key,lod:j.lod,g,X,Z,S:r.S,NG:r.NG,d:r.S/(r.NG-1),H:r.H,cls:r.cls,CR:r.CR,wm:r.wmask,WM:r.WM,RH:r.RH,RHN:r.RHN,GM:r.GM,GMN:r.GMN,keys:new Set(),bk:new Set(),places:[],pois:[],mini:r.mini,tri:0};
  const add=(o,mt,cast,uv)=>{if(!o||!o.I||!o.I.length)return null;const me=new T.Mesh(geom(o,uv),mt);me.castShadow=!!cast;me.receiveShadow=true;me.matrixAutoUpdate=false;g.add(me);c.tri+=o.I.length/3;return me};
  add(r.T,MTR.ter,0,1);add(r.R,MTR.road,0,1);for(const k of ['Rst','Rdi','Rba','Rsw'])add(r[k],PBR.RMAT[k],0,1);add(r.Mc,MTR.conc,1,0);add(r.MS,MTR.mur,1,1);add(r.HG,MTR.siepe,1,0);add(r.M,MTR.misc,0,0);
  {let u=0,w=0;const cl=r.cls;if(cl){for(let i=0;i<cl.length;i++){if(cl[i]===2||cl[i]===11)u++;else if(cl[i]===1)w++}c.urb=Math.max(u/Math.max(1,cl.length-w),(r.dens||0)*1.5)}c.dens=r.dens||0;c.chiese=[];const ch=r.chiese||[];for(let i=0;i+2<ch.length;i+=3)c.chiese.push({x:X-ch[i],z:Z-ch[i+1],y:ch[i+2]})}
@@ -299,19 +299,22 @@ function applyOne(){const t0=performance.now();while(RES.length){const [j,r]=RES
   else if(j.t==='lontano')applyFar(j,r);
   if(performance.now()-t0>7)break}}
 /* ---------- quote, acqua, ponti ---------- */
-function hCell(c,u,v){const d=c.d,NG=c.NG,fx=Math.min(NG-1.0001,Math.max(0,u/d)),fy=Math.min(NG-1.0001,Math.max(0,v/d)),i=fx|0,j=fy|0,a=fx-i,b=fy-j,p=j*NG+i,H=c.H;return H[p]*(1-a)*(1-b)+H[p+1]*a*(1-b)+H[p+NG]*(1-a)*b+H[p+NG+1]*a*b}
+// quota del terreno con gli stessi triangoli della mesh disegnata (auto, persone ed erba poggiano esattamente sul terreno visibile)
+function hCell(c,u,v){const d=c.d,NG=c.NG,fx=Math.min(NG-1.0001,Math.max(0,u/d)),fy=Math.min(NG-1.0001,Math.max(0,v/d)),i=fx|0,j=fy|0,a=fx-i,b=fy-j,p=j*NG+i,H=c.H;return a+b<=1?H[p]+(H[p+1]-H[p])*a+(H[p+NG]-H[p])*b:H[p+NG+1]+(H[p+NG]-H[p+NG+1])*(1-a)+(H[p+1]-H[p+NG+1])*(1-b)}
+// quota dell'asfalto dal raster delle strade (pixel di ~3,6 m): media bilineare dei soli pixel di strada vicini (niente gradini sulle strade strette e ripide)
 function rhCell(c,u,v){const n=c.RHN,px=c.S/n,fx=u/px-.5,fy=v/px-.5,i=Math.floor(fx),j=Math.floor(fy),a=fx-i,b=fy-j,R=c.RH,g=(ii,jj)=>ii<0||jj<0||ii>=n||jj>=n?NaN:R[jj*n+ii];
- const h00=g(i,j),h10=g(i+1,j),h01=g(i,j+1),h11=g(i+1,j+1);if(h00===h00&&h10===h10&&h01===h01&&h11===h11)return h00*(1-a)*(1-b)+h10*a*(1-b)+h01*(1-a)*b+h11*a*b;
- return g(Math.round(fx),Math.round(fy))}
+ const h00=g(i,j),h10=g(i+1,j),h01=g(i,j+1),h11=g(i+1,j+1);let sw=0,sh=0;const add=(h,w)=>{if(h===h&&w>0){sw+=w;sh+=h*w}};add(h00,(1-a)*(1-b));add(h10,a*(1-b));add(h01,(1-a)*b);add(h11,a*b);
+ if(sw>.12)return sh/sw;const hn=g(Math.round(fx),Math.round(fy));return hn}
 function farAt(x,z){const m=g2m(x,z);return FARS.get(key2(Math.floor((m[0]+MH)/S14),Math.floor((MH-m[1])/S14)))}
-function terrainH(x,z){const c=cellAt(x,z);if(c){const u=c.X-x,v=c.Z-z;let h=hCell(c,u,v);if(c.RH){const r=rhCell(c,u,v);if(r===r&&Math.abs(r-h)<2.5)h=r}return LASTH=h}
+// quota del suolo: terreno, o asfalto (raster delle quote stradali) se è vicino al terreno o alla quota attuale di chi si muove (yh): così l'auto resta sulla strada anche dove la strada è alta sul terreno
+function terrainH(x,z,yh){const c=cellAt(x,z);if(c){const u=c.X-x,v=c.Z-z;let h=hCell(c,u,v);if(c.RH){const r=rhCell(c,u,v);if(r===r&&r>h-.3&&(yh!==undefined&&yh!==null?yh>r-2.2:r-h<2.5))h=Math.max(r,h-.05)}return LASTH=h}
  const f=farAt(x,z);if(f){const u=f.X-x,v=f.Z-z,d=f.S/(f.N-1),N=f.N,fx=Math.min(N-1.0001,Math.max(0,u/d)),fy=Math.min(N-1.0001,Math.max(0,v/d)),i=fx|0,j=fy|0,a=fx-i,b=fy-j,p=j*N+i,H=f.H;return Math.max(0,H[p]*(1-a)*(1-b)+H[p+1]*a*(1-b)+H[p+N]*(1-a)*b+H[p+N+1]*a*b)}
  return LASTH}
 function bridgeH(x,z,yh){const a=BRG.get(Math.floor(x/64)+','+Math.floor(z/64));if(!a)return null;let best=null,bd=1e9;
  for(const s of a){const dx=s.bx-s.ax,dz=s.bz-s.az,l2=dx*dx+dz*dz;if(l2<1e-4)continue;const t=Math.max(0,Math.min(1,((x-s.ax)*dx+(z-s.az)*dz)/l2)),px=s.ax+dx*t-x,pz=s.az+dz*t-z;if(px*px+pz*pz>s.hw*s.hw)continue;
   const y=s.ha+(s.hb-s.ha)*t;if(yh!==undefined&&yh!==null){const e=Math.abs(yh-y);if(e>2.6)continue;if(e<bd){bd=e;best=y}}else if(!s.tun&&(best===null||y>best))best=y}
  return best}
-function ground(x,z,yh){const b=bridgeH(x,z,yh);return b!==null?b:terrainH(x,z)}
+function ground(x,z,yh){const b=bridgeH(x,z,yh);return b!==null?b:terrainH(x,z,yh)}
 function wet(x,z){const c=cellAt(x,z);if(!c)return false;const u=c.X-x,v=c.Z-z;let w=false;
  if(c.wm){const n=c.WM,i=Math.min(n-1,Math.max(0,Math.floor(u/c.S*n))),j=Math.min(n-1,Math.max(0,Math.floor(v/c.S*n)));w=!!c.wm[j*n+i]}
  else if(c.cls){const n=c.CR,i=Math.min(n-1,Math.max(0,Math.floor(u/c.S*n))),j=Math.min(n-1,Math.max(0,Math.floor(v/c.S*n)));w=c.cls[j*n+i]===1}

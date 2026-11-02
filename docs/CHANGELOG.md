@@ -1,5 +1,8 @@
 # Cronologia delle versioni
 
+## Versione 29.2 — 2026-11-02 — correzione dei difetti della mappa
+Corretti i difetti visti sull'A3 e in tutta la mappa (codice in `sorgenti/mappa_reale/cella.js` e `real_main.js`, dentro `index.html`): alberi, muretti, siepi ed erba fitta mai sulla carreggiata; terreno abbassato sotto l'asfalto; quote delle strade raccordate agli incroci e uguali al bordo fra due celle (niente asfalto sospeso né gradini); guardrail, parapetti, cordoli, pareti e muretti che seguono la pendenza (niente denti di sega); sottopassi in superficie e scatola delle gallerie solo sotto terra (niente blocchi scuri sulla strada); cavalcavia almeno 5,8 m sopra le strade; frecce e denti di squalo sull'asfalto; rotatorie solo su anelli chiusi veri; dati WorldCover usati con prudenza (niente finto lastricato, neve solo in quota); l'auto resta sull'asfalto anche dove la strada è più alta del terreno. Misure prima/dopo, svincolo sintetico di prova e immagini: docs/IMPLEMENTATION_REPORT.md, sezione 0. Le modifiche della versione 29 e 29.1 (motore fisico, centraline, danni) sono rimaste intatte.
+
 (La versione 28 — texture fotografiche, ciclo giorno/notte, chiese, rotatorie, aree di servizio, dati Copernicus — è descritta in docs/IMPLEMENTATION_REPORT.md.)
 
 ## Versione 29 — 2026-11-02 — motore fisico reale, centraline virtuali, danni meccanici
