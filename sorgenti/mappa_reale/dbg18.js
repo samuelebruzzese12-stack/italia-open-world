@@ -1,0 +1,23 @@
+// sonda: profilo di una strada (pi) nelle varie fasi (DEM grezzo, lisciato, dopo scavalchi, dopo raccordo nodi, dopo confluenze)
+// Uso: SET=real_test_andorra node dbg18.js x15 y15 pi [s0 s1]
+const fs = require('fs'), B = (process.env.DATI || __dirname) + '/' /* DATI: cartella che contiene next/<set> (tile di prova salvate col pulsante «Dati zona» e importate con importa_zona.py) */, SET = process.env.SET || 'real_test_andorra', DD = B + 'next/' + SET + '/';
+let cs = fs.readFileSync(__dirname + '/cella.js', 'utf8');
+const rep = (a, b) => { if (cs.split(a).length !== 2) throw new Error('non unico: ' + a.slice(0, 60)); cs = cs.replace(a, b) };
+rep("for (const P of PR) P.h0f = Float32Array.from(P.h);", "const SNAP = tag => { if (opt.dbgPi !== undefined && PR[opt.dbgPi]) { const P = PR[opt.dbgPi]; (stat.snap = stat.snap || []).push([tag, Array.from(P.h).map(v => +v.toFixed(2))]); stat.snapS = Array.from(P.s).map(v => +v.toFixed(1)); stat.snapH0 = Array.from(P.h0).map(v => +v.toFixed(2)); stat.snapR = P.r.c + ' w' + P.r.w + ' rank' + P.r.rank } };\n  SNAP('lisciato'); for (const P of PR) P.h0f = Float32Array.from(P.h);");
+rep("P.adjA = P.adj; P.adj = null } }", "P.adjA = P.adj; P.adj = null } SNAP('scavalchi') }");
+rep("stat.nodi = NOD.filter(N => N.P.size > 1).length }", "stat.nodi = NOD.filter(N => N.P.size > 1).length; SNAP('raccordo'); if (opt.dbgPi !== undefined) stat.snapCON = CON[opt.dbgPi] }");
+rep("PR.forEach((P, pi) => { const a = adj[pi]; if (!a) return; for (let q = 0; q < P.m; q++) if (a[q] === a[q]) P.h[q] = a[q] }) }", "PR.forEach((P, pi) => { const a = adj[pi]; if (!a) return; for (let q = 0; q < P.m; q++) if (a[q] === a[q]) P.h[q] = a[q] }); SNAP('confluenze') }");
+rep("const tg = sh / sw; for (const [pi, sv, hv, inter] of N.P.values()) { let plat = 1.5;", "const tg = sh / sw; if (opt.dbgNode && Math.hypot(N.u - opt.dbgNode[0], N.v - opt.dbgNode[1]) < 4) console.log('NODO', N.u.toFixed(1), N.v.toFixed(1), 'tg', tg.toFixed(2), JSON.stringify(Array.from(N.P.values()).map(e => [e[0], PR[e[0]].r.c, PR[e[0]].r.rank, +e[1].toFixed(1), +e[2].toFixed(2), e[3]]))); for (const [pi, sv, hv, inter] of N.P.values()) { let plat = 1.5;");
+const src = ['mvt.js', 'earcut.js', 'dem.js'].map(f => fs.readFileSync(__dirname + '/' + f, 'utf8').replace(/if \(typeof module[^\n]*\n/g, '')).join('\n') + '\n' + cs.replace(/if \(typeof module[^\n]*\n/g, '');
+const wsrc = fs.readFileSync(__dirname + '/worker_main.js', 'utf8'); const pick = n => { const i = wsrc.indexOf('function ' + n + '('); let d = 0, j = wsrc.indexOf('{', i); for (; j < wsrc.length; j++) { if (wsrc[j] === '{') d++; else if (wsrc[j] === '}' && --d === 0) break } return wsrc.slice(i, j + 1) };
+const M = new Function(src + '\n' + pick('subLayers') + '\n' + pick('tileDens') + '\n' + pick('mergeTiles') + ';return {decodeMVT,buildCell,makeDem,earcut,subLayers,tileDens,mergeTiles,ME,MH}')();
+const x = +process.argv[2], y = +process.argv[3], pi = +process.argv[4], s0 = +(process.argv[5] || 0), s1 = +(process.argv[6] || 1e9);
+const lat0 = Math.atan(Math.sinh(Math.PI * (1 - 2 * (y + .5) / 32768))) * 180 / Math.PI, K = Math.cos(lat0 * Math.PI / 180), Sm = M.ME / 32768;
+const dem = M.makeDem(12, (tx, ty) => { const f = DD + `dem/12/${tx}/${ty}.f32`; return fs.existsSync(f) ? new Float32Array(fs.readFileSync(f).buffer.slice(0)) : null });
+const tileAt = (tx, ty) => { const f = DD + `vt/14/${tx}/${ty}.pbf`; return fs.existsSync(f) ? M.decodeMVT(fs.readFileSync(f)) : null };
+const x14 = x >> 1, y14 = y >> 1, L14 = tileAt(x14, y14), nb = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) { const L2 = tileAt(x14 + dx, y14 + dy); if (L2) nb.push({ L: L2, dx, dy }) }
+const L = M.subLayers(M.mergeTiles(L14, nb), x & 1, y & 1, 2);
+const r = M.buildCell(L, { S: Sm * K, mxL: -M.MH + x * Sm, myT: M.MH - y * Sm, K, dem, lod: 'A', earcut: M.earcut, cx: x, cy: y, blo: -4096, bhi: 8192, blou: -(1 + (x & 1)) * 4096, bhiu: (3 - (x & 1)) * 4096, blov: -(1 + (y & 1)) * 4096, bhiv: (3 - (y & 1)) * 4096, dens: M.tileDens(L14), dbg: 1, dbgPi: pi, dbgNode: process.env.NODE ? process.env.NODE.split(',').map(Number) : null });
+const st = r.stat; console.log('strada', pi, st.snapR, 'campioni', st.snapS.length); console.log('CON', JSON.stringify((st.snapCON || []).map(c => c.map(v => +v.toFixed(2)))));
+const rows = [['s', 'dem', ...st.snap.map(s => s[0])]]; for (let q = 0; q < st.snapS.length; q++) { if (st.snapS[q] < s0 || st.snapS[q] > s1) continue; rows.push([st.snapS[q], st.snapH0[q], ...st.snap.map(s => s[1][q])]) }
+for (const rw of rows) console.log(rw.map(v => String(v).padStart(10)).join(''));

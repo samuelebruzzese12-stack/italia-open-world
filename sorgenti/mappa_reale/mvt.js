@@ -60,6 +60,15 @@ function clipLine(l, lo, hi) { const out = []; let cur = null;
     if (!cur || t0 > 0) { cur = [ax, ay]; out.push(cur) }
     cur.push(bx, by); if (t1 < 1) cur = null }
   return out.filter(p => p.length >= 4) }
+// ritaglio di una polilinea su un rettangolo [x0,x1]×[y0,y1] (Liang–Barsky, come clipLine)
+function clipLineBox(l, x0, x1, y0, y1) { const out = []; let cur = null;
+  for (let i = 0; i + 3 < l.length; i += 2) { let ax = l[i], ay = l[i + 1], bx = l[i + 2], by = l[i + 3], t0 = 0, t1 = 1; const dx = bx - ax, dy = by - ay; let ok = true;
+    for (const [p, q] of [[-dx, ax - x0], [dx, x1 - ax], [-dy, ay - y0], [dy, y1 - ay]]) { if (p === 0) { if (q < 0) { ok = false; break } } else { const r = q / p; if (p < 0) { if (r > t1) { ok = false; break } if (r > t0) t0 = r } else { if (r < t0) { ok = false; break } if (r < t1) t1 = r } } }
+    if (!ok) { cur = null; continue }
+    const cx = ax + dx * t0, cy = ay + dy * t0, ex = ax + dx * t1, ey = ay + dy * t1;
+    if (!cur || t0 > 0) { cur = [cx, cy]; out.push(cur) }
+    cur.push(ex, ey); if (t1 < 1) cur = null }
+  return out.filter(p => p.length >= 4) }
 // riempimento di poligoni (con buchi, regola pari/dispari) su una griglia N×N che copre [0,ext]²: chiama put(indice)
 function fillPoly(rings, ext, N, put) { const k = N / ext; let y0 = 1e9, y1 = -1e9; for (const r of rings) for (let i = 1; i < r.length; i += 2) { if (r[i] < y0) y0 = r[i]; if (r[i] > y1) y1 = r[i] }
   const ja = Math.max(0, Math.floor(y0 * k - .5)), jb = Math.min(N - 1, Math.ceil(y1 * k - .5)), xs = [];
@@ -67,4 +76,4 @@ function fillPoly(rings, ext, N, put) { const k = N / ext; let y0 = 1e9, y1 = -1
     for (const r of rings) { const n = r.length; for (let i = 0, p = n - 2; i < n; p = i, i += 2) { const ya = r[p + 1], yb = r[i + 1]; if ((ya <= yc) !== (yb <= yc)) xs.push(r[p] + (yc - ya) / (yb - ya) * (r[i] - r[p])) } }
     xs.sort((a, b) => a - b);
     for (let q = 0; q + 1 < xs.length; q += 2) { const ia = Math.max(0, Math.ceil(xs[q] * k - .5)), ib = Math.min(N - 1, Math.floor(xs[q + 1] * k - .5)); for (let i = ia; i <= ib; i++) put(j * N + i) } } }
-if (typeof module !== 'undefined') module.exports = { decodeMVT, polygons, clipRing, clipLine, fillPoly, ringArea };
+if (typeof module !== 'undefined') module.exports = { decodeMVT, polygons, clipRing, clipLine, clipLineBox, fillPoly, ringArea };

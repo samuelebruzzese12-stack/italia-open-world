@@ -1,6 +1,6 @@
 // prova sintetica (Node): autostrada con casello, distributore (area di servizio), strada di campagna in pendenza, rotatoria con strade d'ingresso,
 // chiesa e scuola con i loro punti d'interesse, campi tutt'intorno. Controlla che le nuove geometrie della Versione 28 vengano create e siano valide.
-const fs = require('fs'), B = (process.env.DATI || __dirname) + '/';
+const fs = require('fs'), B = (process.env.DATI || __dirname) + '/' /* DATI: cartella che contiene next/<set> (tile di prova salvate col pulsante «Dati zona» e importate con importa_zona.py) */;
 const src = ['mvt.js', 'earcut.js', 'dem.js', 'cella.js'].map(f => fs.readFileSync(__dirname + '/' + f, 'utf8').replace(/if \(typeof module[^\n]*\n/g, '')).join('\n');
 const M = new Function(src + ';return {buildCell,earcut,ME,MH}')();
 const E = 4096, lat0 = 43.5, K = Math.cos(lat0 * Math.PI / 180), Sm = M.ME / 32768, S = Sm * K, k = S / E;   // cella z15 ~ 890 m

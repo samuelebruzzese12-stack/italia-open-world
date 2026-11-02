@@ -76,7 +76,7 @@ function pedsUpdate(dt,px,pz){for(const a of G.peds){pedStep(a,dt);const d=Math.
   if(!a.down&&inCar){const dx=a.x-C.x,dz=a.z-C.z,c=Math.cos(C.h),s=Math.sin(C.h),lx=dx*c-dz*s,lz=dx*s+dz*c;if(Math.abs(lx)<1.05&&Math.abs(lz)<2.35&&Math.hypot(V.vx,V.vz)>2.5){a.down=9;a.downH=C.h;PL.offence('investito un passante',1.5,4);toast('Hai investito un passante!');V.vx*=.85;V.vz*=.85}}}
  if(G.peds.some(a=>a.dead)){for(const a of G.peds)if(a.dead){const i=PEDS.indexOf(a);if(i>=0)PEDS.splice(i,1)}G.peds=G.peds.filter(a=>!a.dead)}
  const want=Math.min(NPED,Math.round(G.ways.filter(w=>w.sw).length*1.2));if(G.peds.length<want&&G.fr%3===1)spawnPed(px,pz);
- let n=0;for(const a of G.peds){const y=REAL.ground(a.x,a.z)+.08,sw=Math.sin(a.ph)*.55*(a.mv>0?1:0),bob=Math.abs(Math.cos(a.ph))*.03;
+ let n=0;for(const a of G.peds){const y=REAL.ground(a.x,a.z,undefined,true)+.08,sw=Math.sin(a.ph)*.55*(a.mv>0?1:0),bob=Math.abs(Math.cos(a.ph))*.03;
   if(a.down>0){_v.set(a.x,y+.25,a.z);_q.setFromAxisAngle(_y,a.downH||a.h);const q2=new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),PI/2);_q.multiply(q2);_s.set(1,1,1);_m4.compose(_v,_q,_s);imSh.setMatrixAt(n,_m4);imHd.setMatrixAt(n,_m4);imLL.setMatrixAt(n,_m4);imLR.setMatrixAt(n,_m4)}
   else{_v.set(a.x,y+bob,a.z);_q.setFromAxisAngle(_y,a.h);_s.set(1,1,1);_m4.compose(_v,_q,_s);imSh.setMatrixAt(n,_m4);imHd.setMatrixAt(n,_m4);
    for(const [im,sg] of [[imLL,1],[imLR,-1]]){_v.set(a.x+Math.cos(a.h)*.1*sg,y+.78,a.z-Math.sin(a.h)*.1*sg);const q1=new T.Quaternion().setFromAxisAngle(_y,a.h),q2=new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),sw*sg);q1.multiply(q2);_s.set(1,1,1);_m4.compose(_v,q1,_s);im.setMatrixAt(n,_m4)}}

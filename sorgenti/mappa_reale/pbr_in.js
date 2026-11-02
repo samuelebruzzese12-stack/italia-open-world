@@ -162,7 +162,7 @@ const ERBA=(()=>{const MAXN=5200;let im=null,last=[1e9,1e9],gen=-1,cnt=0;
    const c=cellAt(x,z);if(!c||c.lod!=='A'||!c.cls)continue;const u=c.X-x,v=c.Z-z;if(u<0||v<0||u>=c.S||v>=c.S)continue;const cl=c.cls[Math.min(c.CR-1,Math.floor(v/c.S*c.CR))*c.CR+Math.min(c.CR-1,Math.floor(u/c.S*c.CR))];let pr=ALLOW[cl];if(!pr)continue;if(cl===0&&((c.urb||0)>.15||(c.dens||0)>.12))continue;
    const h3=Math.sin(gx*41.3+gz*97.1)*9137.31,f3=h3-Math.floor(h3);if(f3>pr)continue;if(c.GM){const gi=Math.min(c.GMN-1,Math.floor(v/c.S*c.GMN))*c.GMN+Math.min(c.GMN-1,Math.floor(u/c.S*c.GMN));if(c.GM[gi])continue}else if(c.RH){const ri=Math.min(c.RHN-1,Math.floor(v/c.S*c.RHN))*c.RHN+Math.min(c.RHN-1,Math.floor(u/c.S*c.RHN));if(c.RH[ri]===c.RH[ri])continue}
    if(c.wm){const wi=Math.min(c.WM-1,Math.floor(v/c.S*c.WM))*c.WM+Math.min(c.WM-1,Math.floor(u/c.S*c.WM));if(c.wm[wi])continue}
-   const y=terrainH(x,z);if(!(y===y))continue;const s=.75+f1*.6;_v.set(x,y-.03,z);_q.setFromAxisAngle(_y,f2*6.283);_s.set(s,s*(.8+f3*.5),s);_m4.compose(_v,_q,_s);im.setMatrixAt(n,_m4);vari.array[n]=Math.floor(f3*4)%4;if(++n>=MAXN)break}
+   const y=terrainH(x,z);if(!(y===y))continue;const s=.55+f1*.4;_v.set(x,y-.03,z);_q.setFromAxisAngle(_y,f2*6.283);_s.set(s,s*(.7+f3*.4),s);_m4.compose(_v,_q,_s);im.setMatrixAt(n,_m4);vari.array[n]=Math.floor(f3*4)%4;if(++n>=MAXN)break}
   im.count=n;cnt=n;im.instanceMatrix.needsUpdate=true;vari.needsUpdate=true}
  return{update,get n(){return cnt}}})();
 // geometria delle auto: marca i vertici dei fari (1) e dei fanali (2) per accenderli di notte

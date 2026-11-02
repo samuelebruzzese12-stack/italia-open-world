@@ -131,13 +131,9 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 }
 @media (orientation:landscape) and (max-height:520px) and (max-width:860px){#armCred{display:none}}
 
-#qd{font-size:12px;padding:6px 10px;max-width:46vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#qd[hidden]{display:none}
-#vbtn{position:absolute;left:calc(10px + var(--sl));top:calc(232px + var(--st));width:46px;height:46px;border-radius:50%;padding:0;font-size:22px;display:flex;align-items:center;justify-content:center}
-#vp{position:absolute;left:calc(10px + var(--sl));top:calc(124px + var(--st));width:min(92vw,520px);max-height:66vh;overflow:auto;background:rgba(16,24,34,.95);color:#fff;border-radius:12px;padding:10px;font-size:13px;line-height:1.3;z-index:5}#vp[hidden]{display:none}#vp,#vp *{touch-action:pan-y}#vp .ph{font-weight:800;margin-bottom:4px}#vp .pr{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}#vp .s{height:34px;padding:0 9px;font-size:12px;min-width:0}#vp .s.on{background:var(--go)}#vp .s[disabled]{opacity:.4}#vp .vrow{margin:3px 0}#vp .vg{font-size:15px;margin:2px 0 4px}#vp .vnote{font-size:11px;opacity:.8;margin:4px 0}#vp .vt{width:100%;border-collapse:collapse;font-size:12px}#vp .vt td{padding:3px 4px;border-top:1px solid rgba(255,255,255,.12);vertical-align:top}#vp .vbar{display:inline-block;width:64px;height:8px;background:rgba(255,255,255,.15);border-radius:4px;vertical-align:middle;overflow:hidden}#vp .vbar i{display:block;height:100%}#vp .vok{color:#7fd8a8}#vp .vko{color:#ff8f8f;font-weight:700}#vp .vmem{color:#f3c76b}#vp .vpre{margin:0;font:10.5px/1.3 monospace;white-space:pre-wrap;max-height:120px;overflow:auto;background:#0008;border-radius:8px;padding:6px}
-#gbx{position:absolute;right:calc(20px + var(--sr));bottom:calc(236px + var(--sb));display:none;gap:6px}#gbx .b{height:48px;min-width:52px;font-size:15px}
-@media (orientation:landscape) and (max-height:520px){#vbtn{top:calc(200px + var(--st));width:42px;height:42px}#vp{top:calc(56px + var(--st));max-height:calc(100% - 66px)}#gbx{right:calc(116px + var(--sr));bottom:calc(126px + var(--sb))}#qd{font-size:11px;padding:5px 8px}}
 #rld{position:fixed;inset:0;z-index:12;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;background:#1d2733;color:#fff;font:600 15px system-ui,sans-serif;text-align:center}#rld[hidden]{display:none}#rlt{font-size:20px;font-weight:800}#rlp{opacity:.8;font-size:13px}#rle{color:#ffb4a8;font-size:13px;max-width:520px}#rla{position:absolute;bottom:calc(10px + var(--sb));left:10px;right:10px;font-size:10px;opacity:.6}#mgo{background:var(--go);opacity:1;height:48px;font-size:14px}#mcity{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;max-width:96vw;padding:2px 4px;touch-action:pan-x}#mcity *{touch-action:pan-x}#mcity .b{height:40px;min-width:0;white-space:nowrap;font-size:12px;padding:0 10px;flex:0 0 auto}#mc{width:min(96vw,calc(100vh - 230px))}#mcred{position:absolute;left:calc(14px + var(--sl));bottom:calc(14px + var(--sb));height:40px}#rcred{position:absolute;inset:0;z-index:3;background:rgba(8,16,26,.97);color:#fff;padding:calc(14px + var(--st)) 16px calc(14px + var(--sb));overflow-y:auto;touch-action:pan-y;font:500 13px/1.45 system-ui,sans-serif}#rcred[hidden]{display:none}#rcred *{touch-action:pan-y}#rcred a{color:#8fc3ff}#rcred>button{float:right}#zn{display:none;white-space:pre-line;line-height:1.25;max-width:180px}@media (orientation:landscape) and (max-height:520px){#mc{width:auto;height:calc(100% - 16px)}#mcity{flex-direction:column;flex-wrap:nowrap;overflow-x:hidden;overflow-y:auto;max-height:calc(100% - 210px);width:190px;touch-action:pan-y;align-self:flex-start;margin-top:calc(124px + var(--st))}#mcity *{touch-action:pan-y}#mcity .b{height:34px}#mgo{position:absolute;right:calc(14px + var(--sr));top:calc(70px + var(--st));height:40px}#mcred{left:auto;right:calc(120px + var(--sr))}}
 #msat{position:absolute;left:calc(92px + var(--sl));bottom:calc(14px + var(--sb));height:40px}
+#mdati{position:absolute;left:calc(92px + var(--sl));bottom:calc(62px + var(--sb));height:40px}
 </style>
 </head>
 <body>
@@ -204,6 +200,15 @@ function clipLine(l, lo, hi) { const out = []; let cur = null;
     const ax = x0 + dx * t0, ay = y0 + dy * t0, bx = x0 + dx * t1, by = y0 + dy * t1;
     if (!cur || t0 > 0) { cur = [ax, ay]; out.push(cur) }
     cur.push(bx, by); if (t1 < 1) cur = null }
+  return out.filter(p => p.length >= 4) }
+// ritaglio di una polilinea su un rettangolo [x0,x1]×[y0,y1] (Liang–Barsky, come clipLine)
+function clipLineBox(l, x0, x1, y0, y1) { const out = []; let cur = null;
+  for (let i = 0; i + 3 < l.length; i += 2) { let ax = l[i], ay = l[i + 1], bx = l[i + 2], by = l[i + 3], t0 = 0, t1 = 1; const dx = bx - ax, dy = by - ay; let ok = true;
+    for (const [p, q] of [[-dx, ax - x0], [dx, x1 - ax], [-dy, ay - y0], [dy, y1 - ay]]) { if (p === 0) { if (q < 0) { ok = false; break } } else { const r = q / p; if (p < 0) { if (r > t1) { ok = false; break } if (r > t0) t0 = r } else { if (r < t0) { ok = false; break } if (r < t1) t1 = r } } }
+    if (!ok) { cur = null; continue }
+    const cx = ax + dx * t0, cy = ay + dy * t0, ex = ax + dx * t1, ey = ay + dy * t1;
+    if (!cur || t0 > 0) { cur = [cx, cy]; out.push(cur) }
+    cur.push(ex, ey); if (t1 < 1) cur = null }
   return out.filter(p => p.length >= 4) }
 // riempimento di poligoni (con buchi, regola pari/dispari) su una griglia N×N che copre [0,ext]²: chiama put(indice)
 function fillPoly(rings, ext, N, put) { const k = N / ext; let y0 = 1e9, y1 = -1e9; for (const r of rings) for (let i = 1; i < r.length; i += 2) { if (r[i] < y0) y0 = r[i]; if (r[i] > y1) y1 = r[i] }
@@ -1371,7 +1376,7 @@ const BRAND = [[/eni|agip/i, '#f7d117', '#1c1c1c'], [/esso/i, '#d71920', '#0b3b8
 const brandOf = nm => { for (const b of BRAND) if (b[0].test(nm || '')) return b; return BRAND[BRAND.length - 1] };
 function buildCell(L, opt) {
   const { S, mxL, myT, K, dem, lod, earcut, cx, cy } = opt, A = lod === 'A';
-  const NG = opt.NG || (A ? 97 : 33), d = S / (NG - 1), CR = opt.CR || (A ? 128 : 32), WM = A ? 256 : 0, RHN = A ? 256 : 0, BLO = opt.blo === undefined ? 0 : opt.blo, BHI = opt.bhi === undefined ? 4096 : opt.bhi;
+  const NG = opt.NG || (A ? 97 : 33), d = S / (NG - 1), CR = opt.CR || (A ? 128 : 32), WM = A ? 256 : 0, RHN = A ? (opt.RHN || 512) : 0, BLO = opt.blo === undefined ? 0 : opt.blo, BHI = opt.bhi === undefined ? 4096 : opt.bhi, BLOu = opt.blou === undefined ? BLO : opt.blou, BLOv = opt.blov === undefined ? BLO : opt.blov, BHIu = opt.bhiu === undefined ? BHI : opt.bhiu, BHIv = opt.bhiv === undefined ? BHI : opt.bhiv;
   const t0 = Date.now(), stat = {};
   const merc = (u, v) => [mxL + u / K, myT - v / K], hAt = (u, v) => { const m = merc(u, v); return dem(m[0], m[1]) };
   // --- quote del terreno sulla griglia
@@ -1414,9 +1419,9 @@ function buildCell(L, opt) {
         for (let i = 0; i < ly.n; i++) { const f = ly.feat(i); if (f.type !== 3) continue; for (const pg of polygons(f.parts)) fillPoly(pg.map(r => r.map(v => v - BLO)), span, TBN, q => { TBM[q] = 1 }) } } }
       const i = Math.floor((x - BLO) / (BHI - BLO) * TBN), j = Math.floor((y - BLO) / (BHI - BLO) * TBN); return i >= 0 && j >= 0 && i < TBN && j < TBN && !!TBM[j * TBN + i] };
   const tunShallow = (pts, k, ha, hb) => { let L2 = 0; for (let i = 0; i + 3 < pts.length; i += 2) L2 += Math.hypot(pts[i + 2] - pts[i], pts[i + 3] - pts[i + 1]) * k; if (L2 < 1) return true;
-    let a2 = 0, mx = -1e9, n = 0, nb = 0; const cl2 = q => Math.min(BHI * k, Math.max(BLO * k, q));
+    let a2 = 0, mx = -1e9, n = 0, nb = 0; const cl2 = q => q, clu = q => Math.min(BHIu * k, Math.max(BLOu * k, q)), clv = q => Math.min(BHIv * k, Math.max(BLOv * k, q));
     for (let i = 0; i + 3 < pts.length; i += 2) { const ax = pts[i] * k, ay = pts[i + 1] * k, bx = pts[i + 2] * k, by = pts[i + 3] * k, l = Math.hypot(bx - ax, by - ay), ns = Math.max(1, Math.ceil(l / 10));
-      for (let e = 0; e < ns; e++) { const t = e / ns, u = ax + (bx - ax) * t, v = ay + (by - ay) * t, sp = a2 + l * t, h = hAt(cl2(u), cl2(v)), clr = Math.min(1, Math.min(sp, L2 - sp) / 15), lp = ha + (hb - ha) * sp / L2, y = Math.min(lp, h - clr * 1.5);
+      for (let e = 0; e < ns; e++) { const t = e / ns, u = ax + (bx - ax) * t, v = ay + (by - ay) * t, sp = a2 + l * t, h = hAt(clu(u), clv(v)), clr = Math.min(1, Math.min(sp, L2 - sp) / 15), lp = ha + (hb - ha) * sp / L2, y = Math.min(lp, h - clr * 1.5);
         mx = Math.max(mx, h - (y + 5.2)); n++; if (tbmAt(u / k, v / k)) nb++ } a2 += l }
     return mx < 1.5 && nb <= n * .15 };
   { const ly = L.transportation; if (ly) { const ext = ext0(ly), k = S / ext, mgT = MGN / k;
@@ -1430,13 +1435,18 @@ function buildCell(L, opt) {
       if (p.surface === 'unpaved' && sty < 3) sty = 4;
       const lay = +p.layer || 0, ramp = p.ramp === 1;
       for (const part of f.parts) { const pts = part; if (p.brunnel === 'bridge' || tun) { // ponte o galleria: quota interpolata fra le due estremità (spalle o portali), prima del ritaglio
-          const n = pts.length, cl2 = q => Math.min(BHI * k, Math.max(BLO * k, q * k)); const ha = hAt(cl2(pts[0]), cl2(pts[1])), hb = hAt(cl2(pts[n - 2]), cl2(pts[n - 1]));
+          const n = pts.length, clu = q => Math.min(BHIu * k, Math.max(BLOu * k, q * k)), clv = q => Math.min(BHIv * k, Math.max(BLOv * k, q * k)); const ha = hAt(clu(pts[0]), clv(pts[1])), hb = hAt(clu(pts[n - 2]), clv(pts[n - 1]));
           let shallow = false; if (tun) shallow = tunShallow(pts, k, ha, hb);
           if (shallow) { stat.sottopassi = (stat.sottopassi || 0) + 1; for (const cp of clipLine(pts, -mgT, ext + mgT)) roads.push({ pts: cp, k, w, sty, c, rank: RANK[c] || 1, one, ref: p.ref, toll: p.toll, ramp, lay, shallow: 1 }) }
           else for (const cp of clipLine(pts, -mgT, ext + mgT)) roads.push({ pts: cp, k, w, sty, c, rank: RANK[c] || 1, bridge: !tun, tun, ha, hb, full: pts, one, ref: p.ref, lay, ramp }) }
         else for (const cp of clipLine(pts, -mgT, ext + mgT)) roads.push({ pts: cp, k, w, sty, c, rank: RANK[c] || 1, one, ref: p.ref, toll: p.toll, ramp, lay }) } } } }
   // campionamento: punti ogni ≤ passo metri; quote dal terreno lisciate (finestra più lunga per le strade grandi); ponti e gallerie fra le estremità
-  const smoothH = (h, s, m, win) => { const o = new Float32Array(m); for (let q = 0; q < m; q++) { let sw = 0, sv = 0; for (let e = q; e >= 0 && s[q] - s[e] <= win; e--) { const wgt = 1 - (s[q] - s[e]) / (win + 1); sw += wgt; sv += h[e] * wgt } for (let e = q + 1; e < m && s[e] - s[q] <= win; e++) { const wgt = 1 - (s[e] - s[q]) / (win + 1); sw += wgt; sv += h[e] * wgt } o[q] = sv / sw } return o };
+  // lisciatura: retta dei minimi quadrati pesati nella finestra (non media pesata: alle estremità la media vede solo un lato e su una salita
+  // abbassa la quota di pendenza × mezza finestra, cioè metri interi, e le strade arrivavano agli incroci a quote diverse)
+  const smoothH = (h, s, m, win) => { const o = new Float32Array(m); for (let q = 0; q < m; q++) { let sw = 0, sx = 0, sy = 0, sxx = 0, sxy = 0;
+      const acc = e => { const x = s[e] - s[q], wgt = 1 - Math.abs(x) / (win + 1); sw += wgt; sx += wgt * x; sy += wgt * h[e]; sxx += wgt * x * x; sxy += wgt * x * h[e] };
+      for (let e = q; e >= 0 && s[q] - s[e] <= win; e--) acc(e); for (let e = q + 1; e < m && s[e] - s[q] <= win; e++) acc(e);
+      const den = sw * sxx - sx * sx; o[q] = den > 1e-6 ? (sy * sxx - sx * sxy) / den : sy / sw } return o };
   const winOf = r => r.rank >= 8 && r.rank < 10 ? 55 : r.rank >= 6 ? 32 : r.rank >= 4 ? 16 : 8;
   const PR = [];
   for (const r of roads) { if (r.area) continue; const pts = r.pts, k = r.k, step = A ? (r.rank >= 6 ? 6 : 5) : 12, S2 = [];
@@ -1464,58 +1474,141 @@ function buildCell(L, opt) {
       for (let x = 0; x < a.length; x += 2) { const pj = a[x], qj = a[x + 1]; if (pj === pi) continue; const kk = pj * 100003 + qj; if (seen.has(kk)) continue; seen.add(kk); const Q = PR[pj], X = segX(ax, ay, bx, by, Q.S2[qj * 2], Q.S2[qj * 2 + 1], Q.S2[qj * 2 + 2], Q.S2[qj * 2 + 3]); if (X) f(q, Q, pj, qj, X[0], X[1]) } } } };
   const sAt = (P, q, t) => P.s[q] + (P.s[q + 1] - P.s[q]) * t, hAtQ = (P, q, t) => P.h[q] + (P.h[q + 1] - P.h[q]) * t;
   // scavalcamenti: l'impalcato sta almeno 5,8 m sopra la strada (6,6 sui binari); una strada piccola sotto un ponte più importante scende un po'
+  // carreggiate gemelle (stessa strada a senso unico, direzioni opposte, meno di 26 m): stessa quota, così lo spartitraffico non diventa un muro
+  { const twin = r => r.one && !r.bridge && !r.tun && !r.ramp && r.rank >= 5 && r.rank < 10, TG2 = [];
+    for (const P of PR) { if (!twin(P.r)) { TG2.push(null); continue } const t = new Float32Array(P.m).fill(NaN);
+      for (let q = 0; q < P.m; q++) { const u = P.S2[q * 2], v = P.S2[q * 2 + 1], qa = Math.max(0, q - 1), qb = Math.min(P.m - 1, q + 1); let tx = P.S2[qb * 2] - P.S2[qa * 2], tz = P.S2[qb * 2 + 1] - P.S2[qa * 2 + 1]; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl; let best = 1e9, bh = NaN;
+        segNear(u, v, 26, (Q, pj, qj, dd, tt) => { if (Q === P || !twin(Q.r) || Q.r.c !== P.r.c || dd < 3 || dd >= best) return; const dx = Q.S2[qj * 2 + 2] - Q.S2[qj * 2], dz = Q.S2[qj * 2 + 3] - Q.S2[qj * 2 + 1], dl = Math.hypot(dx, dz) || 1; if ((dx * tx + dz * tz) / dl > -.8) return; best = dd; bh = hAtQ(Q, qj, tt) }); t[q] = bh }
+      TG2.push(t) }
+    // solo se le due carreggiate stanno quasi alla stessa quota (meno di 2–4 m): a Monaco l'altra carreggiata può passare 15 m più in basso (imbocco di galleria)
+    PR.forEach((P, pi) => { const t = TG2[pi]; if (!t) return; for (let q = 0; q < P.m; q++) if (t[q] === t[q]) { const w = Math.max(0, Math.min(1, (4 - Math.abs(t[q] - P.h[q])) / 2)); P.h[q] += (t[q] - P.h[q]) / 2 * w } }) }
+  const shoulder = r => r.rank >= 8 && r.rank < 10 && !r.ramp ? 3.4 : 0;
+  const cityE = Math.max((L.building && L.building.n) ? (() => { let n = 0; for (let i = 0; i < CR * CR; i++) if (cls[i] === CL.URBAN) n++; return n / (CR * CR) })() : 0, (opt.dens === undefined ? 0 : opt.dens) * 1.5) > .25;
+  const swOf = r => A && cityE && !r.bridge && !r.tun && (r.c === 'minor' || r.c === 'tertiary' || r.c === 'secondary' || r.c === 'primary') && r.sty !== 4 ? 2.2 : 0;
+  const bandOf = r => r.w / 2 + .5 + shoulder(r) + swOf(r);   // fascia della carreggiata: banchina sulle autostrade, marciapiedi in città
   for (const P of PR) P.h0f = Float32Array.from(P.h);
   { const hump = (P, s0, amt, flat, grade, sg) => { if (!P.adj) P.adj = new Float32Array(P.m); for (let q = 0; q < P.m; q++) { const dd = Math.abs(P.s[q] - s0), val = dd <= flat ? amt : amt - (dd - flat) * grade; if (val <= 0) continue; if (sg > 0) { if (val > P.adj[q]) P.adj[q] = val } else if (-val < P.adj[q]) P.adj[q] = -val } };
     PR.forEach((B, bi) => { if (!B.r.bridge) return; const lb = lvl(B.r);
-      crossings(B, bi, (q, G, pj, qj, t, w) => { if (G.r.sty === 9 || lvl(G.r) >= lb) return; const hB = hAtQ(B, q, t), hG = hAtQ(G, qj, w), need = hG + (G.r.c === 'rail' ? 6.6 : 5.8) + (G.r.bridge ? .8 : 0) - hB; if (need <= .05) return;
-        let dn = 0; if (!G.r.bridge && !G.r.tun && G.r.c !== 'rail' && G.r.rank <= 6 && B.r.rank >= G.r.rank) dn = Math.min(need * .5, 3);
-        hump(B, sAt(B, q, t), need - dn, G.r.w / 2 + 6, B.r.rank >= 8 ? .04 : .06, 1); B.raised = 1; if (dn > 0) hump(G, sAt(G, qj, w), dn, B.r.w / 2 + 6, .08, -1); stat.scavalchi = (stat.scavalchi || 0) + 1 }) });
-    for (const P of PR) if (P.adj) { for (let q = 0; q < P.m; q++) P.h[q] += P.adj[q]; P.adj = null } }
+      crossings(B, bi, (q, G, pj, qj, t, w) => { if (G.r.sty === 9 || lvl(G.r) >= lb) return; const sB0 = sAt(B, q, t), sG0 = sAt(G, qj, w); if (sB0 < 2 || sB0 > B.s[B.m - 1] - 2 || sG0 < 2 || sG0 > G.s[G.m - 1] - 2) return;   // strade che si toccano a un'estremità: non è uno scavalcamento
+        const hB = hAtQ(B, q, t), hG = hAtQ(G, qj, w), isRail = G.r.c === 'rail', need = hG + (isRail ? 6.6 : G.r.rank <= 2 ? 2.8 : 5.9) + (G.r.bridge ? .8 : 0) - hB; if (need <= .05) return;
+        // sentieri e carrarecce passano sotto (si abbassano loro); strade minori si abbassano in parte; strade importanti e binari: si alza l'impalcato
+        let dn = 0; if (!G.r.bridge && !G.r.tun && !isRail) { if (G.r.rank <= 2) dn = need; else if (G.r.rank <= 5 && B.r.rank >= G.r.rank) dn = Math.min(need * .6, 4); else if (G.r.rank <= 6 && B.r.rank >= G.r.rank) dn = Math.min(need * .5, 3) }
+        if (need - dn > .05) { hump(B, sAt(B, q, t), need - dn, G.r.w / 2 + 6, B.r.rank >= 8 ? .04 : .06, 1); B.raised = 1 } if (dn > 0) hump(G, sAt(G, qj, w), dn, B.r.w / 2 + 6, G.r.rank <= 2 ? .25 : .08, -1); stat.scavalchi = (stat.scavalchi || 0) + 1 }) });
+    for (const P of PR) if (P.adj) { for (let q = 0; q < P.m; q++) P.h[q] += P.adj[q]; P.adjA = P.adj; P.adj = null } }
+  // rialzo effettivo di un ponte all'ascissa sv (0 se lo scavalcamento è lontano: così due celle vicine decidono allo stesso modo)
+  const adjAt = (P, sv) => { if (!P.adjA) return 0; let q = 0; while (q < P.m - 2 && P.s[q + 1] < sv) q++; const t = Math.max(0, Math.min(1, (sv - P.s[q]) / (P.s[q + 1] - P.s[q] || 1e-9))); return P.adjA[q] + (P.adjA[q + 1] - P.adjA[q]) * t };
   // raccordo delle quote: le estremità che toccano un'altra strada (allo stesso livello, o un'altra estremità) e gli incroci a raso
   // prendono una sola quota per nodo; la correzione si spegne lungo la strada (sui ponti si distribuisce su tutto l'impalcato)
   { const tol = 1.6, NOD = [], NI = new Map(), lim = MGN - 1;
     const nodeAt = (u, v) => { const i0 = Math.floor(u / 4), j0 = Math.floor(v / 4); for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) { const a = NI.get((i0 + di) + ',' + (j0 + dj)); if (a) for (const N of a) if (Math.hypot(N.u - u, N.v - v) < tol) return N }
       const N = { u, v, P: new Map() }; NOD.push(N); const kk = i0 + ',' + j0; let a = NI.get(kk); if (!a) NI.set(kk, a = []); a.push(N); return N };
-    const join = (N, pi, sv, hv, inter) => { const kk = pi + ':' + Math.round(sv * 2); if (!N.P.has(kk)) N.P.set(kk, [pi, sv, hv, inter]) };
+    const join = (N, pi, sv, hv, inter, dd) => { for (const [kk, e] of N.P) if (e[0] === pi && Math.abs(e[1] - sv) < 30) { if (dd < e[4]) { N.P.delete(kk); break } return } N.P.set(pi + ':' + Math.round(sv * 2), [pi, sv, hv, inter, dd]) };
+    // pianerottolo: entro (metà larghezza dell'altra strada + 3 m) dal nodo la quota resta quella del nodo, poi la correzione si spegne
     PR.forEach((P, pi) => { if (P.r.sty === 9) return; for (const e of [0, P.m - 1]) { const u = P.S2[e * 2], v = P.S2[e * 2 + 1]; if (u < -lim || v < -lim || u > S + lim || v > S + lim) continue; let N = null;
-      segNear(u, v, tol, (Q, pj, qj, dd, t) => { if (Q.r.sty === 9) return; const sQ = sAt(Q, qj, t); if (pj === pi && Math.abs(sQ - P.s[e]) < 8) return; const endQ = sQ < .6 || sQ > Q.s[Q.m - 1] - .6;
-        const hQ = hAtQ(Q, qj, t), hQ0 = Q.h0f[qj] + (Q.h0f[qj + 1] - Q.h0f[qj]) * t; if (!endQ && lvl(P.r) !== lvl(Q.r) && dd > .35 && Math.abs(hQ0 - P.h0f[e]) > 2.5) return;   // estremità sopra o sotto una strada di un altro livello: nessun nodo
-        if (!N) { N = nodeAt(u, v); join(N, pi, P.s[e], P.h[e], false) } join(N, pj, sQ, hQ, !endQ) }) } });
+      // estremità dentro la carreggiata di un'altra strada (+1,2 m: in OpenStreetMap molte vie finiscono vicino alla strada senza toccarla), o a 1,6 m da un'altra estremità
+      segNear(u, v, 7, (Q, pj, qj, dd, t) => { if (Q.r.sty === 9) return; const sQ = sAt(Q, qj, t); if (pj === pi && Math.abs(sQ - P.s[e]) < 8) return; const endQ = sQ < .6 || sQ > Q.s[Q.m - 1] - .6, nearEnd = sQ < 4 || sQ > Q.s[Q.m - 1] - 4; if (dd > (endQ ? Math.max(tol, (P.r.w + Q.r.w) / 4 + .8) : Q.r.w / 2 + 1.2)) return;
+        const hQ = hAtQ(Q, qj, t), hQ0 = Q.h0f[qj] + (Q.h0f[qj + 1] - Q.h0f[qj]) * t; if (!endQ && !nearEnd && lvl(P.r) !== lvl(Q.r) && dd > .35 && Math.abs(hQ0 - P.h0f[e]) > 2.5) return;   // estremità sotto/sopra un'altra strada (livello diverso): nessun nodo   // estremità sopra o sotto una strada di un altro livello: nessun nodo
+        if (!N) { N = nodeAt(u, v); join(N, pi, P.s[e], P.h[e], false, 0) } join(N, pj, sQ, hQ, !endQ, dd) }) } });
     PR.forEach((P, pi) => { if (P.r.sty === 9 || P.r.bridge || P.r.tun) return;
       crossings(P, pi, (q, Q, pj, qj, t, w) => { if (pj < pi || Q.r.sty === 9 || Q.r.bridge || Q.r.tun || (P.r.lay || 0) !== (Q.r.lay || 0)) return; const sP = sAt(P, q, t), sQ = sAt(Q, qj, w); if (sP < .6 || sP > P.s[P.m - 1] - .6 || sQ < .6 || sQ > Q.s[Q.m - 1] - .6) return;
-        const N = nodeAt(P.S2[q * 2] + (P.S2[q * 2 + 2] - P.S2[q * 2]) * t, P.S2[q * 2 + 1] + (P.S2[q * 2 + 3] - P.S2[q * 2 + 1]) * t); join(N, pi, sP, hAtQ(P, q, t), true); join(N, pj, sQ, hAtQ(Q, qj, w), true) }) });
-    const CON = PR.map(() => []);
-    for (const N of NOD) { if (N.P.size < 2) continue; let sw = 0, sh = 0; for (const [pi, sv, hv, inter] of N.P.values()) { const P = PR[pi]; let wgt = Math.pow(P.r.rank + 1, 3) * (inter ? 3 : 1); if (P.r.bridge || P.r.tun) wgt *= P.raised ? 60 : .05; sw += wgt; sh += hv * wgt }
-      const tg = sh / sw; for (const [pi, sv, hv] of N.P.values()) CON[pi].push([sv, tg - hv]) }
-    // la correzione si spegne entro Lf ≤ 130 m (meno del margine di 160 m): le celle vicine vedono gli stessi nodi e ottengono le stesse quote al bordo
-    PR.forEach((P, pi) => { const C = CON[pi]; if (!C.length) return; C.sort((a, b) => a[0] - b[0]); const isB = P.r.bridge || P.r.tun, gr = P.r.rank >= 8 || isB ? .035 : .06, Lf = dv => Math.min(130, Math.max(isB ? 60 : 28, Math.abs(dv) / gr));
-      for (let q = 0; q < P.m; q++) { const sv = P.s[q]; let c = 0; const F = C[0], Z = C[C.length - 1];
-        if (sv <= F[0]) c = F[1] * Math.max(0, 1 - (F[0] - sv) / Lf(F[1]));
-        else if (sv >= Z[0]) c = Z[1] * Math.max(0, 1 - (sv - Z[0]) / Lf(Z[1]));
-        else { let k2 = 0; while (C[k2 + 1][0] < sv) k2++; const a = C[k2], b = C[k2 + 1], gap = b[0] - a[0], t = gap > 1e-6 ? (sv - a[0]) / gap : 0;
-          c = gap <= Lf(a[1]) + Lf(b[1]) ? a[1] + (b[1] - a[1]) * t : a[1] * Math.max(0, 1 - (sv - a[0]) / Lf(a[1])) + b[1] * Math.max(0, 1 - (b[0] - sv) / Lf(b[1])) }
-        P.h[q] += c } });
+        const N = nodeAt(P.S2[q * 2] + (P.S2[q * 2 + 2] - P.S2[q * 2]) * t, P.S2[q * 2 + 1] + (P.S2[q * 2 + 3] - P.S2[q * 2 + 1]) * t); join(N, pi, sP, hAtQ(P, q, t), true, 0); join(N, pj, sQ, hAtQ(Q, qj, w), true, 0) }) });
+    // nodi vicini (meno di 9 m) sono lo stesso incrocio: una sola quota per tutto il gruppo. Ogni nodo si unisce al più al nodo "capo" più vicino
+    // (prima i più ricchi di rami), mai a catena: altrimenti nei centri fitti di vie e scale si formava un unico gruppo largo 50 m con una sola quota
+    { const NI2 = new Map(), key = (u, v) => Math.floor(u / 9) + ',' + Math.floor(v / 9), ord = NOD.slice().sort((a, b) => b.P.size - a.P.size || a.u - b.u || a.v - b.v);
+      for (const N of ord) { if (!N.P.size) continue; let best = null, bd = 9; const i0 = Math.floor(N.u / 9), j0 = Math.floor(N.v / 9);
+        for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) { const a = NI2.get((i0 + di) + ',' + (j0 + dj)); if (!a) continue; for (const R0 of a) { const dd = Math.hypot(R0.u - N.u, R0.v - N.v); if (dd < bd) { bd = dd; best = R0 } } }
+        if (best) { for (const [kk, v] of N.P) if (!best.P.has(kk)) best.P.set(kk, v); N.P.clear() } else { const kk = key(N.u, N.v); let a = NI2.get(kk); if (!a) NI2.set(kk, a = []); a.push(N) } } }
+    const nearNode = (pi, sv) => { for (const N of NOD) for (const [pj, sj] of N.P.values()) if (pj === pi && Math.abs(sj - sv) > .5 && Math.abs(sj - sv) < 25) return true; return false };
+    // profili prima del raccordo: le correzioni si calcolano sempre rispetto a questi
+    const OWN = PR.map(P => Float32Array.from(P.h)), ownAtOf = pi => { const P = PR[pi], own = OWN[pi], m = P.m; return s => { if (s <= P.s[0]) return own[0]; if (s >= P.s[m - 1]) return own[m - 1]; let k = 0; while (k < m - 2 && P.s[k + 1] < s) k++; const t = (s - P.s[k]) / (P.s[k + 1] - P.s[k] || 1e-9); return own[k] + (own[k + 1] - own[k]) * t } };
+    const parOf = P => { const isB = P.r.bridge || P.r.tun, gr = P.r.rank >= 8 || isB ? .035 : .06; return dv => Math.min(130, Math.max(isB ? 60 : 28, Math.abs(dv) / gr)) };
+    // quota raccordata della strada pi all'ascissa sv, date le correzioni C (ordinate per ascissa), saltando il nodo "skip" (entrata con K[0] === skip):
+    // dentro i pianerottoli, media delle quote dei nodi pesata con la profondità nel pianerottolo (continua ai bordi); fuori, media delle correzioni
+    // sfumate pesata con 1/distanza dal bordo del pianerottolo, così al bordo vale esattamente la correzione di quel nodo (nessun gradino)
+    const evalAt = (pi, sv, C, ownAt, Lf, skip) => { const P = PR[pi], Lend = P.s[P.m - 1]; let sIn = 0, wIn = 0, sc = 0, sw = 0, endT = null;
+      for (const K of C) { if (skip && skip.has(K[0])) continue; const ds = sv - K[0], ad = Math.abs(ds), e = ad - K[2];
+        if (e <= 0) { const isEnd = K[0] < .6 || K[0] > Lend - .6; if (isEnd && ad < .6) endT = K[3]; const dw = (K[2] - ad + .05) * (isEnd ? 3 : 1); sIn += K[3] * dw; wIn += dw; continue }
+        const c0 = ds < 0 ? K[4] : K[5], f = Math.max(0, 1 - e / Lf(c0)); if (f > 0) { const w = f / Math.max(e, 1e-3); sc += c0 * f * w; sw += w } }
+      return endT !== null ? endT : wIn > 0 ? sIn / wIn : ownAt(sv) + (sw > 0 ? sc / sw : 0) };   // l'estremità deve toccare esattamente ciò su cui finisce
+    // quote dei nodi: media pesata (rango³, la strada passante pesa 8 volte quella che finisce lì) delle quote dei rami; hvOf dà la quota del ramo
+    const nodeCON = hvOf => { const CON = PR.map(() => []);
+      for (const N of NOD) { if (N.P.size < 2) continue; let sw = 0, sh = 0; let tight = false; for (const [pi, sv, , inter] of N.P.values()) if (!(PR[pi].r.bridge || PR[pi].r.tun) && nearNode(pi, sv)) tight = true;
+        for (const e of N.P.values()) e[2] = hvOf(e[0], e[1], N);
+        for (const [pi, sv, hv, inter] of N.P.values()) { const P = PR[pi]; let wgt = Math.pow(P.r.rank + 1, 3) * (inter ? 8 : 1); if (P.r.bridge || P.r.tun) wgt *= adjAt(P, sv) > .3 ? 60 : .05; sw += wgt; sh += hv * wgt }   // ponte alzato per il franco: comanda lui (anche fra nodi fitti: il franco non si rinuncia)
+        // pianerottolo: la larghezza delle strade che attraversano il nodo (+3 m); almeno 1,5 m, così anche la strada passante tocca esattamente la quota del nodo
+        const tg = sh / sw; for (const [pi, sv, hv, inter] of N.P.values()) { let plat = 1.5; if (PR[pi].r.rank >= 2) for (const [pj, , , interj] of N.P.values()) if (pj !== pi && interj && PR[pj].r.rank >= 2) plat = Math.max(plat, PR[pj].r.w / 2 + shoulder(PR[pj].r) + 3); CON[pi].push([sv, tg - ownAtOf(pi)(sv), plat]) } }
+      // dentro il pianerottolo (metà larghezza dell'altra strada + 3 m) la quota è quella del nodo; fuori, la correzione vale (nodo − quota propria al bordo
+      // del pianerottolo) e si spegne entro Lf ≤ 130 m (meno del margine di 160 m: le celle vicine vedono gli stessi nodi e ottengono le stesse quote al bordo)
+      CON.forEach((C, pi) => { if (!C.length) return; C.sort((a, b) => a[0] - b[0]); const ownAt = ownAtOf(pi); for (const K of C) { K[3] = K[1] + ownAt(K[0]); K[4] = K[3] - ownAt(K[0] - K[2]); K[5] = K[3] - ownAt(K[0] + K[2]) } });   // quota del nodo; correzioni ai due bordi del pianerottolo
+      return CON };
+    const applyCON = CON => PR.forEach((P, pi) => { const C = CON[pi]; if (!C.length) return; const ownAt = ownAtOf(pi), Lf = parOf(P); for (let q = 0; q < P.m; q++) P.h[q] = evalAt(pi, P.s[q], C, ownAt, Lf, null) });
+    // più passate: dalla seconda ogni ramo entra nel nodo con la quota che gli danno gli ALTRI suoi nodi (una via breve fra due strade alte
+    // non trascina più l'incrocio in mezzo nel suo avvallamento: ci arriva già sollevata dalle sue estremità); 4 passate in tutto
+    let CON = nodeCON((pi, sv) => ownAtOf(pi)(sv)); applyCON(CON);
+    // (ponti e gallerie restano rigidi: entrano nel nodo con la loro quota propria, già alzata per il franco; sono le strade a terra ad adattarsi)
+    for (let it = 0; it < 3; it++) { CON = nodeCON((pi, sv, N) => { if (PR[pi].r.bridge || PR[pi].r.tun) return ownAtOf(pi)(sv); const skip = new Set(); for (const e of N.P.values()) if (e[0] === pi) skip.add(e[1]); return evalAt(pi, sv, CON[pi], ownAtOf(pi), parOf(PR[pi]), skip) }); applyCON(CON) }
     stat.nodi = NOD.filter(N => N.P.size > 1).length }
-  // spianamento del terreno lungo le strade (non sotto i ponti): per ogni vertice vince la strada più vicina (peso maggiore)
-  const gnd = r => !r.bridge && !r.tun && r.sty !== 9, shoulder = r => r.rank >= 8 && r.rank < 10 && !r.ramp ? 3.4 : 0;
+  // zone di confluenza: dove una strada corre dentro la carreggiata di una strada più importante (rampe che si staccano, corsie di immissione,
+  // vie che costeggiano), prende la sua quota, sfumando sui 2 m del bordo: le due superfici coincidono e nessuna delle due fluttua
+  { const BW = bandOf, adj = [];
+    for (const P of PR) { if (P.r.bridge || P.r.tun || P.r.sty === 9) { adj.push(null); continue } const a = new Float32Array(P.m).fill(NaN);
+      for (let q = 0; q < P.m; q++) { const u = P.S2[q * 2], v = P.S2[q * 2 + 1]; let bw = 0, bh = 0;
+        segNear(u, v, 12, (Q, pj, qj, dd, tt) => { if (Q === P || Q.r.bridge || Q.r.tun || Q.r.sty === 9 || Q.r.rank < P.r.rank || (Q.r.rank === P.r.rank && !P.r.ramp)) return; const hwQ = BW(Q.r); if (dd >= hwQ) return; const hq = hAtQ(Q, qj, tt), dh = Math.abs(hq - P.h[q]);
+          // a più di 1,5–3 m di dislivello non è una confluenza ma una terrazza (via che corre sotto la strada grande): ognuna tiene la sua quota
+          const w = Math.min(1, (hwQ - dd) / 2) * Math.max(0, Math.min(1, (3 - dh) / 1.5)); if (w > bw) { bw = w; bh = hq } });
+        // alle estremità (6 m) la confluenza non agisce: lì comanda il nodo (l'estremità tocca esattamente ciò su cui finisce)
+        bw *= Math.min(1, P.s[q] / 6, (P.s[P.m - 1] - P.s[q]) / 6); if (bw > 0) a[q] = P.h[q] + (bh - P.h[q]) * bw }
+      adj.push(a) }
+    PR.forEach((P, pi) => { const a = adj[pi]; if (!a) return; for (let q = 0; q < P.m; q++) if (a[q] === a[q]) P.h[q] = a[q] }) }
+  // movimento terra lungo le strade (non sotto i ponti né nelle gallerie), versione 29.3. Per ogni vertice del terreno:
+  //  1) spianamento morbido verso la quota della strada più vicina (entro ~11 m);
+  //  2) scarpate: fuori dalla fascia della carreggiata il terreno non può stare più in basso del riporto 1:2 né più in alto della trincea 1:1,2
+  //     (il riporto si fa solo se il dislivello è sotto FILLMAX metri: oltre, è un viadotto senza etichetta o una parete, e resta il muro);
+  //  3) fascia della carreggiata (con banchina e marciapiedi): quota strada − 0,2 esatta, la strada più vicina comanda;
+  //  4) i vertici dei triangoli che toccano la carreggiata non sporgono sopra l'asfalto (limite superiore) e non scendono sotto quota strada − 0,9
+  //     (limite inferiore, se il riporto è possibile): la strada poggia sempre sul terreno disegnato.
+  const gnd = r => !r.bridge && !r.tun && r.sty !== 9, FILLMAX = 6;
   { const FW = new Float32Array(NG * NG), FT = new Float32Array(NG * NG);
     for (const R of PR) { if (!gnd(R.r)) continue; const hw = R.r.w / 2 + 1.5 + shoulder(R.r), rad = hw + d * .75;
       for (let q = 0; q < R.m; q++) { const u = R.S2[q * 2], v = R.S2[q * 2 + 1]; if (u < -rad || v < -rad || u > S + rad || v > S + rad) continue; const i0 = Math.max(0, Math.floor((u - rad) / d)), i1 = Math.min(NG - 1, Math.ceil((u + rad) / d)), j0 = Math.max(0, Math.floor((v - rad) / d)), j1 = Math.min(NG - 1, Math.ceil((v + rad) / d));
         for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const dd = Math.hypot(i * d - u, j * d - v); if (dd > rad) continue; const wgt = dd <= hw ? 1 : 1 - (dd - hw) / (rad - hw), p = j * NG + i;
           if (wgt > FW[p]) { FW[p] = wgt; FT[p] = R.h[q] - .12 } } } }
     for (let p = 0; p < NG * NG; p++) if (FW[p] > 0) H[p] += (FT[p] - H[p]) * FW[p] }
-  // il terreno non deve sporgere sopra l'asfalto: i vertici dei triangoli che toccano la carreggiata (e la banchina) scendono sotto la strada
-  const cityE = Math.max((L.building && L.building.n) ? (() => { let n = 0; for (let i = 0; i < CR * CR; i++) if (cls[i] === CL.URBAN) n++; return n / (CR * CR) })() : 0, (opt.dens === undefined ? 0 : opt.dens) * 1.5) > .25;
-  const swOf = r => A && cityE && !r.bridge && !r.tun && (r.c === 'minor' || r.c === 'tertiary' || r.c === 'secondary' || r.c === 'primary') && r.sty !== 4 ? 2.2 : 0;
-  { const AL = new Float32Array(NG * NG).fill(1e9);
-    const put = (u, v, y) => { if (u < 0 || v < 0 || u > S || v > S) return; const fx = Math.min(NG - 1.0001, u / d), fy = Math.min(NG - 1.0001, v / d), i = Math.floor(fx), j = Math.floor(fy), p = j * NG + i;
-      if (fx - i + fy - j <= 1) { if (y < AL[p]) AL[p] = y; if (y < AL[p + 1]) AL[p + 1] = y; if (y < AL[p + NG]) AL[p + NG] = y } else { if (y < AL[p + 1]) AL[p + 1] = y; if (y < AL[p + NG]) AL[p + NG] = y; if (y < AL[p + NG + 1]) AL[p + NG + 1] = y } };
-    for (const R of PR) { if (!gnd(R.r)) continue; const hw = R.r.w / 2 + .5 + shoulder(R.r) + swOf(R.r), y0 = .06 + R.r.rank * .004 - .22;
+  { const LO = new Float32Array(NG * NG).fill(-1e9), HI = new Float32Array(NG * NG).fill(1e9), BD = new Float32Array(NG * NG).fill(1e9), BY = new Float32Array(NG * NG), TOP = new Float32Array(NG * NG).fill(1e9), BOT = new Float32Array(NG * NG).fill(-1e9), RF = 2 * FILLMAX + 2;
+    // per ogni strada, per ogni vertice entro hwB + max(RF, 30): il segmento più vicino e la quota della strada alla proiezione (yr);
+    // poi fascia, triangoli che toccano, scarpate
+    const ND = new Float32Array(NG * NG), NY = new Float32Array(NG * NG), NGN = new Int32Array(NG * NG).fill(-1), TM = new Uint8Array(NG * NG), BDR = new Int32Array(NG * NG).fill(-1); let rid = 0;
+    for (const R of PR) { if (!gnd(R.r)) continue; const hwB = bandOf(R.r), lift = .06 + R.r.rank * .004, isPath = R.r.rank <= 1, rad = isPath ? hwB + d * 1.2 : hwB + Math.max(RF, 16), TL = []; rid++;
+      for (let q = 0; q < R.m - 1; q++) { const ax = R.S2[q * 2], ay = R.S2[q * 2 + 1], bx = R.S2[q * 2 + 2], by = R.S2[q * 2 + 3]; if (Math.max(ax, bx) < -rad || Math.max(ay, by) < -rad || Math.min(ax, bx) > S + rad || Math.min(ay, by) > S + rad) continue;
+        const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy || 1e-9, i0 = Math.max(0, Math.floor((Math.min(ax, bx) - rad) / d)), i1 = Math.min(NG - 1, Math.ceil((Math.max(ax, bx) + rad) / d)), j0 = Math.max(0, Math.floor((Math.min(ay, by) - rad) / d)), j1 = Math.min(NG - 1, Math.ceil((Math.max(ay, by) + rad) / d));
+        for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const pu = i * d, pv = j * d; let t = ((pu - ax) * dx + (pv - ay) * dy) / l2; t = t < 0 ? 0 : t > 1 ? 1 : t; const dd = Math.hypot(ax + dx * t - pu, ay + dy * t - pv); if (dd > rad) continue;
+          const p = j * NG + i; if (NGN[p] !== rid) { NGN[p] = rid; ND[p] = 1e9; TM[p] = 0; TL.push(p) } if (dd < ND[p]) { ND[p] = dd; NY[p] = R.h[q] + (R.h[q + 1] - R.h[q]) * t + lift - .2 } } }
+      // vertici dei triangoli che contengono punti della carreggiata (campioni ogni 2,5 m lungo e ogni ≤1,5 m attraverso)
+      if (!isPath) for (let q = 0; q < R.m - 1; q++) { const ax = R.S2[q * 2], ay = R.S2[q * 2 + 1], bx = R.S2[q * 2 + 2], by = R.S2[q * 2 + 3]; if (Math.max(ax, bx) < -hwB || Math.max(ay, by) < -hwB || Math.min(ax, bx) > S + hwB || Math.min(ay, by) > S + hwB) continue;
+        const len = Math.hypot(bx - ax, by - ay) || 1e-6, tx = (bx - ax) / len, tz = (by - ay) / len, n = Math.max(1, Math.ceil(len / 2.5)), na = Math.max(2, Math.ceil(hwB / 1.5));
+        for (let e = 0; e <= n; e++) { const t = e / n, cu = ax + (bx - ax) * t, cv = ay + (by - ay) * t; for (let a = -na; a <= na; a++) { const f = a / na, u = cu - tz * hwB * f, v = cv + tx * hwB * f; if (u < 0 || v < 0 || u > S || v > S) continue; const fx = Math.min(NG - 1.0001, u / d), fy = Math.min(NG - 1.0001, v / d), i = Math.floor(fx), j = Math.floor(fy), p = j * NG + i;
+            if (fx - i + fy - j <= 1) { TM[p] = TM[p + 1] = TM[p + NG] = 1 } else { TM[p + 1] = TM[p + NG] = TM[p + NG + 1] = 1 } } } }
+      for (const p of TL) { const dd = ND[p], yr = NY[p], ddp = isPath ? dd + 50 : dd;   // i sentieri contano solo se non c'è una strada vera
+        if (dd <= hwB) { if (ddp < BD[p]) { BD[p] = ddp; BY[p] = yr; BDR[p] = rid } }
+        if (TM[p]) { if (yr < TOP[p]) TOP[p] = yr; const lb = yr - .7; if (lb > BOT[p] && H[p] > lb - FILLMAX) BOT[p] = lb; continue } if (dd <= hwB) continue;
+        const e = dd - hwB, hi = yr + e / 1.2, lo = yr - e / 2; if (hi < HI[p]) HI[p] = hi; if (lo > LO[p] && H[p] > lo - FILLMAX) LO[p] = lo } }
+    if (opt.dbgV) { const i = Math.round(opt.dbgV[0] / d), j = Math.round(opt.dbgV[1] / d), p = j * NG + i; stat.dbgV = { i, j, u: i * d, v: j * d, H: H[p], LO: LO[p], HI: HI[p], BD: BD[p], BY: BY[p], TOP: TOP[p], BOT: BOT[p] } }
+    let nb = 0, ns = 0, nt = 0; for (let p = 0; p < NG * NG; p++) { let h = H[p];
+      if (h > HI[p]) { h = HI[p]; ns++ } if (h < LO[p]) { h = LO[p]; ns++ }
+      if (BD[p] < 1e8) { h = BY[p]; nb++ } else if (h < BOT[p]) h = BOT[p];
+      if (h > TOP[p]) { h = TOP[p]; nt++ } H[p] = h }
+    // sicurezza: nessun punto dell'asfalto sotto il terreno disegnato; si abbassa quanto basta il vertice più influente del triangolo
+    let nl = 0, rid2 = 0; for (let it = 0; it < 2; it++) { rid2 = 0; for (const R of PR) { if (!gnd(R.r)) continue; rid2++; const hw = bandOf(R.r) - .3, y0 = .06 + R.r.rank * .004 - .05;
       for (let q = 0; q < R.m - 1; q++) { const ax = R.S2[q * 2], ay = R.S2[q * 2 + 1], bx = R.S2[q * 2 + 2], by = R.S2[q * 2 + 3]; if (Math.max(ax, bx) < -hw || Math.max(ay, by) < -hw || Math.min(ax, bx) > S + hw || Math.min(ay, by) > S + hw) continue;
-        const len = Math.hypot(bx - ax, by - ay) || 1e-6, tx = (bx - ax) / len, tz = (by - ay) / len, n = Math.max(1, Math.ceil(len / 2));
-        const na = Math.max(2, Math.ceil(hw / 1.5));
-        for (let e = 0; e <= n; e++) { const t = e / n, u = ax + (bx - ax) * t, v = ay + (by - ay) * t, y = R.h[q] + (R.h[q + 1] - R.h[q]) * t + y0; for (let a = -na; a <= na; a++) { const f = a / na; put(u - tz * hw * f, v + tx * hw * f, y) } } } }
-    let nl = 0; for (let p = 0; p < NG * NG; p++) if (H[p] > AL[p]) { H[p] = AL[p]; nl++ } stat.abbassati = nl }
+        const len = Math.hypot(bx - ax, by - ay) || 1e-6, tx = (bx - ax) / len, tz = (by - ay) / len, n = Math.max(1, Math.ceil(len / 2.5)), na = Math.max(2, Math.ceil(hw / 1.5));
+        for (let e = 0; e <= n; e++) { const t = e / n, cu = ax + (bx - ax) * t, cv = ay + (by - ay) * t, y = R.h[q] + (R.h[q + 1] - R.h[q]) * t + y0;
+          for (let a = -na; a <= na; a++) { const f = a / na, u = cu - tz * hw * f, v = cv + tx * hw * f; if (u < 0 || v < 0 || u > S || v > S) continue; const fx0 = Math.min(NG - 1.0001, u / d), fy0 = Math.min(NG - 1.0001, v / d), i = Math.floor(fx0), j = Math.floor(fy0), fx = fx0 - i, fy = fy0 - j, p = j * NG + i;
+            let ids, lam; if (fx + fy <= 1) { ids = [p, p + 1, p + NG]; lam = [1 - fx - fy, fx, fy] } else { ids = [p + NG + 1, p + 1, p + NG]; lam = [fx + fy - 1, 1 - fy, 1 - fx] }
+            const th = H[ids[0]] * lam[0] + H[ids[1]] * lam[1] + H[ids[2]] * lam[2]; if (th <= y) continue;
+            // si abbassano i vertici che non stanno nella fascia di un'altra strada (se pesano abbastanza), altrimenti tutti e tre: mai un vertice solo di poco peso
+            const dz = th - y + .03; let sf = 0; const fr = [false, false, false]; for (let z = 0; z < 3; z++) if (BDR[ids[z]] < 0 || BDR[ids[z]] === rid2) { fr[z] = true; sf += lam[z] }
+            if (sf >= .3) { for (let z = 0; z < 3; z++) if (fr[z]) H[ids[z]] -= dz / sf } else for (let z = 0; z < 3; z++) H[ids[z]] -= dz; nl++ } } } } }
+    stat.abbassati = nl; stat.fascia = nb; stat.scarpate = ns; stat.terrazze = nt }
   // tratti dentro la cella (le quote calcolate col contesto restano)
   const RD = [];
   for (const P of PR) { let cur = null; const out = [];
@@ -1540,11 +1633,14 @@ function buildCell(L, opt) {
   for (let j = 0; j < NG; j++) for (let i = 0; i < NG; i++) { const p = j * NG + i, h = H[p], hl = hX(i - 1, j), hr = hX(i + 1, j), hu = hX(i, j - 1), hd = hX(i, j + 1);
     const gx = (hr - hl) / (2 * d), gz = (hd - hu) / (2 * d), l = Math.hypot(gx, 1, gz), sl = Math.hypot(gx, gz);
     const u = i * d, v = j * d, cc = cls[Math.min(CR - 1, Math.floor(v / S * CR)) * CR + Math.min(CR - 1, Math.floor(u / S * CR))];
+    const nearRd = (cc === CL.URBAN || cc === CL.IND || (cc === CL.NONE && dens0 > .14)) ? (() => { let best = 1e9; segNear(u, v, 16, (P, pi, q, dd) => { if (P.r.tun) return; const e = dd - P.r.w / 2; if (e < best) best = e }); return best })() : 1e9;
     let c = (CCOL[cc] || CCOL[0]).slice(); if (cc === CL.NONE) { if (dens0 > .14) c = CCOL[CL.URBAN].slice(); else if (h > 1900) c = [.48, .47, .44]; else if (h > 1300) c = [.38, .44, .30] }
+    if ((cc === CL.URBAN || (cc === CL.NONE && dens0 > .14)) && nearRd >= 7 && !tbmAt(u / S * 4096, v / S * 4096)) c = [.40, .50, .27];
     const rk = Math.min(1, Math.max(0, (sl - .55) / .5)); if (rk > 0 && cc !== CL.URBAN && cc !== CL.WATER) c = c.map((x, q) => x * (1 - rk) + [.50, .48, .45][q] * rk);
     const sn = Math.min(1, Math.max(0, (h - 2500) / 400)) * (1 - Math.min(1, sl * .8)); if (sn > 0) c = c.map(x => x * (1 - sn) + .93 * sn);
     const nz2 = .9 + hsh(cx * 131 + i, cy * 131 + j) * .2; c = lin(c.map(x => Math.min(1, x * nz2)));
-    { let wg = 1, wr = 0, wd = 0, wp = 0; if (cc === CL.ROCK) { wg = 0; wr = 1 } else if (cc === CL.URBAN || cc === CL.IND) { wg = 0; wp = 1 } else if (cc === CL.SAND) { wg = 0; wp = .4; wd = .6 } else if (cc === CL.FARM) { wg = .3; wd = .7 } else if (cc === CL.VINE) { wg = .45; wd = .55 } else if (cc === CL.WOOD) { wg = .55; wd = .45 } else if (cc === CL.ICE) { wg = 0; wr = 1 } else if (cc === CL.NONE && dens0 > .14) { if (sl < .22) { wg = 0; wp = 1 } else { wg = .55; wd = .45 } }
+    // zone edificate: lastricato solo vicino alle strade e agli edifici, altrove giardini (erba e terra)
+    { let wg = 1, wr = 0, wd = 0, wp = 0; if (cc === CL.ROCK) { wg = 0; wr = 1 } else if (cc === CL.URBAN || cc === CL.IND) { if (nearRd < 7 || cc === CL.IND && nearRd < 20 || tbmAt(u / S * 4096, v / S * 4096)) { wg = 0; wp = 1 } else { wg = .6; wd = .4; wp = 0 } } else if (cc === CL.SAND) { wg = 0; wp = .4; wd = .6 } else if (cc === CL.FARM) { wg = .3; wd = .7 } else if (cc === CL.VINE) { wg = .45; wd = .55 } else if (cc === CL.WOOD) { wg = .55; wd = .45 } else if (cc === CL.ICE) { wg = 0; wr = 1 } else if (cc === CL.NONE && dens0 > .14) { if (sl < .22 && nearRd < 7) { wg = 0; wp = 1 } else { wg = .55; wd = .45 } }
       if (cc !== CL.URBAN && cc !== CL.WATER) { const rk2 = Math.min(1, Math.max(0, (sl - .45) / .5)) + (h > 1900 ? .5 : 0); if (rk2 > 0) { const t = Math.min(1, rk2); wg *= 1 - t; wd *= 1 - t; wp *= 1 - t; wr += t } }
       const sw2 = wg + wr + wd + wp || 1; TG.W.push(wg / sw2, wr / sw2, wd / sw2, wp / sw2) }
     // normale in coordinate del gioco: gradiente (gx est, gz sud) → (−(−gx), 1, −(−gz)) / l = (gx, 1, gz)
@@ -1559,16 +1655,24 @@ function buildCell(L, opt) {
   const RG = new GB(true), RSg = new GB(true), RDg = new GB(true), RBg = new GB(true), RWg = new GB(true), MC = new GB(false), MG = new GB(false), MS = new GB(false), rgOf = sty => sty === 3 ? RSg : sty === 4 ? RDg : sty === 5 ? RBg : sty === 6 ? RWg : RG, urban = (L.building && L.building.n) ? (() => { let n = 0; for (let i = 0; i < CR * CR; i++) if (cls[i] === CL.URBAN) n++; return n / (CR * CR) })() : 0, cityish = Math.max(urban, dens0 * 1.5) > .25;
   const COLS = 12, dirt = lin([.42, .36, .28]), conc = lin([.62, .61, .58]), curb = lin([.70, .69, .66]), stoneW = lin([.60, .57, .52]);
   // fondo del bordo verticale sotto il punto (u,v) alla quota y: fino al terreno, ma mai dentro un'altra strada (lì resta corto)
-  const deep = (u, v, y, R) => { let other = false; if (ROW) { const i0 = Math.floor(u / rpx), j0 = Math.floor(v / rpx); for (let j = j0 - 1; j <= j0 + 1 && !other; j++) for (let i = i0 - 1; i <= i0 + 1; i++) { if (i < 0 || j < 0 || i >= RHN || j >= RHN) continue; const o = ROW[j * RHN + i]; if (o >= 0 && o !== R.idx) { other = true; break } } } else segNear(u, v, 6, (P, pi, q, dd) => { if (!other && P.r !== R.r && !P.r.tun && dd < P.r.w / 2 + .3) other = true });
+  const deep = (u, v, y, R) => { let other = false; if (ROW) { const i0 = Math.floor(u / rpx), j0 = Math.floor(v / rpx), R2 = Math.max(1, Math.round(3.5 / rpx)); for (let j = j0 - R2; j <= j0 + R2 && !other; j++) for (let i = i0 - R2; i <= i0 + R2; i++) { if (i < 0 || j < 0 || i >= RHN || j >= RHN) continue; const o = ROW[j * RHN + i]; if (o >= 0 && o !== R.idx) { other = true; break } } } else segNear(u, v, 6, (P, pi, q, dd) => { if (!other && P.r !== R.r && !P.r.tun && dd < P.r.w / 2 + .3) other = true });
     return other ? y - 1.2 : Math.max(y - 40, Math.min(y - 1.2, ghT(u, v) - .4)) };
-  const liftOf = r => .06 + r.rank * .004 + (r.bridge ? .2 : 0), RH = RHN ? new Float32Array(RHN * RHN).fill(NaN) : null, ROW = RHN ? new Int32Array(RHN * RHN).fill(-1) : null, rpx = RHN ? S / RHN : 1;
-  // pixel del raster a distanza [w0,w1] dal segmento (lato: 0 entrambi, +1 sinistra, −1 destra); free = solo pixel fuori dalle carreggiate
-  const rasterSeg = (ax, ay, bx, by, ya, yb, w0, w1, dy0, id, side, free) => { const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy || 1e-6;
+  const liftOf = r => .06 + r.rank * .004 + (r.bridge ? .2 : 0), RH = RHN ? new Float32Array(RHN * RHN).fill(NaN) : null, ROW = RHN ? new Int32Array(RHN * RHN).fill(-1) : null, RH2 = RHN ? new Float32Array(RHN * RHN).fill(NaN) : null, RDD = RHN ? new Float32Array(RHN * RHN).fill(1e9) : null, RDP = RHN ? new Uint8Array(RHN * RHN) : null, rpx = RHN ? S / RHN : 1;
+  // pixel del raster a distanza [w0,w1] dal segmento (lato: 0 entrambi, +1 sinistra, −1 destra); free = solo pixel fuori dalle carreggiate.
+  // La quota segue la pendenza del segmento anche oltre le sue estremità (niente "tappi" piatti: su una discesa facevano una scala);
+  // dove due strade si sovrappongono vince quella di rango più alto (la sua carreggiata resta intera); a pari rango il segmento più vicino, cioè le due
+  // superfici si incontrano a metà strada fra gli assi (lì in realtà c'è il muretto o il cordolo). La strada che perde il pixel resta nel secondo strato (RH2):
+  // chi guida sceglie lo strato più vicino alla propria quota, così sulle terrazze (vie sovrapposte a quote diverse) ognuno resta sulla sua carreggiata
+  // (alle estremità della strada il raster finisce lì, con mezzo metro di margine: niente tappi sopra l'impalcato o la galleria che seguono)
+  const rasterSeg = (ax, ay, bx, by, ya, yb, w0, w1, dy0, id, side, free, capA, capB, prio) => { const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy || 1e-6, tE = .5 / Math.sqrt(l2);
     const i0 = Math.max(0, Math.floor((Math.min(ax, bx) - w1) / rpx)), i1 = Math.min(RHN - 1, Math.floor((Math.max(ax, bx) + w1) / rpx)), j0 = Math.max(0, Math.floor((Math.min(ay, by) - w1) / rpx)), j1 = Math.min(RHN - 1, Math.floor((Math.max(ay, by) + w1) / rpx));
-    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const pu = (i + .5) * rpx, pv = (j + .5) * rpx, t = Math.max(0, Math.min(1, ((pu - ax) * dx + (pv - ay) * dy) / l2)), ex = ax + dx * t - pu, ey = ay + dy * t - pv, dd = Math.sqrt(ex * ex + ey * ey);
-      if (dd > w1 || dd < w0) continue; if (side && (dx * (pv - ay) - dy * (pu - ax)) * side <= 0) continue; const p = j * RHN + i; if (free && ROW[p] >= 0) continue;
-      const y = ya + (yb - ya) * t + dy0; if (!(RH[p] >= y)) RH[p] = y; if (!free) ROW[p] = id } };
-  if (RHN) RD.forEach((R, idx) => { R.idx = idx; if (R.r.bridge || R.r.tun) return; const hw = R.r.w / 2, lf = liftOf(R.r); for (let q = 0; q < R.m - 1; q++) rasterSeg(R.S2[q * 2], R.S2[q * 2 + 1], R.S2[q * 2 + 2], R.S2[q * 2 + 3], R.h[q] + lf, R.h[q + 1] + lf, 0, hw, 0, idx, 0, false) });
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const pu = (i + .5) * rpx, pv = (j + .5) * rpx, t0 = ((pu - ax) * dx + (pv - ay) * dy) / l2, t = Math.max(0, Math.min(1, t0)), ex = ax + dx * t - pu, ey = ay + dy * t - pv, dd = Math.sqrt(ex * ex + ey * ey);
+      if (dd > w1 || dd < w0 || (!capA && t0 < -tE) || (!capB && t0 > 1 + tE)) continue; if (side && (dx * (pv - ay) - dy * (pu - ax)) * side <= 0) continue; const p = j * RHN + i; if (free && ROW[p] >= 0) continue;
+      const y = ya + (yb - ya) * Math.max(-.5, Math.min(1.5, t0)) + dy0, cur = RH[p]; if (cur === cur && (prio < RDP[p] || (prio === RDP[p] && dd >= RDD[p]))) { if (ROW[p] !== id && !(RH2[p] >= y)) RH2[p] = y; continue }
+      if (cur === cur && ROW[p] !== id && !(RH2[p] >= cur)) RH2[p] = cur; RH[p] = y; RDD[p] = dd; RDP[p] = prio; if (!free) ROW[p] = id } };
+  // raster delle quote stradali: larghezza almeno 0,8 pixel, così anche le strade strette coprono tutti i pixel attraversati dall'asse
+  if (RHN) RD.forEach((R, idx) => { R.idx = idx; if (R.r.bridge || R.r.tun) return; const hw = Math.max(R.r.w / 2, rpx * .8), lf = liftOf(R.r); const onB = (u, v) => u < .05 || v < .05 || u > S - .05 || v > S - .05, cA = onB(R.S2[0], R.S2[1]), cB = onB(R.S2[R.m * 2 - 2], R.S2[R.m * 2 - 1]);   // pezzo tagliato sul bordo della cella: la strada continua, il tappo resta
+    for (let q = 0; q < R.m - 1; q++) rasterSeg(R.S2[q * 2], R.S2[q * 2 + 1], R.S2[q * 2 + 2], R.S2[q * 2 + 3], R.h[q] + lf, R.h[q + 1] + lf, 0, hw, 0, idx, 0, false, q > 0 || cA, q < R.m - 2 || cB, 2 + R.r.rank) });
   RD.sort((a, b) => a.r.rank - b.r.rank);
   for (const R of RD) { const r = R.r, hw = r.w / 2, m = R.m, S2 = R.S2, lift = liftOf(r), u0 = r.sty / COLS + .004, u1 = (r.sty + 1) / COLS - .004;
     const sideL = [], sideR = [];
@@ -1612,7 +1716,7 @@ function buildCell(L, opt) {
           if (ROW) { const mu = ex + nx * sw * .5, mv = ez + nz * sw * .5, pi = Math.floor(mu / rpx), pj = Math.floor(mv / rpx); if (pi >= 0 && pj >= 0 && pi < RHN && pj < RHN) { const o = ROW[pj * RHN + pi]; if (o >= 0 && o !== R.idx) cut[q] = 1 } }
           RWg.v(-ex, y, -ez, 0, 1, 0, [1, 1, 1], sgn > 0 ? us1 : us0, vv); RWg.v(-(ex + nx * sw), y, -(ez + nz * sw), 0, 1, 0, [1, 1, 1], sgn > 0 ? us0 : us1, vv) }
         for (let q = 0; q < m - 1; q++) { if (cut[q] || cut[q + 1]) continue; const a = b0 + q * 2; if (sgn > 0) RWg.I.push(a + 1, a + 3, a, a, a + 3, a + 2); else RWg.I.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
-          if (RHN) rasterSeg(S2[q * 2], S2[q * 2 + 1], S2[q * 2 + 2], S2[q * 2 + 3], R.h[q] + lift, R.h[q + 1] + lift, hw, hw + sw, .14, R.idx, sgn, true) }
+          if (RHN) rasterSeg(S2[q * 2], S2[q * 2 + 1], S2[q * 2 + 2], S2[q * 2 + 3], R.h[q] + lift, R.h[q + 1] + lift, hw, hw + sw, .14, R.idx, sgn, true, q > 0 || S2[0] < .05 || S2[1] < .05 || S2[0] > S - .05 || S2[1] > S - .05, q < m - 2 || S2[m * 2 - 2] < .05 || S2[m * 2 - 1] < .05 || S2[m * 2 - 2] > S - .05 || S2[m * 2 - 1] > S - .05, 1) }
         for (let q = 0; q < m - 1; q++) { if (cut[q] || cut[q + 1]) continue; const ax = side[q * 3], az = side[q * 3 + 1], ay = side[q * 3 + 2], bx = side[q * 3 + 3], bz = side[q * 3 + 4];
           const by = side[q * 3 + 5]; if (sgn > 0) wallS(MC, bx, bz, ax, az, by - .02, by + .14, ay - .02, ay + .14, curb); else wallS(MC, ax, az, bx, bz, ay - .02, ay + .14, by - .02, by + .14, curb);
           // bordo esterno del marciapiede fino al terreno (muro di pietra se il dislivello è alto)
@@ -1733,7 +1837,7 @@ function buildCell(L, opt) {
       { let s0 = 0; for (let q = 0; q < 8; q++) { const [u0, v0] = lo[q], [u1, v1] = lo[(q + 1) % 8]; wallB(GW, u0, v0, u1, v1, top - .3, top + lr * 2.2, stoneC, s0, 17, .6); s0 += Math.hypot(u1 - u0, v1 - v0) } }
       for (let q = 0; q < 8; q++) { const a = [lo[q][0], top + lr * 2.2, lo[q][1]], b = [lo[(q + 1) % 8][0], top + lr * 2.2, lo[(q + 1) % 8][1]]; tri3(GR, [a, b, [cen[0], top + lr * 3.6, cen[2]]], dc, [[0, 0], [lr / 2, 0], [lr / 4, lr]]) } stat.cupole = (stat.cupole || 0) + 1 } };
 
-  let nb = 0; stat.falde = 0; { const ly = L.building; if (ly) { const ext = ext0(ly), k = S / ext, ck = q => Math.min(BHI * k, Math.max(BLO * k, q * k)); stat.edifici_dati = 0;
+  let nb = 0; stat.falde = 0; { const ly = L.building; if (ly) { const ext = ext0(ly), k = S / ext, cku = q => Math.min(BHIu * k, Math.max(BLOu * k, q * k)), ckv = q => Math.min(BHIv * k, Math.max(BLOv * k, q * k)); stat.edifici_dati = 0;
     for (let i = 0; i < ly.n; i++) { const f = ly.feat(i), p = f.props; if (f.type !== 3 || p.hide_3d) continue;
       for (const pg of polygons(f.parts)) { const rings = pg.map(r => clipRing(r, 0, ext)).filter(r => r.length >= 6); if (!rings.length) continue;
         let area = 0; for (const r of rings) area += ringArea(r) * k * k; if (area < 6) continue;
@@ -1759,7 +1863,7 @@ function buildCell(L, opt) {
         const bands = STB[st], fh = st === ST.STORICO || st === ST.PIETRA ? 3.6 : st === ST.IND ? 4.5 : 3.2;
         // negozi al piano terra: dove OpenStreetMap ha un negozio o un locale a meno di 9 m dal perimetro (oppure, nei centri densi, a caso)
         let shop = false; if (st !== ST.IND && st !== ST.UFFICI && top >= 6) { const r0 = rings[0]; outer: for (let q = 0; q < shopPts.length; q += 2) { const pu = shopPts[q], pv = shopPts[q + 1]; if (Math.abs(pu - cu) > 60 || Math.abs(pv - cv) > 60) continue; const n = r0.length / 2; for (let e = 0; e < n; e++) { const ax = r0[e * 2] * k, ay = r0[e * 2 + 1] * k, bx = r0[((e + 1) % n) * 2] * k, by = r0[((e + 1) % n) * 2 + 1] * k, dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy || 1e-9, t = Math.max(0, Math.min(1, ((pu - ax) * dx + (pv - ay) * dy) / l2)); if (Math.hypot(ax + dx * t - pu, ay + dy * t - pv) < 9) { shop = true; break outer } } } if (!shop && (st === ST.STORICO || st === ST.CONDO || st === ST.PIETRA) && dens > .3 && hr2 < .3) shop = true } if (spc) shop = false;
-        let hraw = 1e9, hgr = 1e9; for (const r of pg) for (let q = 0; q < r.length; q += 2) { const hh = hAt(ck(r[q]), ck(r[q + 1])); if (hh < hraw) hraw = hh }
+        let hraw = 1e9, hgr = 1e9; for (const r of pg) for (let q = 0; q < r.length; q += 2) { const hh = hAt(cku(r[q]), ckv(r[q + 1])); if (hh < hraw) hraw = hh }
         for (const r of rings) for (let q = 0; q < r.length; q += 2) { const hh = gh(r[q] * k, r[q + 1] * k); if (hh < hgr) hgr = hh }
         const yb0 = hraw - .4 + low, y0 = Math.min(yb0, hgr - .4 + low), y1 = hraw + top;
         const pal = PAL[st]; let col = p.colour ? hexRGB(p.colour) : null; if (!col) col = spc ? SPC[spc.k][Math.floor(hr * SPC[spc.k].length)].slice() : rgb(pal[Math.floor(hr * pal.length)]); col = lin(col.map(x => Math.min(1, x * (.94 + hr2 * .1))));
@@ -1931,8 +2035,8 @@ function buildCell(L, opt) {
             if (!free(au, av, R, 3.5) || !free(bu, bv, R, 3.5) || !free((au + bu) / 2, (av + bv) / 2, R, 3.5)) continue;
             const L2 = Math.hypot(bu - au, bv - av); if (L2 < .2) continue;
             // muro di sostegno dal lato a monte, solo dove la scarpata vera (dopo lo scavo della strada) supera 1,2 m e non c'è altro vicino
-            const gA = ghT(au + nx * 1.4, av + nz * 1.4), gB = ghT(bu + nx * 1.4, bv + nz * 1.4), up = Math.min(gA - yA, gB - yB);
-            if (up > 1.2 && r.c !== 'track' && free(au + nx * 6, av + nz * 6, R, 4)) { const tA = Math.min(yA + 2.6, gA + .2), tB = Math.min(yB + 2.6, gB + .2); wallS(MS, sgn > 0 ? au : bu, sgn > 0 ? av : bv, sgn > 0 ? bu : au, sgn > 0 ? bv : av, (sgn > 0 ? yA : yB) - .3, sgn > 0 ? tA : tB, (sgn > 0 ? yB : yA) - .3, sgn > 0 ? tB : tA, stoneC); stat.sostegno = (stat.sostegno || 0) + L2; continue }
+            const gA = ghT(au + nx * 3.2, av + nz * 3.2), gB = ghT(bu + nx * 3.2, bv + nz * 3.2), up = Math.min(gA - yA, gB - yB);
+            if (up > 2 && r.c !== 'track' && free(au + nx * 6, av + nz * 6, R, 4)) { const tA = Math.min(yA + 2.6, gA + .2), tB = Math.min(yB + 2.6, gB + .2); wallS(MS, sgn > 0 ? au : bu, sgn > 0 ? av : bv, sgn > 0 ? bu : au, sgn > 0 ? bv : av, (sgn > 0 ? yA : yB) - .3, sgn > 0 ? tA : tB, (sgn > 0 ? yB : yA) - .3, sgn > 0 ? tB : tA, stoneC); stat.sostegno = (stat.sostegno || 0) + L2; continue }
             if (!kind) continue;
             if (kind === 1) { const ht = .85 + hsh(e, 3) * .25, ou = nx * .5, ov = nz * .5;
               wallS(MS, sgn > 0 ? au : bu, sgn > 0 ? av : bv, sgn > 0 ? bu : au, sgn > 0 ? bv : av, (sgn > 0 ? yA : yB) - .25, (sgn > 0 ? yA : yB) + ht, (sgn > 0 ? yB : yA) - .25, (sgn > 0 ? yB : yA) + ht, stoneC);
@@ -1994,8 +2098,8 @@ function buildCell(L, opt) {
   const places = [], pois = [];
   { const ly = L.place; if (ly) { const k = S / ext0(ly); for (let i = 0; i < ly.n; i++) { const f = ly.feat(i), p = f.props; if (f.type !== 1 || !p.name) continue; const pt = f.parts[0]; if (!pt) continue; const u = pt[0] * k, v = pt[1] * k; if (u < 0 || v < 0 || u > S || v > S) continue;
       places.push({ x: -u, z: -v, name: p['name:it'] || p.name, cl: p.class, rank: p.rank || 0 }) } } }
-  { const ly = L.poi; if (ly && A) { const k = S / ext0(ly); for (let i = 0; i < ly.n; i++) { const f = ly.feat(i), p = f.props; if (f.type !== 1) continue; if (p.class !== 'cafe' && p.class !== 'bar' && p.subclass !== 'cafe' && p.subclass !== 'bar' && p.subclass !== 'pub' && p.class !== 'fuel' && p.subclass !== 'fuel' && p.subclass !== 'car_repair') continue; const pt = f.parts[0]; const u = pt[0] * k, v = pt[1] * k; if (u < 0 || v < 0 || u > S || v > S) continue;
-      pois.push({ x: -u, z: -v, name: p.name || '', cl: (p.class === 'fuel' || p.subclass === 'fuel') ? 'fuel' : p.subclass === 'car_repair' ? 'car_repair' : (p.subclass || p.class) }) } } }
+  { const ly = L.poi; if (ly && A) { const k = S / ext0(ly); for (let i = 0; i < ly.n; i++) { const f = ly.feat(i), p = f.props; if (f.type !== 1) continue; if (p.class !== 'cafe' && p.class !== 'bar' && p.subclass !== 'cafe' && p.subclass !== 'bar' && p.subclass !== 'pub') continue; const pt = f.parts[0]; const u = pt[0] * k, v = pt[1] * k; if (u < 0 || v < 0 || u > S || v > S) continue;
+      pois.push({ x: -u, z: -v, name: p.name || '', cl: p.subclass || p.class }) } } }
   for (const mn of mini) { mn.pk = mn.R.pk || 0; delete mn.R }
   // --- nomi delle vie, insegne dei negozi veri, numeri civici, fermate dell'autobus, cestini e colonnine (dati OpenStreetMap)
   const names = [], NR = RHN ? new Int16Array(RHN * RHN).fill(-1) : null;
@@ -2020,10 +2124,12 @@ function buildCell(L, opt) {
       for (let i = 0; i < ly.n; i++) { const f = ly.feat(i), p = f.props; if (f.type !== 1) continue; const pt = f.parts[0]; if (!pt) continue; const u = pt[0] * k, v = pt[1] * k; if (u < 1 || v < 1 || u > S - 1 || v > S - 1) continue; const nm = p['name:it'] || p.name || '';
         if (p.class === 'bus' && p.subclass === 'bus_stop') { let bt = 1e9, tx = 1, tz = 0; for (const R of RD) { const S2 = R.S2; for (let q = 0; q < R.m; q += 3) { const d = (S2[q * 2] - u) ** 2 + (S2[q * 2 + 1] - v) ** 2; if (d < bt) { bt = d; const qa = Math.max(0, q - 1), qb = Math.min(R.m - 1, q + 1), l = Math.hypot(S2[qb * 2] - S2[qa * 2], S2[qb * 2 + 1] - S2[qa * 2 + 1]) || 1; tx = (S2[qb * 2] - S2[qa * 2]) / l; tz = (S2[qb * 2 + 1] - S2[qa * 2 + 1]) / l } } }
           objs.push(1, u, gh(u, v), v, 0, 1); if (nm) texts.push({ k: 'bus', txt: nm, u, v, nx: -tz, nz: tx, y: gh(u, v) + 2.55, w: .5, h: .5, free: 1 }); continue }
-        if (p.class === 'waste_basket' || p.class === 'recycling') { if (!inB(u, v)) objs.push(2, u, gh(u, v), v, 0, 1); continue }
-        if (p.class === 'post' && p.subclass === 'post_box') { if (!inB(u, v)) objs.push(3, u, gh(u, v), v, 0, 1); continue }
+        // cestini, cassette, telefoni: mai dentro una carreggiata (la posizione OpenStreetMap è spesso imprecisa di qualche metro); i dissuasori sì, sono barriere vere
+        const onRoad = (() => { const o = rowAt2(u, v); return o >= 0 && RD[o] && RD[o].r.rank >= 2 })();
+        if (p.class === 'waste_basket' || p.class === 'recycling') { if (!inB(u, v) && !onRoad) objs.push(2, u, gh(u, v), v, 0, 1); continue }
+        if (p.class === 'post' && p.subclass === 'post_box') { if (!inB(u, v) && !onRoad) objs.push(3, u, gh(u, v), v, 0, 1); continue }
         if (p.class === 'bollard') { if (!inB(u, v)) objs.push(4, u, gh(u, v), v, 0, 1); continue }
-        if (p.class === 'telephone') { if (!inB(u, v)) objs.push(5, u, gh(u, v), v, 0, 1); continue }
+        if (p.class === 'telephone') { if (!inB(u, v) && !onRoad) objs.push(5, u, gh(u, v), v, 0, 1); continue }
         const cat = SIGNCAT(p); if (!cat) continue; const ne = nearEdge(u, v, 14); if (!ne || ne.e.L < 2.2) continue; const e = ne.e; if (e.used >= 3) continue; e.used++;
         const txt = nm ? nm.toUpperCase() : cat[0], w = Math.min(e.L * .86, Math.max(2.2, txt.length * .36 + .9)), tt = Math.max(w / 2 / e.L + .03, Math.min(1 - w / 2 / e.L - .03, ne.t));
         texts.push({ k: 'ins', txt, sub: nm ? cat[0] : '', bg: cat[1], fg: cat[2], u: e.u0 + (e.u1 - e.u0) * tt, v: e.v0 + (e.v1 - e.v0) * tt, nx: e.nx, nz: e.nz, y: e.yb + Math.min(e.gfl - .35, 3.55), w, h: .62 }) } } }
@@ -2044,7 +2150,10 @@ function buildCell(L, opt) {
   stat.edifici = nb; stat.strade = RD.length; stat.alberi = trees.length / 5; stat.ms = Date.now() - t0;
   stat.testi = texts.length; stat.oggetti = objs.length / 6;
   if (opt.dbg) stat._dbg = { RD: RD.map(R => ({ S2: R.S2, h: R.h, m: R.m, w: R.r.w, c: R.r.c, bridge: !!R.r.bridge, tun: !!R.r.tun, rank: R.r.rank, one: !!R.r.one, ramp: !!R.r.ramp, lift: liftOf(R.r), cov: R.r.tun ? Array.from({ length: R.m }, (_, q) => ghT(R.S2[q * 2], R.S2[q * 2 + 1]) - (R.h[q] + liftOf(R.r) + 5.2)) : null })), d, MSo: MS.n, HGo: HG.n };
-  return { S, NG, H, cls, CR, wmask, WM, RH, RHN, NR, names, GM, GMN, T: TG.out(), R: RG.out(), Rst: RSg.out(), Rdi: RDg.out(), Rba: RBg.out(), Rsw: RWg.out(), Mc: MC.out(), MS: MS.out(), HG: HG.out(), chiese: chList, rotatorie: rbList, dens: dens0, M: MG.out(), W: WG.out(), BW: outs(BWs), BR: outs(BRs), walls: new Float32Array(walls), trees: new Float32Array(trees), lamps: new Float32Array(lamps), parked: new Float32Array(parked), objs: new Float32Array(objs), texts, nav, bridges, mini, places, pois, stat } }
+  // raster delle quote stradali: due strati a 16 bit (0 = niente strada, altrimenti 1 + (quota − base) / 0,04 m): un quarto della memoria dei float
+  let RHQ = null, RH2Q = null, RHB = 0; if (RHN) { let mn = 1e9; for (let p = 0; p < RHN * RHN; p++) { const h = RH[p]; if (h === h && h < mn) mn = h } RHB = mn < 1e9 ? mn - 1 : 0; RHQ = new Uint16Array(RHN * RHN); RH2Q = new Uint16Array(RHN * RHN);
+    for (let p = 0; p < RHN * RHN; p++) { const h = RH[p], h2 = RH2[p]; if (h === h) RHQ[p] = Math.min(65535, 1 + Math.round((h - RHB) * 25)); if (h2 === h2) RH2Q[p] = Math.min(65535, 1 + Math.round((h2 - RHB) * 25)) } }
+  return { S, NG, H, cls, CR, wmask, WM, RH: RHQ, RH2: RH2Q, RHB, RHN, NR, names, GM, GMN, T: TG.out(), R: RG.out(), Rst: RSg.out(), Rdi: RDg.out(), Rba: RBg.out(), Rsw: RWg.out(), Mc: MC.out(), MS: MS.out(), HG: HG.out(), chiese: chList, rotatorie: rbList, dens: dens0, M: MG.out(), W: WG.out(), BW: outs(BWs), BR: outs(BRs), walls: new Float32Array(walls), trees: new Float32Array(trees), lamps: new Float32Array(lamps), parked: new Float32Array(parked), objs: new Float32Array(objs), texts, nav, bridges, mini, places, pois, stat } }
 // cella lontana: solo terreno (colori per quota e pendenza; il mare è un gruppo di triangoli a parte, a 1 m sotto lo zero).
 // Il terreno lontano sta un po' sotto la quota vera (di più sui pendii ripidi) così non sporge dalle celle vicine più dettagliate.
 // Le pendenze usano anche un campione oltre il bordo: due celle lontane vicine hanno vertici identici sul bordo comune.
@@ -2082,6 +2191,34 @@ function vtTile(z, x, y) { return lru(VTC, z + '/' + x + '/' + y, async () => { 
 async function demFor(zd, mx0, my0, mx1, my1) { const need = demTilesFor(zd, mx0, my0, mx1, my1), tiles = new Map();
   await Promise.all(need.map(async ([tx, ty]) => { tiles.set(tx * 65536 + ty, await demTile(zd, tx, ty)) }));
   return makeDem(zd, (tx, ty) => tiles.get(tx * 65536 + ty) || null) }
+// tile z14 con le tile vicine unite (strade ed edifici): le celle ai bordi della tile vedono le strade anche oltre il bordo (margine di calcolo),
+// così due celle di tile diverse calcolano le stesse quote sul bordo comune. Le linee della tile principale si tagliano esattamente sui quattro bordi
+// (la fascia di sicurezza della tile duplicherebbe le strade delle vicine e cambierebbe da quarto a quarto); le linee delle vicine si tagliano sulla
+// loro area; i pezzi della stessa strada che si toccano sul bordo (stessa classe, ponte/galleria, senso, livello) vengono ricuciti in una sola linea,
+// così ponti e gallerie lunghi hanno un profilo unico. Senza vicine, la tile resta com'è (con la sua fascia).
+function mergeTiles(main, neigh) { neigh = (neigh || []).filter(n => n && n.L && (n.L.transportation || n.L.building)); if (!neigh.length) return main;
+  const out = {}; for (const k in main) out[k] = main[k];
+  const shift = (p, ox, oy) => { const q = new Array(p.length); for (let j = 0; j < p.length; j += 2) { q[j] = p[j] + ox; q[j + 1] = p[j + 1] + oy } return q };
+  // edifici: unione semplice (traslati)
+  { const name = 'building', ly = main[name], ext = ly ? ly.ext : 4096, srcs = []; if (ly) srcs.push({ ly, dx: 0, dy: 0, n: ly.n });
+    for (const nb of neigh) { const l2 = nb.L[name]; if (l2 && l2.feat) srcs.push({ ly: l2, dx: nb.dx, dy: nb.dy, n: l2.n }) }
+    if (srcs.length) { const tot = srcs.reduce((a, s2) => a + s2.n, 0); out[name] = { name, ext, n: tot, feat: i => { let s2 = 0; while (i >= srcs[s2].n) { i -= srcs[s2].n; s2++ } const S = srcs[s2], ft = S.ly.feat(i); if (!S.dx && !S.dy) return ft; return { id: ft.id, type: ft.type, props: ft.props, parts: ft.parts.map(p => shift(p, S.dx * ext, S.dy * ext)) } } } } }
+  // strade: materializzate, ritagliate e ricucite sui bordi
+  { const name = 'transportation', ly = main[name], ext = ly ? ly.ext : 4096, feats = [], ends = [];
+    const add = (ft, parts, keyBase) => { for (const p of parts) { const f = { id: ft.id, type: ft.type, props: ft.props, parts: [p] }; feats.push(f);
+      const onB = (x, y) => Math.abs(x) < 1.5 || Math.abs(x - ext) < 1.5 || Math.abs(y) < 1.5 || Math.abs(y - ext) < 1.5; if (onB(p[0], p[1])) ends.push({ f, e: 0, x: p[0], y: p[1], k: keyBase }); if (onB(p[p.length - 2], p[p.length - 1])) ends.push({ f, e: 1, x: p[p.length - 2], y: p[p.length - 1], k: keyBase }) } };
+    const keyOf = pr => pr.class + '|' + (pr.brunnel || '') + '|' + (pr.oneway || 0) + '|' + (pr.layer || 0) + '|' + (pr.ramp || 0) + '|' + (pr.ref || '') + '|' + (pr.name || '');
+    if (ly) for (let i = 0; i < ly.n; i++) { const ft = ly.feat(i); if (ft.type !== 2) { feats.push(ft); continue } const parts = []; for (const p of ft.parts) for (const c of clipLineBox(p, 0, ext, 0, ext)) parts.push(c); add(ft, parts, keyOf(ft.props)) }
+    for (const nb of neigh) { const l2 = nb.L[name]; if (!l2 || !l2.feat) continue; const ox = nb.dx * ext, oy = nb.dy * ext, x0 = nb.dx < 0 ? -ext : nb.dx > 0 ? ext : 0, x1 = x0 + ext, y0 = nb.dy < 0 ? -ext : nb.dy > 0 ? ext : 0, y1 = y0 + ext;
+      for (let i = 0; i < l2.n; i++) { const ft = l2.feat(i); if (ft.type !== 2) { if (ft.type === 3) feats.push({ id: ft.id, type: 3, props: ft.props, parts: ft.parts.map(p => shift(p, ox, oy)) }); continue } const parts = []; for (const p of ft.parts) for (const c of clipLineBox(shift(p, ox, oy), x0, x1, y0, y1)) parts.push(c); add(ft, parts, keyOf(ft.props)) } }
+    // ricucitura: estremità sullo stesso punto di bordo con la stessa chiave
+    const byK = new Map(); for (const e of ends) { const kk = e.k + '|' + Math.round(e.x / 3) + '|' + Math.round(e.y / 3); let a = byK.get(kk); if (!a) byK.set(kk, a = []); a.push(e) }
+    // solo continuazioni nello stesso verso (fine di uno = inizio dell'altro): il senso unico resta giusto e il risultato non dipende dall'ordine
+    const alias = new Map(), find = f => { while (alias.has(f)) f = alias.get(f); return f }; let nst = 0;
+    for (const a of byK.values()) { if (a.length !== 2) continue; let [A, B] = a; if (Math.hypot(A.x - B.x, A.y - B.y) > 2 || A.e === B.e) continue; if (A.e === 0) { const t = A; A = B; B = t }
+      const fa = find(A.f), fb = find(B.f); if (fa === fb) continue; fa.parts[0] = fa.parts[0].concat(fb.parts[0].slice(2)); alias.set(fb, fa); nst++ }
+    const kept = feats.filter(f => !alias.has(f)); out[name] = { name, ext, n: kept.length, feat: i => kept[i], __stitched: nst } }
+  return out }
 // quarto (qx,qy) di una tile: stesse geometrie con coordinate ×f e traslate (la cella torna a coprire [0,ext]²)
 function subLayers(L, qx, qy, f) { const out = {};
   for (const name in L) { const ly = L[name]; if (!ly || !ly.feat) continue; const e = ly.ext, ox = qx * e, oy = qy * e;
@@ -2121,9 +2258,14 @@ function lcTile(z, x, y) { if (!CFG.lc || LCFAIL > 3) return Promise.resolve(nul
       LCFAIL = 0; STAT.lc = (STAT.lc || 0) + 1; return n ? { N, d: out } : null } catch (e) { return null } }, 12) }
 // --- celle 3D (z15, dal quarto della tile z14)
 async function cell(m) { const z = m.z, Sm = ME / (1 << z), mxL = -MH + m.x * Sm, myT = MH - m.y * Sm, K = CFG.K;
-  const [dem, L14, lc] = await Promise.all([demFor(Math.min(CFG.demMax || 12, 12), mxL - Sm, myT - 2 * Sm, mxL + 2 * Sm, myT + Sm), vtTile(z - 1, m.x >> 1, m.y >> 1), lcTile(z - 1, m.x >> 1, m.y >> 1).catch(() => null)]);
-  const L = subLayers(L14, m.x & 1, m.y & 1, 2), ext = 4096;
-  const r = buildCell(L, { S: Sm * K, mxL, myT, K, dem, lod: m.lod, earcut, cx: m.x, cy: m.y, blo: -ext, bhi: 2 * ext, dens: tileDens(L14), lc: lc ? { N: lc.N, d: lc.d, qx: m.x & 1, qy: m.y & 1 } : null });
+  // le 8 tile vicine (stesso insieme per i quattro quarti della tile: così le celle calcolano le stesse quote sui bordi e sui ponti/gallerie lunghi)
+  const x14 = m.x >> 1, y14 = m.y >> 1, nbT = (dx, dy) => vtTile(z - 1, x14 + dx, y14 + dy).then(L2 => ({ L: L2, dx, dy })).catch(() => null), NB = [];
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) NB.push(nbT(dx, dy));
+  // rilievo: tile z14 intera più una cella intorno (uguale per i quattro quarti: ponti e gallerie lunghi hanno lo stesso profilo in tutte le celle)
+  const qx = m.x & 1, qy = m.y & 1, tw = mxL - qx * Sm, tn = myT + qy * Sm;
+  const [dem, L14, lc, ...nbs] = await Promise.all([demFor(Math.min(CFG.demMax || 12, 12), tw - Sm, tn - 3 * Sm, tw + 3 * Sm, tn + Sm), vtTile(z - 1, x14, y14), lcTile(z - 1, x14, y14).catch(() => null)].concat(NB));
+  const L = subLayers(mergeTiles(L14, nbs), qx, qy, 2), ext = 4096;
+  const r = buildCell(L, { S: Sm * K, mxL, myT, K, dem, lod: m.lod, earcut, cx: m.x, cy: m.y, blo: -ext, bhi: 2 * ext, blou: -(1 + qx) * ext, bhiu: (3 - qx) * ext, blov: -(1 + qy) * ext, bhiv: (3 - qy) * ext, dens: tileDens(L14), lc: lc ? { N: lc.N, d: lc.d, qx, qy } : null });
   r.net = { vt: STAT.vt, dem: STAT.dem, kb: Math.round(STAT.bytes / 1024) }; return r }
 async function far(m) { const z = m.z, Sm = ME / (1 << z), mxL = -MH + m.x * Sm, myT = MH - m.y * Sm, N = m.N || 17, pad = Sm / (N - 1);
   const dem = await demFor(Math.min(m.zd || 11, CFG.demMax || 12), mxL - pad, myT - Sm - pad, mxL + Sm + pad, myT + pad); return buildFar({ S: Sm * CFG.K, mxL, myT, K: CFG.K, dem, N, q: [m.x & 1, m.y & 1] }) }
@@ -2131,7 +2273,7 @@ async function mapTile(m) { const L = await vtTile(m.z, m.x, m.y), Sm = ME / (1 
 function transfers(r) { const t = []; const add = a => { if (a && a.buffer && !t.includes(a.buffer)) t.push(a.buffer) };
   const geo = o => { if (o) { add(o.P); add(o.N); add(o.C); add(o.I); add(o.U) } };
   for (const k of ['T', 'R', 'Rst', 'Rdi', 'Rba', 'Rsw', 'Mc', 'MS', 'HG', 'M', 'W']) geo(r[k]); if (r.T && r.T.W) add(r.T.W); for (const k of ['BW', 'BR']) if (Array.isArray(r[k])) r[k].forEach(geo);
-  add(r.H); add(r.cls); add(r.wmask); add(r.RH); add(r.NR); add(r.GM); add(r.walls); add(r.trees); add(r.lamps); add(r.parked); add(r.objs); if (r.img) t.push(r.img); return t }
+  add(r.H); add(r.cls); add(r.wmask); add(r.RH); add(r.RH2); add(r.NR); add(r.GM); add(r.walls); add(r.trees); add(r.lamps); add(r.parked); add(r.objs); if (r.img) t.push(r.img); return t }
 onmessage = async e => { const m = e.data;
   if (m.t === 'cfg') { CFG = m.cfg; return }
   const job = m.t === 'cella' ? cell : m.t === 'lontano' ? far : m.t === 'mappa' ? mapTile : null; if (!job) return;
@@ -2144,13 +2286,13 @@ onmessage = async e => { const m = e.data;
 <div id="hud"><div id="ottica" hidden><i class="oh"></i><i class="ov"></i><i class="ol"></i><i class="or"></i><i class="ob"></i><i class="op"></i></div>
 <div id="look"></div>
 <div id="joy"><div id="base"><div id="knob"></div></div></div>
-<div id="top"><div class="chip" id="w"></div><div class="chip" id="sp" hidden></div><div class="chip" id="qd" hidden></div><div style="flex:1"></div><button class="b" id="tbtn" title="Ora del giorno">🌓</button><button class="b" id="rbtn" title="Radio">📻</button><button class="b" id="v360">360°</button><button class="b" id="vw">VISTA</button></div>
+<div id="top"><div class="chip" id="w"></div><div class="chip" id="sp" hidden></div><div style="flex:1"></div><button class="b" id="tbtn" title="Ora del giorno">🌓</button><button class="b" id="rbtn" title="Radio">📻</button><button class="b" id="v360">360°</button><button class="b" id="vw">VISTA</button></div>
 <button class="b" id="hb" hidden>FRENO A MANO</button>
 <button class="b" id="act">—</button>
 <div class="chip" id="toast"></div>
 <div id="cr">Mappa © OpenStreetMap contributors · OpenMapTiles · OpenFreeMap · Rilievo Mapterhorn (INGV TINITALY e fonti regionali) · © ESA WorldCover 2021, dati Copernicus Sentinel (CC BY 4.0) · Texture Poly Haven e ambientCG (CC0) · Auto: «Alfa Romeo 159 Sedan And Wagon» di Nieve5677 (sketchfab.com), CC BY 4.0</div>
 <canvas id="mm" width="240" height="240"></canvas><div class="chip" id="zn"></div>
-<div id="arr" hidden></div><button class="b" id="pbtn">🚔</button><button class="b" id="vbtn" title="Veicolo">🚗</button><div id="vp" hidden></div><div id="gbx"><button class="b" id="gdn">−</button><button class="b" id="gup">+</button></div><div class="chip" id="heat" style="display:none"></div><div class="chip" id="dmg" style="display:none"></div><button class="b" id="rep" style="display:none">🔧 Ripara l'auto</button><div id="sub"></div>
+<div id="arr" hidden></div><button class="b" id="pbtn">🚔</button><div class="chip" id="heat" style="display:none"></div><div class="chip" id="dmg" style="display:none"></div><button class="b" id="rep" style="display:none">🔧 Ripara l'auto</button><div id="sub"></div>
 <div id="mirino"><i class="a"></i><i class="bb"></i><i class="c"></i><i class="d"></i><i class="p"></i></div>
 <button class="b" id="bspara">SPARA</button><button class="b" id="bmira">MIRA</button><button class="b" id="bricarica">RICARICA</button>
 <div class="chip" id="colpi"></div><button class="b" id="barmi" title="Armeria">ARMI</button><button class="b" id="bfull" title="Schermo intero"><svg class="i1" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg><svg class="i2" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg></button>
@@ -2158,11 +2300,10 @@ onmessage = async e => { const m = e.data;
 <div id="pp" hidden><div class="ph">Polizia · pattuglie sulle strade vere</div><label><input type="checkbox" id="p_on"> Sistema attivo</label><label><input type="checkbox" id="p_voice"> Voce radio</label><label><input type="checkbox" id="p_sub"> Sottotitoli</label><label><input type="checkbox" id="p_siren"> Sirene</label><label><input type="checkbox" id="p_cine"> Momenti spettacolari (rallentatore)</label><div class="pr"><button class="b s" id="p_test">Prova inseguimento</button><button class="b s" id="p_back">Rinforzi</button><button class="b s" id="p_block">Posto di blocco</button><button class="b s" id="p_spk">Strisce chiodate</button><button class="b s" id="p_box">Scatola</button><button class="b s" id="p_pin">Tenaglia</button><button class="b s" id="p_end">Termina</button></div><pre id="p_log"></pre></div>
 <div id="rw" hidden><div id="rwc"><div id="rwring"></div><div id="rwname"></div></div><div id="rwhint">Trascina sulla ruota e rilascia · tocca fuori per chiudere</div><button class="b" id="rwx" style="color:var(--ink);background:rgba(255,255,255,.88);text-shadow:none">Chiudi</button></div><div id="rnow" hidden><div class="rn1">📻 <span id="rn_st"></span></div><div class="rn2" id="rn_song"></div></div>
 <div id="menu" hidden><b>Bar Da Gino · Menu</b><div id="tabs"></div><div id="items"></div><button class="b" id="close">Chiudi</button></div>
-<div id="map" hidden><div id="mt">Mappa</div><canvas id="mc" width="900" height="900"></canvas><button class="b" id="mgo" hidden>Vai qui</button><div id="mcity"></div><div id="mz"><button class="b" id="mzo">−</button><button class="b" id="mzc">◎</button><button class="b" id="mzi">+</button></div><button class="b" id="mx" style="color:var(--ink);background:rgba(255,255,255,.88);text-shadow:none">Chiudi</button><button class="b s" id="mcred">Fonti</button><button class="b s" id="msat">🛰 Copernicus</button><div id="rcred" hidden><button class="b s" id="rcredx">Chiudi</button><div><b>Fonti della mappa reale</b><p>Dati geografici: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors, licenza ODbL; schema e tile vettoriali <a href="https://openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a> (licenza BSD/CC BY), serviti da <a href="https://openfreemap.org/" target="_blank" rel="noopener noreferrer">OpenFreeMap</a>.</p><p>Rilievo del terreno: tile <a href="https://mapterhorn.com/" target="_blank" rel="noopener noreferrer">Mapterhorn</a> (elenco completo delle fonti su mapterhorn.com/attribution). Per l’Italia comprendono: TINITALY 10 m, Istituto Nazionale di Geofisica e Vulcanologia (INGV), CC BY 4.0 · DTM Regione Autonoma Valle d’Aosta 2 m, CC BY 4.0 · DGM Provincia Autonoma di Bolzano 2,5 m, CC0 · DTM Regione Lombardia 5 m, CC BY 4.0 · DTM Regione Piemonte 5 m, CC BY 4.0 · DTM Regione Autonoma della Sardegna 1 m, CC BY 4.0 · MDT Regione Siciliana 2 m, CC BY 4.0 · LiDAR Provincia Autonoma di Trento 5 m, CC BY 2.5 · Copernicus GLO-30 (© DLR e.V. 2010-2014 e Airbus Defence and Space GmbH 2014-2018, fornito nell’ambito di COPERNICUS dall’Unione Europea e dall’ESA).</p><p>Gli edifici sono ricostruiti dalle sagome di OpenStreetMap: dove l’altezza non è registrata viene stimata. Le gallerie stradali sono percorribili.</p><p>Software: three.js (MIT, © 2010-2021 three.js authors); earcut (ISC, © 2016 Mapbox): «Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies. THE SOFTWARE IS PROVIDED “AS IS” AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.» Catalogo completo delle fonti: docs/RESOURCE_CATALOG.md nel repository del gioco.</p><p>Texture fotografiche dei materiali (strade, marciapiedi, porfido, intonaci, mattoni, pietra, tegole, erba, roccia, terra, calcestruzzo, ciuffi d’erba, panorami dei riflessi): <a href="https://polyhaven.com/" target="_blank" rel="noopener noreferrer">Poly Haven</a> e <a href="https://ambientcg.com/" target="_blank" rel="noopener noreferrer">ambientCG</a>, licenza CC0 (pubblico dominio); elenco preciso con autori e impronte in tex/manifest.json.</p><p>Copertura del suolo e immagine del terreno lontano: © ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium, licenza CC BY 4.0; tile servite da Terrascope (VITO). Si possono spegnere con il pulsante «🛰 Copernicus» della mappa.</p><p>Posizione del Sole: calcolata dalla data, dall’ora e dal punto in cui ti trovi (formule astronomiche semplificate).</p></div></div></div>
+<div id="map" hidden><div id="mt">Mappa</div><canvas id="mc" width="900" height="900"></canvas><button class="b" id="mgo" hidden>Vai qui</button><div id="mcity"></div><div id="mz"><button class="b" id="mzo">−</button><button class="b" id="mzc">◎</button><button class="b" id="mzi">+</button></div><button class="b" id="mx" style="color:var(--ink);background:rgba(255,255,255,.88);text-shadow:none">Chiudi</button><button class="b s" id="mcred">Fonti</button><button class="b s" id="msat">🛰 Copernicus</button><button class="b s" id="mdati" title="Salva i dati della zona in cui ti trovi">📦 Dati zona</button><div id="rcred" hidden><button class="b s" id="rcredx">Chiudi</button><div><b>Fonti della mappa reale</b><p>Dati geografici: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors, licenza ODbL; schema e tile vettoriali <a href="https://openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a> (licenza BSD/CC BY), serviti da <a href="https://openfreemap.org/" target="_blank" rel="noopener noreferrer">OpenFreeMap</a>.</p><p>Rilievo del terreno: tile <a href="https://mapterhorn.com/" target="_blank" rel="noopener noreferrer">Mapterhorn</a> (elenco completo delle fonti su mapterhorn.com/attribution). Per l’Italia comprendono: TINITALY 10 m, Istituto Nazionale di Geofisica e Vulcanologia (INGV), CC BY 4.0 · DTM Regione Autonoma Valle d’Aosta 2 m, CC BY 4.0 · DGM Provincia Autonoma di Bolzano 2,5 m, CC0 · DTM Regione Lombardia 5 m, CC BY 4.0 · DTM Regione Piemonte 5 m, CC BY 4.0 · DTM Regione Autonoma della Sardegna 1 m, CC BY 4.0 · MDT Regione Siciliana 2 m, CC BY 4.0 · LiDAR Provincia Autonoma di Trento 5 m, CC BY 2.5 · Copernicus GLO-30 (© DLR e.V. 2010-2014 e Airbus Defence and Space GmbH 2014-2018, fornito nell’ambito di COPERNICUS dall’Unione Europea e dall’ESA).</p><p>Gli edifici sono ricostruiti dalle sagome di OpenStreetMap: dove l’altezza non è registrata viene stimata. Le gallerie stradali sono percorribili.</p><p>Software: three.js (MIT, © 2010-2021 three.js authors); earcut (ISC, © 2016 Mapbox): «Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies. THE SOFTWARE IS PROVIDED “AS IS” AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.» Catalogo completo delle fonti: docs/RESOURCE_CATALOG.md nel repository del gioco.</p><p>Texture fotografiche dei materiali (strade, marciapiedi, porfido, intonaci, mattoni, pietra, tegole, erba, roccia, terra, calcestruzzo, ciuffi d’erba, panorami dei riflessi): <a href="https://polyhaven.com/" target="_blank" rel="noopener noreferrer">Poly Haven</a> e <a href="https://ambientcg.com/" target="_blank" rel="noopener noreferrer">ambientCG</a>, licenza CC0 (pubblico dominio); elenco preciso con autori e impronte in tex/manifest.json.</p><p>Copertura del suolo e immagine del terreno lontano: © ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium, licenza CC BY 4.0; tile servite da Terrascope (VITO). Si possono spegnere con il pulsante «🛰 Copernicus» della mappa.</p><p>Posizione del Sole: calcolata dalla data, dall’ora e dal punto in cui ti trovi (formule astronomiche semplificate).</p></div></div></div>
 <div id="rld"><div id="rlt">Caricamento della mappa reale…</div><div id="rlp"></div><div id="rle"></div><button class="b" id="rlr" hidden>Riprova</button><div id="rla">Mappa © OpenStreetMap contributors · OpenMapTiles · OpenFreeMap · Rilievo Mapterhorn (INGV TINITALY e fonti regionali)</div></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="motore/veicoli_db.js"></script><script src="motore/fisica_veicolo.js"></script><script src="motore/ecu.js"></script><script src="motore/danni_meccanici.js"></script><script src="motore/calibrazione.js"></script>
 <script>
 ( function () {
 
@@ -16247,7 +16388,7 @@ const ERBA=(()=>{const MAXN=5200;let im=null,last=[1e9,1e9],gen=-1,cnt=0;
    const c=cellAt(x,z);if(!c||c.lod!=='A'||!c.cls)continue;const u=c.X-x,v=c.Z-z;if(u<0||v<0||u>=c.S||v>=c.S)continue;const cl=c.cls[Math.min(c.CR-1,Math.floor(v/c.S*c.CR))*c.CR+Math.min(c.CR-1,Math.floor(u/c.S*c.CR))];let pr=ALLOW[cl];if(!pr)continue;if(cl===0&&((c.urb||0)>.15||(c.dens||0)>.12))continue;
    const h3=Math.sin(gx*41.3+gz*97.1)*9137.31,f3=h3-Math.floor(h3);if(f3>pr)continue;if(c.GM){const gi=Math.min(c.GMN-1,Math.floor(v/c.S*c.GMN))*c.GMN+Math.min(c.GMN-1,Math.floor(u/c.S*c.GMN));if(c.GM[gi])continue}else if(c.RH){const ri=Math.min(c.RHN-1,Math.floor(v/c.S*c.RHN))*c.RHN+Math.min(c.RHN-1,Math.floor(u/c.S*c.RHN));if(c.RH[ri]===c.RH[ri])continue}
    if(c.wm){const wi=Math.min(c.WM-1,Math.floor(v/c.S*c.WM))*c.WM+Math.min(c.WM-1,Math.floor(u/c.S*c.WM));if(c.wm[wi])continue}
-   const y=terrainH(x,z);if(!(y===y))continue;const s=.75+f1*.6;_v.set(x,y-.03,z);_q.setFromAxisAngle(_y,f2*6.283);_s.set(s,s*(.8+f3*.5),s);_m4.compose(_v,_q,_s);im.setMatrixAt(n,_m4);vari.array[n]=Math.floor(f3*4)%4;if(++n>=MAXN)break}
+   const y=terrainH(x,z);if(!(y===y))continue;const s=.55+f1*.4;_v.set(x,y-.03,z);_q.setFromAxisAngle(_y,f2*6.283);_s.set(s,s*(.7+f3*.4),s);_m4.compose(_v,_q,_s);im.setMatrixAt(n,_m4);vari.array[n]=Math.floor(f3*4)%4;if(++n>=MAXN)break}
   im.count=n;cnt=n;im.instanceMatrix.needsUpdate=true;vari.needsUpdate=true}
  return{update,get n(){return cnt}}})();
 // geometria delle auto: marca i vertici dei fari (1) e dei fanali (2) per accenderli di notte
@@ -16400,7 +16541,7 @@ function plan(px,pz){const m=g2m(px,pz),cx=Math.floor((m[0]+MH)/S15),cy=Math.flo
 function geom(o,uv){const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(o.P,3));g.setAttribute('normal',new T.BufferAttribute(o.N,3));g.setAttribute('color',new T.BufferAttribute(o.C,3));if(uv&&o.U)g.setAttribute('uv',new T.BufferAttribute(o.U,2));if(o.W)g.setAttribute('tw',new T.BufferAttribute(o.W,4));g.setIndex(new T.BufferAttribute(o.I,1));g.computeBoundingSphere();return g}
 const _m4=new T.Matrix4(),_v=new T.Vector3(),_s=new T.Vector3(),_q=new T.Quaternion(),_y=new T.Vector3(0,1,0),_c=new T.Color();
 function mkCell(j,r){const mxL=-MH+j.x*S15,myT=MH-j.y*S15,g0=m2g(mxL,myT),X=g0[0],Z=g0[1],g=new T.Group();g.position.set(X,0,Z);g.updateMatrix();g.matrixAutoUpdate=false;
- const c={x:j.x,y:j.y,key:j.key,lod:j.lod,g,X,Z,S:r.S,NG:r.NG,d:r.S/(r.NG-1),H:r.H,cls:r.cls,CR:r.CR,wm:r.wmask,WM:r.WM,RH:r.RH,RHN:r.RHN,GM:r.GM,GMN:r.GMN,keys:new Set(),bk:new Set(),places:[],pois:[],mini:r.mini,tri:0};
+ const c={x:j.x,y:j.y,key:j.key,lod:j.lod,g,X,Z,S:r.S,NG:r.NG,d:r.S/(r.NG-1),H:r.H,cls:r.cls,CR:r.CR,wm:r.wmask,WM:r.WM,RH:r.RH,RH2:r.RH2,RHB:r.RHB||0,RHN:r.RHN,GM:r.GM,GMN:r.GMN,keys:new Set(),bk:new Set(),places:[],pois:[],mini:r.mini,tri:0};
  const add=(o,mt,cast,uv)=>{if(!o||!o.I||!o.I.length)return null;const me=new T.Mesh(geom(o,uv),mt);me.castShadow=!!cast;me.receiveShadow=true;me.matrixAutoUpdate=false;g.add(me);c.tri+=o.I.length/3;return me};
  add(r.T,MTR.ter,0,1);add(r.R,MTR.road,0,1);for(const k of ['Rst','Rdi','Rba','Rsw'])add(r[k],PBR.RMAT[k],0,1);add(r.Mc,MTR.conc,1,0);add(r.MS,MTR.mur,1,1);add(r.HG,MTR.siepe,1,0);add(r.M,MTR.misc,0,0);
  {let u=0,w=0;const cl=r.cls;if(cl){for(let i=0;i<cl.length;i++){if(cl[i]===2||cl[i]===11)u++;else if(cl[i]===1)w++}c.urb=Math.max(u/Math.max(1,cl.length-w),(r.dens||0)*1.5)}c.dens=r.dens||0;c.chiese=[];const ch=r.chiese||[];for(let i=0;i+2<ch.length;i+=3)c.chiese.push({x:X-ch[i],z:Z-ch[i+1],y:ch[i+2]})}
@@ -16442,6 +16583,16 @@ function satFor(f){if(!COP.on||COP.fail>3)return;const k=(f.x>>1)+'/'+(f.y>>1);l
   L.load(tplZ(CFG.sat,13,f.x>>1,f.y>>1),t=>{t.encoding=T.sRGBEncoding;t.anisotropy=4;e.tex=t;e.mat=new T.MeshStandardMaterial({map:t,roughness:1,metalness:0,color:new T.Color(1.12,1.12,1.12)});COP.ok++;COP.fail=0;for(const g of e.wait)if(g.me&&FARS.get(g.key)===g)g.me.material=[e.mat,MTR.farS];e.wait.length=0},undefined,()=>{COP.fail++;e.dead=1})}
  e.n++;f.sat=k;if(e.mat)f.me.material=[e.mat,MTR.farS];else if(!e.dead)e.wait.push(f)}
 function satRelease(f){if(!f.sat)return;const k=f.sat,e=COP.cache.get(k);f.sat=null;if(!e)return;if(--e.n<=0){if(e.tex)e.tex.dispose();if(e.mat)e.mat.dispose();COP.cache.delete(k)}}
+// «Dati zona»: salva in un file i dati pubblici che il gioco ha già scaricato per il posto in cui ti trovi (tile vettoriali OpenMapTiles z14 3×3,
+// rilievo Mapterhorn z12, copertura WorldCover se attiva) con la posizione: serve a riprodurre esattamente un difetto visto nel gioco.
+async function esportaZona(opt){opt=opt||{};const m=g2m(UPP[0],UPP[1]),x14=Math.floor((m[0]+MH)/S14),y14=Math.floor((MH-m[1])/S14),ll=m2ll(m[0],m[1]),out={versione:'29.3',quando:new Date().toISOString(),pos:{lat:ll[0],lon:ll[1],x:UPP[0],z:UPP[1]},x14,y14,vt:{},dem:{},lc:{},errori:[]};
+ const b64=b=>{const u=new Uint8Array(b);let s='';for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s)};
+ const get=async(url)=>{const r=await fetch(url,{mode:'cors',credentials:'omit'});if(!r.ok)throw new Error(r.status+' '+url);return b64(await r.arrayBuffer())};
+ const tp=(t,z,x,y)=>t.replace('{zz}',String(z).padStart(2,'0')).replace('{z}',z).replace('{x}',x).replace('{y}',y);
+ const jobs=[];for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const x=x14+dx,y=y14+dy;jobs.push(get(tp(CFG.vt,14,x,y)).then(d=>{out.vt['14/'+x+'/'+y]=d}).catch(e=>out.errori.push(String(e))));if(COP.on&&CFG.lc)jobs.push(get(tp(CFG.lc,14,x,y)).then(d=>{out.lc['14/'+x+'/'+y]=d}).catch(()=>{}))}
+ const seen=new Set();for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const x=(x14+dx)>>2,y=(y14+dy)>>2,k='12/'+x+'/'+y;if(seen.has(k))continue;seen.add(k);jobs.push(get(tp(CFG.dem,12,x,y)).then(d=>{out.dem[k]=d}).catch(e=>out.errori.push(String(e))))}
+ await Promise.all(jobs);const name='italia-open-world-zona-'+ll[0].toFixed(4)+'_'+ll[1].toFixed(4)+'.json';if(opt.testo)return JSON.stringify(out);const blob=new Blob([JSON.stringify(out)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);
+ return{name,kb:Math.round(blob.size/1024),vt:Object.keys(out.vt).length,dem:Object.keys(out.dem).length,errori:out.errori.length}}
 function copToggle(){COP.on=!COP.on;try{localStorage.setItem('iow_cop',COP.on?'1':'0')}catch(e){}cfgAll();for(const f of FARS.values()){if(COP.on)satFor(f);else{f.me.material=[MTR.farL,MTR.farS];satRelease(f)}}return COP.on}
 function applyFar(j,r){const mxL=-MH+j.x*S14,myT=MH-j.y*S14,g0=m2g(mxL,myT),ge=geom(r.T,1);ge.addGroup(0,r.nL,0);if(r.nS)ge.addGroup(r.nL,r.nS,1);
  const me=new T.Mesh(ge,[MTR.farL,MTR.farS]);me.position.set(g0[0],0,g0[1]);me.updateMatrix();me.matrixAutoUpdate=false;me.receiveShadow=false;sc.add(me);
@@ -16457,19 +16608,40 @@ function applyOne(){const t0=performance.now();while(RES.length){const [j,r]=RES
 // quota del terreno con gli stessi triangoli della mesh disegnata (auto, persone ed erba poggiano esattamente sul terreno visibile)
 function hCell(c,u,v){const d=c.d,NG=c.NG,fx=Math.min(NG-1.0001,Math.max(0,u/d)),fy=Math.min(NG-1.0001,Math.max(0,v/d)),i=fx|0,j=fy|0,a=fx-i,b=fy-j,p=j*NG+i,H=c.H;return a+b<=1?H[p]+(H[p+1]-H[p])*a+(H[p+NG]-H[p])*b:H[p+NG+1]+(H[p+NG]-H[p+NG+1])*(1-a)+(H[p+1]-H[p+NG+1])*(1-b)}
 // quota dell'asfalto dal raster delle strade (pixel di ~3,6 m): media bilineare dei soli pixel di strada vicini (niente gradini sulle strade strette e ripide)
-function rhCell(c,u,v){const n=c.RHN,px=c.S/n,fx=u/px-.5,fy=v/px-.5,i=Math.floor(fx),j=Math.floor(fy),a=fx-i,b=fy-j,R=c.RH,g=(ii,jj)=>ii<0||jj<0||ii>=n||jj>=n?NaN:R[jj*n+ii];
- const h00=g(i,j),h10=g(i+1,j),h01=g(i,j+1),h11=g(i+1,j+1);let sw=0,sh=0;const add=(h,w)=>{if(h===h&&w>0){sw+=w;sh+=h*w}};add(h00,(1-a)*(1-b));add(h10,a*(1-b));add(h01,(1-a)*b);add(h11,a*b);
- if(sw>.12)return sh/sw;const hn=g(Math.round(fx),Math.round(fy));return hn}
+// quota dell'asfalto dal raster delle strade (pixel di ~3,6 m): media bilineare dei soli pixel di strada vicini che stanno sulla stessa superficie
+// del pixel più vicino (entro 1,5 m): così due strade sovrapposte o un tornante non si mescolano
+// quota dell'asfalto in (u,v) dal raster a due strati (16 bit, 4 cm). Si sceglie prima la superficie: il valore (fra i due strati dei 4 pixel attorno)
+// più vicino alla quota di riferimento yh (senza yh: il primo strato del pixel più vicino); poi media bilineare dei pixel che appartengono alla stessa
+// superficie (entro 2,6 m), ciascuno con lo strato più vicino: chi sta sulla via bassa di una terrazza resta lì, e nessun pixel "salta" di strato da solo
+function rhCell(c,u,v,yh){const n=c.RHN,px=c.S/n,fx=u/px-.5,fy=v/px-.5,i=Math.floor(fx),j=Math.floor(fy),a=fx-i,b=fy-j,R=c.RH,R2=c.RH2,B=c.RHB,hy=yh!==undefined&&yh!==null;
+ const W=[(1-a)*(1-b),a*(1-b),(1-a)*b,a*b],H1=[NaN,NaN,NaN,NaN],H2=[NaN,NaN,NaN,NaN];
+ for(let k=0;k<4;k++){const ii=i+(k&1),jj=j+(k>>1);if(ii<0||jj<0||ii>=n||jj>=n)continue;const p=jj*n+ii,q=R[p];if(!q)continue;H1[k]=B+(q-1)*.04;if(R2){const q2=R2[p];if(q2)H2[k]=B+(q2-1)*.04}}
+ let hn=NaN;if(hy){let be=1e9;for(let k=0;k<4;k++){const h=H1[k],h2=H2[k];if(h===h&&Math.abs(h-yh)<be){be=Math.abs(h-yh);hn=h}if(h2===h2&&Math.abs(h2-yh)<be){be=Math.abs(h2-yh);hn=h2}}}
+ else{let wn=-1;for(let k=0;k<4;k++)if(H1[k]===H1[k]&&W[k]>wn){wn=W[k];hn=H1[k]}}
+ if(!(hn===hn))return hn;let sw=0,sh=0;for(let k=0;k<4;k++){let h=H1[k];const h2=H2[k];if(h2===h2&&(!(h===h)||Math.abs(h2-hn)<Math.abs(h-hn)))h=h2;if(h===h&&W[k]>0&&Math.abs(h-hn)<2.6){sw+=W[k];sh+=h*W[k]}}return sw>.12?sh/sw:hn}
 function farAt(x,z){const m=g2m(x,z);return FARS.get(key2(Math.floor((m[0]+MH)/S14),Math.floor((MH-m[1])/S14)))}
 // quota del suolo: terreno, o asfalto (raster delle quote stradali) se è vicino al terreno o alla quota attuale di chi si muove (yh): così l'auto resta sulla strada anche dove la strada è alta sul terreno
-function terrainH(x,z,yh){const c=cellAt(x,z);if(c){const u=c.X-x,v=c.Z-z;let h=hCell(c,u,v);if(c.RH){const r=rhCell(c,u,v);if(r===r&&r>h-.3&&(yh!==undefined&&yh!==null?yh>r-2.2:r-h<2.5))h=Math.max(r,h-.05)}return LASTH=h}
+// quota del suolo: dentro una carreggiata vale l'asfalto (raster), salvo che la quota di riferimento yh (veicolo) sia più vicina al terreno di oltre 1,5 m
+// (strada sopraelevata o terrazza accanto: chi sta sotto resta sotto); senza yh (comparsa, pedoni) l'asfalto comanda sempre
+function terrainH(x,z,yh){const c=cellAt(x,z);if(c){const u=c.X-x,v=c.Z-z;let h=hCell(c,u,v);if(c.RH){const r=rhCell(c,u,v,yh);if(r===r){const useR=(yh!==undefined&&yh!==null)?Math.abs(r-yh)<=Math.abs(h-yh)+1.5:true;if(useR)h=Math.max(r,h-.05)}}return LASTH=h}
  const f=farAt(x,z);if(f){const u=f.X-x,v=f.Z-z,d=f.S/(f.N-1),N=f.N,fx=Math.min(N-1.0001,Math.max(0,u/d)),fy=Math.min(N-1.0001,Math.max(0,v/d)),i=fx|0,j=fy|0,a=fx-i,b=fy-j,p=j*N+i,H=f.H;return Math.max(0,H[p]*(1-a)*(1-b)+H[p+1]*a*(1-b)+H[p+N]*(1-a)*b+H[p+N+1]*a*b)}
  return LASTH}
-function bridgeH(x,z,yh){const a=BRG.get(Math.floor(x/64)+','+Math.floor(z/64));if(!a)return null;let best=null,bd=1e9;
- for(const s of a){const dx=s.bx-s.ax,dz=s.bz-s.az,l2=dx*dx+dz*dz;if(l2<1e-4)continue;const t=Math.max(0,Math.min(1,((x-s.ax)*dx+(z-s.az)*dz)/l2)),px=s.ax+dx*t-x,pz=s.az+dz*t-z;if(px*px+pz*pz>s.hw*s.hw)continue;
-  const y=s.ha+(s.hb-s.ha)*t;if(yh!==undefined&&yh!==null){const e=Math.abs(yh-y);if(e>2.6)continue;if(e<bd){bd=e;best=y}}else if(!s.tun&&(best===null||y>best))best=y}
- return best}
-function ground(x,z,yh){const b=bridgeH(x,z,yh);return b!==null?b:terrainH(x,z,yh)}
+// quota dell'impalcato (o del piano di una galleria) sotto (x,z): vince il segmento più vicino, così i "tappi" dei segmenti contigui (proiezione
+// bloccata all'estremo, quota dell'estremo) non fanno una scala su un ponte in salita; a parità di distanza (impalcati sovrapposti) quello
+// più vicino alla quota attuale yh (o il più alto, senza yh). Con yh si considerano solo impalcati entro 2,6 m (gallerie: 1,2 m, chi sta su una via
+// che passa 2–3 m sopra una galleria poco profonda non deve "caderci" dentro): altrimenti si è sotto o sopra
+let LASTBT=false;
+function bridgeH(x,z,yh,ped){const a=BRG.get(Math.floor(x/64)+','+Math.floor(z/64));if(!a)return null;let best=null,bd=1e9,be=1e9,bt=false;
+ for(const s of a){if(!ped&&s.hw<2.5)continue;const dx=s.bx-s.ax,dz=s.bz-s.az,l2=dx*dx+dz*dz;if(l2<1e-4)continue;const t=Math.max(0,Math.min(1,((x-s.ax)*dx+(z-s.az)*dz)/l2)),px=s.ax+dx*t-x,pz=s.az+dz*t-z,d2=px*px+pz*pz;if(d2>s.hw*s.hw)continue;
+  const y=s.ha+(s.hb-s.ha)*t,d=Math.sqrt(d2);if(yh!==undefined&&yh!==null){const e=Math.abs(yh-y);if(e>(s.tun?1.2:2.6))continue;if(d<bd-1||(d<bd+1&&e<be)){bd=Math.min(bd,d);be=e;best=y;bt=!!s.tun}}
+  else if(!s.tun){if(d<bd-1||(d<bd+1&&(best===null||y>best))){bd=Math.min(bd,d);best=y}}}
+ LASTBT=bt;return best}
+// suolo per chi si muove: superficie (terreno o asfalto) oppure impalcato di un ponte / piano di una galleria, quello più vicino alla quota attuale (a parità, la superficie)
+// (a parità, entro 30 cm, vince l'impalcato: chi scende su un ponte in pendenza non deve restare agganciato all'asfalto della rampa accanto)
+// Gallerie: il piano della galleria vale solo dove il suolo sta chiaramente sopra (più di 2,5 m: si è dentro la montagna); all'imbocco, dove suolo e piano
+// coincidono, comanda il suolo, così una via che passa sopra l'imbocco non "cade" nella galleria. Ponti: un impalcato a meno di 2 m dal suolo
+// (dati incoerenti: ponte che non ha potuto alzarsi) non cattura chi passa sotto, lo prende solo chi ci è già sopra (entro 50 cm)
+function ground(x,z,yh,ped){const s=terrainH(x,z,yh),b=bridgeH(x,z,yh,ped);if(b===null)return s;if(yh===undefined||yh===null)return Math.max(s,b);if(LASTBT)return s-b>2.5&&Math.abs(b-yh)<=1?b:s;if(b-s<2&&Math.abs(b-yh)>=.5)return s;return Math.abs(b-yh)<Math.abs(s-yh)+.3?b:s}
 function wet(x,z){const c=cellAt(x,z);if(!c)return false;const u=c.X-x,v=c.Z-z;let w=false;
  if(c.wm){const n=c.WM,i=Math.min(n-1,Math.max(0,Math.floor(u/c.S*n))),j=Math.min(n-1,Math.max(0,Math.floor(v/c.S*n)));w=!!c.wm[j*n+i]}
  else if(c.cls){const n=c.CR,i=Math.min(n-1,Math.max(0,Math.floor(u/c.S*n))),j=Math.min(n-1,Math.max(0,Math.floor(v/c.S*n)));w=c.cls[j*n+i]===1}
@@ -16501,8 +16673,7 @@ function drawMini(){const mm=$('#mm'),c=mm.getContext('2d'),px=inCar?C.x:P.x,pz=
  c.save();c.clearRect(0,0,240,240);c.beginPath();c.arc(120,120,118,0,6.2832);c.clip();c.fillStyle='#ece6d8';c.fillRect(0,0,240,240);
  const m=g2m(px,pz),hw=wm/2/K,tx0=Math.floor((m[0]-hw+MH)/S14),tx1=Math.floor((m[0]+hw+MH)/S14),ty0=Math.floor((MH-(m[1]+hw))/S14),ty1=Math.floor((MH-(m[1]-hw))/S14);
  for(let ty=ty0;ty<=ty1;ty++)for(let tx=tx0;tx<=tx1;tx++){const e=mapTileGet(14,tx,ty,512,2);if(!e)continue;const g0=m2g(-MH+tx*S14,MH-ty*S14),S=S14*K*k;c.drawImage(e.img,120+(px-g0[0])*k,120+(pz-g0[1])*k,S+.5,S+.5)}
- c.restore();for(const ce of CELLS.values()){if(ce.lod!=='A')continue;for(const p of ce.pois){if(p.cl!=='fuel'&&p.cl!=='car_repair')continue;const x=120+(px-p.x)*k,y=120+(pz-p.z)*k;if((x-120)**2+(y-120)**2>104*104)continue;c.font='bold 11px system-ui,sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#fff';c.beginPath();c.arc(x,y,7,0,6.2832);c.fill();c.fillStyle='#1b3a66';c.fillText(p.cl==='fuel'?'⛽':'🔧',x,y+1)}}   /* benzinai e officine (OpenStreetMap) per il rifornimento e le riparazioni */
- if(!inCar){const x=120+(px-C.x)*k,y=120+(pz-C.z)*k;if((x-120)**2+(y-120)**2<110*110)carIcon(c,x,y,-C.h)}arrow(c,120,120,-(inCar?C.h:yaw),13)}
+ c.restore();if(!inCar){const x=120+(px-C.x)*k,y=120+(pz-C.z)*k;if((x-120)**2+(y-120)**2<110*110)carIcon(c,x,y,-C.h)}arrow(c,120,120,-(inCar?C.h:yaw),13)}
 /* ---------- mappa grande: tile OpenMapTiles disegnate qui, zoom e spostamento, viaggio verso un punto ---------- */
 const MAPV={z:13,cx:0,cy:0,mark:null,markName:''};
 function mapOpen(){const m=g2m(inCar?C.x:P.x,inCar?C.z:P.z);MAPV.cx=m[0];MAPV.cy=m[1];if(MAPV.z<5)MAPV.z=13;MAPV.mark=null;$('#mgo').hidden=true;drawMap()}
@@ -16568,18 +16739,15 @@ function overlay(on){const o=$('#rld');if(!o)return;o.hidden=!on;if(on){$('#rlt'
 function retry(){ERR.net=0;ERR.msg='';LOAD.t0=performance.now();plan.force=true;$('#rlr').hidden=true}
 /* ---------- aggiornamento per fotogramma ---------- */
 let kT=0,labT=0,lastLab='';
-function update(px,pz,all){SKY.position.copy(cam.position);try{CIELO.update(px,pz);ERBA.update(px,pz)}catch(e){if(!update.e){update.e=1;console.error(e)}}if(!WK.length)return;const now=performance.now();if(RETRY.length&&RETRY.some(j=>j.retryAt<=now))plan.force=true;plan(px,pz);pump();applyOne();if(farVisDirty)farVis();checkLoad();mapTick();
+let UPP=[0,0];
+function update(px,pz,all){UPP[0]=px;UPP[1]=pz;SKY.position.copy(cam.position);try{CIELO.update(px,pz);ERBA.update(px,pz)}catch(e){if(!update.e){update.e=1;console.error(e)}}if(!WK.length)return;const now=performance.now();if(RETRY.length&&RETRY.some(j=>j.retryAt<=now))plan.force=true;plan(px,pz);pump();applyOne();if(farVisDirty)farVis();checkLoad();mapTick();
  if(!LOAD.on){if(now>kT){kT=now+2000;const ll=geoOf(px,pz),dr=Math.abs(Math.cos(ll[0]*PI/180)/K-1);if(dr>.02){const sp=Math.hypot(V.vx,V.vz);if(sp<25||dr>.04){const pg=geoOf(P.x,P.z),cg=geoOf(C.x,C.z);rescale(ll,pg,cg)}}}
   if(now>labT){labT=now+3000;const m=g2m(px,pz);for(const z of [11,9]){const n=1<<z,ts=ME/n,tx=Math.floor((m[0]+MH)/ts),ty=Math.floor((MH-m[1])/ts);mapTileGet(z,tx,ty,256,8)}}}}
 // cambio di scala: l'origine si sposta qui (oltre ~150 km a nord o a sud dal punto di partenza la scala di Mercatore cambierebbe del 2%)
 function rescale(ll,pg,cg){const h=C.h,yw=yaw;if(typeof VITA!=='undefined')VITA.travelReset();dropAll();setOrigin(ll[0],ll[1]);const p=m2g(...ll2m(pg[0],pg[1])),c=m2g(...ll2m(cg[0],cg[1]));
  LOAD.on=true;LOAD.t0=performance.now();LOAD.label='';P.x=p[0];P.z=p[1];C.x=c[0];C.z=c[1];LOAD.place=()=>{placeAt(0,0,{pl:[p[0],p[1]],car:[c[0],c[1]],ch:h,h:yw});yaw=yw};overlay(true);$('#rlt').textContent='Aggiornamento della scala della mappa…';plan.force=true}
 /* ---------- bar e caffè veri: si può ordinare al banco ---------- */
-function nearBar(x,z){let b=null,bd=16;for(const c of CELLS.values()){if(c.lod!=='A')continue;for(const p of c.pois){if(p.cl==='fuel'||p.cl==='car_repair')continue;const d=Math.hypot(p.x-x,p.z-z);if(d<bd){bd=d;b=p}}}return b}
-function nearFuel(x,z){let b=null,bd=34;for(const c of CELLS.values()){if(c.lod!=='A')continue;for(const p of c.pois){if(p.cl!=='fuel'&&p.cl!=='car_repair')continue;const d=Math.hypot(p.x-x,p.z-z);if(d<bd){bd=d;b=p}}}return b}
-/* superficie sotto il veicolo per il motore fisico: strada (asfalto o sterrato) oppure classe del suolo della cella */
-const SURF_CL=['asfalto','asfalto','lastricato','erba','terra','terra','erba','ghiaia','terra','neve','erba','lastricato','terra'];
-function surf(x,z){const c=cellAt(x,z);if(!c)return 'asfalto';const u=c.X-x,v=c.Z-z;if(c.RH){const r=rhCell(c,u,v);if(r===r)return 'asfalto'}if(bridgeH(x,z)!==null)return 'asfalto';if(c.cls){const n=c.CR,i=Math.min(n-1,Math.max(0,Math.floor(u/c.S*n))),j=Math.min(n-1,Math.max(0,Math.floor(v/c.S*n)));return SURF_CL[c.cls[j*n+i]]||'asfalto'}return 'asfalto'}
+function nearBar(x,z){let b=null,bd=16;for(const c of CELLS.values()){if(c.lod!=='A')continue;for(const p of c.pois){const d=Math.hypot(p.x-x,p.z-z);if(d<bd){bd=d;b=p}}}return b}
 /* ---------- salvataggio della posizione geografica ---------- */
 function saveGeo(){if(LOAD.on||!WK.length)return;S.geo=geoOf(P.x,P.z);S.cgeo=geoOf(C.x,C.z);S.ch=C.h}
 function start(){PBR.load();mkWorkers();if(!WK.length){overlay(true);$('#rle').textContent='Il caricatore della mappa non è disponibile in questo browser.';return}
@@ -16591,10 +16759,10 @@ function start(){PBR.load();mkWorkers();if(!WK.length){overlay(true);$('#rle').t
  const mc=$('#mcity');if(mc){mc.innerHTML=CITIES.map((q,i)=>'<button class="b s" data-i="'+i+'">'+q[0]+'</button>').join('');mc.addEventListener('click',e=>{const b=e.target.closest('button');if(b)mapCity(+b.dataset.i)})}
  const go=$('#mgo');if(go)go.onclick=()=>{if(!MAPV.mark)return;const ll=m2ll(MAPV.mark[0],MAPV.mark[1]);const nm=MAPV.markName||'';MAPV.mark=null;go.hidden=true;openMap(false);if(inCar&&Math.hypot(V.vx,V.vz)>3){V.vx=V.vz=0}travel(ll[0],ll[1],nm||'il punto scelto')};
  const rb=$('#rlr');if(rb)rb.onclick=retry;
- const cb=$('#mcred');if(cb)cb.onclick=()=>{const p=$('#rcred');p.hidden=!p.hidden};{const sb=$('#msat');if(sb){const lab=()=>{sb.textContent=COP.on?'🛰 Copernicus: sì':'🛰 Copernicus: no'};lab();sb.onclick=()=>{copToggle();lab();toast(COP.on?'Dati Copernicus attivi: boschi, campi e roccia da ESA WorldCover; terreno lontano dalle immagini Sentinel-2':'Dati Copernicus disattivati: solo OpenStreetMap')}}}const cx=$('#rcredx');if(cx)cx.onclick=()=>{$('#rcred').hidden=true}}
-return{start,update,ground,terrainH,wet,surf,nearFuel,inside:(x,z)=>!LOAD.on&&!!cellAt(x,z),placeName,roadName,hudText,nearBar,saveGeo,travel,drawMini,drawMap,mapOpen:()=>{mapOpen_=true;mapOpen()},mapClose:()=>{mapOpen_=false},mapZoom,mapZoomTo,mapCenter,mapPan,mapTap,mapCity,
- sunPos:CIELO.sunPos,CIELO,PBR,UNI,ERBA,COP,copToggle,_mkCell:mkCell,busy:()=>LOAD.on,CSO:CSO2,CARG,MTR,CARCOLS,laneOff,MAPV,CELLS,FARS,STATS,ERR,CFG,geoOf,ll2m,m2g,g2m,get K(){return K},get GEN(){return GEN},nearRoad,cellAt,bridgeH,PLACES,MT2,QUEUE,JOBS}})();
-const WORLD={CSZ:32,WS:0,SEA:0,X0:-1e9,X1:1e9,Z0:-1e9,Z1:1e9,NCH:0,H:(x,z)=>REAL.terrainH(x,z),ground:(x,z,yh)=>REAL.ground(x,z,yh),wet:(x,z)=>REAL.wet(x,z),inside:(x,z)=>REAL.inside(x,z),chunkOK:()=>false,zone:()=>0,coastX:()=>0,
+ const cb=$('#mcred');if(cb)cb.onclick=()=>{const p=$('#rcred');p.hidden=!p.hidden};{const eb=$('#mdati');if(eb)eb.onclick=async()=>{eb.disabled=true;eb.textContent='📦 scarico…';try{const r=await esportaZona();toast('Salvato '+r.name+' ('+r.kb+' KB): mandalo in chat per far riprodurre il difetto');eb.textContent='📦 Dati zona'}catch(e){toast('Dati zona: errore '+e.message);eb.textContent='📦 Dati zona'}eb.disabled=false}}{const sb=$('#msat');if(sb){const lab=()=>{sb.textContent=COP.on?'🛰 Copernicus: sì':'🛰 Copernicus: no'};lab();sb.onclick=()=>{copToggle();lab();toast(COP.on?'Dati Copernicus attivi: boschi, campi e roccia da ESA WorldCover; terreno lontano dalle immagini Sentinel-2':'Dati Copernicus disattivati: solo OpenStreetMap')}}}const cx=$('#rcredx');if(cx)cx.onclick=()=>{$('#rcred').hidden=true}}
+return{start,update,ground,terrainH,bridgeH,wet,inside:(x,z)=>!LOAD.on&&!!cellAt(x,z),placeName,roadName,hudText,nearBar,saveGeo,travel,drawMini,drawMap,mapOpen:()=>{mapOpen_=true;mapOpen()},mapClose:()=>{mapOpen_=false},mapZoom,mapZoomTo,mapCenter,mapPan,mapTap,mapCity,
+ sunPos:CIELO.sunPos,CIELO,PBR,UNI,ERBA,COP,copToggle,esportaZona,_mkCell:mkCell,busy:()=>LOAD.on,CSO:CSO2,CARG,MTR,CARCOLS,laneOff,MAPV,CELLS,FARS,STATS,ERR,CFG,geoOf,ll2m,m2g,g2m,get K(){return K},get GEN(){return GEN},nearRoad,cellAt,bridgeH,PLACES,MT2,QUEUE,JOBS}})();
+const WORLD={CSZ:32,WS:0,SEA:0,X0:-1e9,X1:1e9,Z0:-1e9,Z1:1e9,NCH:0,H:(x,z)=>REAL.terrainH(x,z),ground:(x,z,yh,ped)=>REAL.ground(x,z,yh,ped),wet:(x,z)=>REAL.wet(x,z),inside:(x,z)=>REAL.inside(x,z),chunkOK:()=>false,zone:()=>0,coastX:()=>0,
  RS:[],SCH:new Map(),BCH:new Map(),RIV:[],BR:[],SPEC:[],MWS:[],CITIES:[],TOWNS:[],TOWN:{cx:0,cz:0,name:''},townAt:()=>null,LAKE:null,MILAN:null,MW:null,mwAt:()=>null,bridgeAt:(x,z)=>REAL.bridgeH(x,z),deckAt:()=>0,SGTXT:[]};
 const GY=(x,z,yh)=>REAL.ground(x,z,yh),CHS=new Map(),CSO=REAL.CSO,CHK=null,MAPC=null,MAPV=REAL.MAPV,ZN=['—'];
 let mmT=0,znT=0,znLast='';
@@ -16735,7 +16903,7 @@ function pedsUpdate(dt,px,pz){for(const a of G.peds){pedStep(a,dt);const d=Math.
   if(!a.down&&inCar){const dx=a.x-C.x,dz=a.z-C.z,c=Math.cos(C.h),s=Math.sin(C.h),lx=dx*c-dz*s,lz=dx*s+dz*c;if(Math.abs(lx)<1.05&&Math.abs(lz)<2.35&&Math.hypot(V.vx,V.vz)>2.5){a.down=9;a.downH=C.h;PL.offence('investito un passante',1.5,4);toast('Hai investito un passante!');V.vx*=.85;V.vz*=.85}}}
  if(G.peds.some(a=>a.dead)){for(const a of G.peds)if(a.dead){const i=PEDS.indexOf(a);if(i>=0)PEDS.splice(i,1)}G.peds=G.peds.filter(a=>!a.dead)}
  const want=Math.min(NPED,Math.round(G.ways.filter(w=>w.sw).length*1.2));if(G.peds.length<want&&G.fr%3===1)spawnPed(px,pz);
- let n=0;for(const a of G.peds){const y=REAL.ground(a.x,a.z)+.08,sw=Math.sin(a.ph)*.55*(a.mv>0?1:0),bob=Math.abs(Math.cos(a.ph))*.03;
+ let n=0;for(const a of G.peds){const y=REAL.ground(a.x,a.z,undefined,true)+.08,sw=Math.sin(a.ph)*.55*(a.mv>0?1:0),bob=Math.abs(Math.cos(a.ph))*.03;
   if(a.down>0){_v.set(a.x,y+.25,a.z);_q.setFromAxisAngle(_y,a.downH||a.h);const q2=new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),PI/2);_q.multiply(q2);_s.set(1,1,1);_m4.compose(_v,_q,_s);imSh.setMatrixAt(n,_m4);imHd.setMatrixAt(n,_m4);imLL.setMatrixAt(n,_m4);imLR.setMatrixAt(n,_m4)}
   else{_v.set(a.x,y+bob,a.z);_q.setFromAxisAngle(_y,a.h);_s.set(1,1,1);_m4.compose(_v,_q,_s);imSh.setMatrixAt(n,_m4);imHd.setMatrixAt(n,_m4);
    for(const [im,sg] of [[imLL,1],[imLR,-1]]){_v.set(a.x+Math.cos(a.h)*.1*sg,y+.78,a.z-Math.sin(a.h)*.1*sg);const q1=new T.Quaternion().setFromAxisAngle(_y,a.h),q2=new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),sw*sg);q1.multiply(q2);_s.set(1,1,1);_m4.compose(_v,q1,_s);im.setMatrixAt(n,_m4)}}
@@ -18894,24 +19062,22 @@ function clipDist(x,z,dx,dz,d,skipLo){let best=d;for(const s of solids){if(s.on=
 function walk(dt,ix,iy,run){const sy=Math.sin(yaw),cy=Math.cos(yaw),sp=run?6.5:4.2,m=Math.hypot(ix,iy),k=m>1?1/m:1;ix*=k;iy*=k;
  const vx=(sy*iy-cy*ix)*sp,vz=(cy*iy+sy*ix)*sp;P.sp=0;
  if(Math.abs(vx)+Math.abs(vz)>.01){const q=push(P.x+vx*dt,P.z+vz*dt,P.r);let nx=q[0],nz=q[1];const ds=Math.hypot(nx-P.x,nz-P.z);
-  if(WORLD.wet(nx,nz)||!WORLD.inside(nx,nz,40)||(ds>1e-4&&(GY(nx,nz,P.y)-GY(P.x,P.z,P.y))/ds>1.5)){nx=P.x;nz=P.z}
+  if(WORLD.wet(nx,nz)||!WORLD.inside(nx,nz,40)||(ds>1e-4&&(GY(nx,nz,P.y,true)-GY(P.x,P.z,P.y,true))/ds>1.5)){nx=P.x;nz=P.z}
   P.x=nx;P.z=nz;P.m.rotation.y=Math.atan2(vx,vz);P.sp=Math.hypot(vx,vz)}
- P.y+=(GY(P.x,P.z,P.y)-P.y)*Math.min(1,dt*14)}
+ P.y+=(GY(P.x,P.z,P.y,true)-P.y)*Math.min(1,dt*14)}
 function groundCar(dt){const sn=Math.sin(C.h),cn=Math.cos(C.h),yh=V.y,yf=GY(C.x+sn*1.5,C.z+cn*1.5,yh),yb=GY(C.x-sn*1.5,C.z-cn*1.5,yh),yl=GY(C.x+cn*.9,C.z-sn*.9,yh),yr=GY(C.x-cn*.9,C.z+sn*.9,yh),k=Math.min(1,dt*12);
  V.y+=((yf+yb)/2-V.y)*k;V.tp+=(-Math.atan2(yf-yb,3)-V.tp)*k;V.tr+=(Math.atan2(yl-yr,1.8)-V.tr)*k}
 function drive(dt,ix,iy){const hb=!!(K[' ']||K.hb);if(V.rol){crRollDrive(dt);return}if(V.flip){V.vx*=Math.exp(-6*dt);V.vz*=Math.exp(-6*dt);cs.v=0;return}
  let sn=Math.sin(C.h),cn=Math.cos(C.h),vf=V.vx*sn+V.vz*cn,vl=V.vz*sn-V.vx*cn;if(crTrip(V,carA,vl,Math.hypot(vf,vl),dt)){V.rlF=vf;crRollDrive(dt);return}
- const sp=Math.abs(vf),lock=.6/(1+sp*sp/220),EG=VEHX.guida();V.st+=(ix*lock*CARDMG.lk*EG.sterzoCorsa+(CARDMG.pull+EG.sterzoTiro)*Math.min(1,sp/6)-V.st)*Math.min(1,dt*9);
- let w=vf/2.7*Math.tan(V.st)*(hb?1.35:1)*(VEHOK&&VEH.ruote.bloccate?.35:1);if(sp<.4)w*=sp/.4;   /* ruote anteriori bloccate (senza ABS): lo sterzo non risponde */
+ const sp=Math.abs(vf),lock=.6/(1+sp*sp/220);V.st+=(ix*lock*CARDMG.lk+CARDMG.pull*Math.min(1,sp/6)-V.st)*Math.min(1,dt*9);
+ let w=vf/2.7*Math.tan(V.st)*(hb?1.35:1);if(sp<.4)w*=sp/.4;
  C.h-=w*dt;C.h+=(V.yw+V.ywW)*dt;V.yw*=Math.exp(-1.1*dt);V.ywW*=Math.exp(-4*dt);sn=Math.sin(C.h);cn=Math.cos(C.h);vf=V.vx*sn+V.vz*cn;vl=V.vz*sn-V.vx*cn;
  const f0=vf;
- if(VEHOK){vf=VEHX.drive(dt,vf,vl,iy,hb);if(CARDMG.vmax<56)vf=cl(vf,-12,CARDMG.vmax)}   /* motore fisico reale: motore, cambio, frizione, freni con ABS/ASR, pendenza, superficie, consumo (motore/fisica_veicolo.js) */
- else{if(iy>.05)vf+=(vf>=-.3?9.5*CARDMG.ef*(1-Math.pow(Math.max(0,vf)/66,1.6)):14*Math.max(.3,CARDMG.ef))*iy*dt;
-  else if(iy<-.05)vf+=(vf>.3?-15:-6)*(-iy)*dt;
-  vf-=Math.sign(vf)*Math.min(Math.abs(vf),(.35+.001*vf*vf+(Math.abs(iy)<.05?1.2:0))*dt);
-  if(hb)vf-=Math.sign(vf)*Math.min(Math.abs(vf),8*dt);
-  vf-=Math.sign(vf)*Math.min(Math.abs(vf),CARDMG.drag*dt);vf=cl(vf,-12,CARDMG.vmax)}   /* modello arcade di riserva se i moduli non sono caricati */
- vl*=Math.exp(-((hb||(typeof PD!=='undefined'&&V.slipT>PD.t))?1.4:(Math.abs(vl)>7?3.5:8.5)*(CARDMG.grip||1)*(VEHOK?.3+.7*VEH.ruote.aderenza:1))*dt);
+ if(iy>.05)vf+=(vf>=-.3?9.5*CARDMG.ef*(1-Math.pow(Math.max(0,vf)/66,1.6)):14*Math.max(.3,CARDMG.ef))*iy*dt;
+ else if(iy<-.05)vf+=(vf>.3?-15:-6)*(-iy)*dt;
+ vf-=Math.sign(vf)*Math.min(Math.abs(vf),(.35+.001*vf*vf+(Math.abs(iy)<.05?1.2:0))*dt);
+ if(hb)vf-=Math.sign(vf)*Math.min(Math.abs(vf),8*dt);
+ vf-=Math.sign(vf)*Math.min(Math.abs(vf),CARDMG.drag*dt);vf=cl(vf,-12,CARDMG.vmax);vl*=Math.exp(-((hb||(typeof PD!=='undefined'&&V.slipT>PD.t))?1.4:(Math.abs(vl)>7?3.5:8.5)*(CARDMG.grip||1))*dt);
  V.vx=sn*vf-cn*vl;V.vz=cn*vf+sn*vl;
  let nx=C.x+V.vx*dt,nz=C.z+V.vz*dt;
  for(const o of [1.3,-1.3]){const fx=nx+sn*o,fz=nz+cn*o,q=push(fx,fz,1),ux=q[0]-fx,uz=q[1]-fz;if(q[2]&&(ux||uz)){const l=Math.hypot(ux,uz),mx=ux/l,mz=uz/l,vn=V.vx*mx+V.vz*mz;try{VITA.carHitBy(PO.s,-vn)}catch(e){}nx+=ux;nz+=uz;{const so=PO.s,lo=!!(so&&so.lo),vt=V.vx*-mz+V.vz*mx;crScrape(fx-mx,V.y+(lo?.48:.38),fz-mz,-mz,mx,vt,Math.max(0,-vn));const lat=-cn*mx+sn*mz,vl0=V.vz*sn-V.vx*cn;if(lo&&Math.abs(lat)>.75&&vl0*lat<-10&&!V.rol){V.rlF=V.vx*sn+V.vz*cn;rlStart(V,vl0,.3,'guardrail',.6,0)}}if(vn<0){if(vn<-3.2)carHit(carA,{x:C.x,z:C.z,h:C.h,y:V.y,vx:V.vx,vz:V.vz,player:true},fx-mx,fz-mz,mx,mz,-vn);const e=vn<-8?1.05:vn<-4?1.15:1.25,ox=V.vx,oz=V.vz;V.vx=(V.vx-e*vn*mx)*.97;V.vz=(V.vz-e*vn*mz)*.97;if(vn<-2){const rx=fx-mx-C.x,rz=fz-mz-C.z;V.ywW=cl(V.ywW+(rz*(V.vx-ox)-rx*(V.vz-oz))*.16,-2.4,2.4)}}}}
@@ -18944,13 +19110,13 @@ function buy(it){if(!it)return;const t=performance.now();if(t<lock)return;lock=t
 let tt=0;function toast(s){const e=$('#toast');e.textContent=s;e.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>{e.style.opacity=0},2600)}
 const LINES=['Buongiorno! Il bar qui accanto fa un ottimo cappuccino.','Attento in strada: qui le auto corrono!','Bella giornata, eh? Una passeggiata fa sempre bene.','Prenda il tiramisù da Gino: è il migliore del quartiere.'];
 function exitCar(){if(Math.hypot(V.vx,V.vz)>3){toast('Rallenta per scendere');return}
- const q=push(C.x+Math.cos(C.h)*2.3,C.z-Math.sin(C.h)*2.3,P.r);P.x=q[0];P.z=q[1];P.y=GY(P.x,P.z,V.y);inCar=false;S.inCar=false;cs.v=0;V.vx=V.vz=0;yaw=camYaw;pitch=-.2;save();if(RADIO.el)RADIO.el.pause();rwOpen(false)}
+ const q=push(C.x+Math.cos(C.h)*2.3,C.z-Math.sin(C.h)*2.3,P.r);P.x=q[0];P.z=q[1];P.y=GY(P.x,P.z,V.y,true);inCar=false;S.inCar=false;cs.v=0;V.vx=V.vz=0;yaw=camYaw;pitch=-.2;save();if(RADIO.el)RADIO.el.pause();rwOpen(false)}
 let tab_='Caffè';
 function renderMenu(){$('#tabs').innerHTML=Object.keys(MENU).map(k=>'<button class="b t'+(k===tab_?' on':'')+'" data-k="'+k+'">'+k+'</button>').join('');
  $('#items').innerHTML=ITEMS.filter(i=>i.k===tab_).map(i=>'<button class="b i" data-n="'+i.n+'"><span class="p">'+i.e+'</span><span class="nm">'+i.n+'</span><span>'+eur(i.c)+'</span></button>').join('')}
 function near(){const px=inCar?C.x:P.x,pz=inCar?C.z:P.z,L3=[];
  if(inCar)L3.push({x:px,z:pz,r:99,t:'Scendi dall\u2019auto',a:exitCar});
- else{L3.push({x:C.x,z:C.z,r:4.6,t:'Sali in auto',a:()=>{inCar=true;S.inCar=true;cs.v=0;camYaw=C.h;view=0;lookYaw=lookPitch=0;save();radioApply(RADIO.cur>0);if(VEHOK)VEHX.avvioAuto()}});
+ else{L3.push({x:C.x,z:C.z,r:4.6,t:'Sali in auto',a:()=>{inCar=true;S.inCar=true;cs.v=0;camYaw=C.h;view=0;lookYaw=lookPitch=0;save();radioApply(RADIO.cur>0)}});
   const bb=REAL.nearBar(px,pz);if(bb)L3.push({x:bb.x,z:bb.z,r:16,t:'Ordina'+(bb.name?' da '+bb.name:' al bar'),a:()=>{menu=true;$('#menu').hidden=false;$('#menu b').textContent=(bb.name||'Bar')+' · Menu';renderMenu()}});
   if(CC.st>=3&&CC.st<=6)OF.forEach(o=>{if(o.visible)L3.push({x:o.position.x,z:o.position.z,r:2.2,t:'Saluta il carabiniere',a:()=>toast('«Buongiorno! Tutto tranquillo da queste parti?» — «Sì, grazie, agente.»')})});
   NP.forEach(n=>L3.push({x:n.x,z:n.z,r:2.2,t:'Parla con il passante',a:()=>{n.p=2.5;toast(LINES[Math.random()*LINES.length|0])}}))}
@@ -19481,130 +19647,7 @@ function armInit(){armHudInit();armViewInput();try{armFxInit();if(AFX.flash&&!AF
 let lastLabel='';
 const TOLL={last:-99,inside:false,list:null};
 function tollStep(){if(!inCar)return;if(!TOLL.list)TOLL.list=WORLD.SPEC.filter(q=>q.t==='toll');let inA=false;for(const q of TOLL.list){const dx=C.x-q.x,dz=C.z-q.z;if(Math.abs(dx)>60||Math.abs(dz)>60)continue;const c=Math.cos(q.a),s=Math.sin(q.a),lx=dx*c+dz*s,lz=-dx*s+dz*c;if(Math.abs(lx)<q.w/2&&Math.abs(lz)<q.d/2){inA=true;if(!TOLL.inside&&PD.t-TOLL.last>20){TOLL.last=PD.t;const cost=q.main?220:380;S.cents=Math.max(0,S.cents-cost);S.log.push({t:Date.now(),w:'Pedaggio '+(q.name||'casello'),c:-cost});if(S.log.length>30)S.log.shift();save();hud();toast('Pedaggio '+(q.name||'')+': −'+eur(cost))}}}TOLL.inside=inA}
-
-/* ===================================================================================================================
-   VEICOLO REALE: motore fisico, ECU virtuali, danni meccanici, quadro strumenti, officina, benzinai, salvataggio
-   Moduli puri in motore/*.js (testati con node test/run.js). Qui c'è solo il collegamento al gioco.
-   =================================================================================================================== */
-const VEHOK=!!(window.IOW_FISICA&&window.IOW_VEICOLI&&window.IOW_ECU&&window.IOW_DANNI);
-const VEH=VEHOK?IOW_FISICA.crea(IOW_VEICOLI.parametri('alfa_159_19_jtdm_150'),{Tambiente:18,carburante:42,acceso:false}):null;
-const ECUN=VEHOK?IOW_ECU.crea(VEH,{seed:12}):null,DANS=VEHOK?IOW_DANNI.crea():null;
-const VEHX={t:0,cmd:null,vl:0,attritoDAN:0,tempAria:18,hudT:0,panT:0,tab:'quadro',open:false,prezzoL:1699,ultimoPOI:null,inOfficina:false,avviaT:0,consumoMedia:null,cal:null,toastT:0,
- /* effetti dello sterzo dai danni meccanici (oltre a quelli già calcolati dal gioco con la rete deformabile) */
- guida(){return VEHOK?IOW_DANNI.effettiGuida(DANS):{sterzoCorsa:1,sterzoTiro:0}},
- /* salendo in auto il motore si avvia da solo (se c'è carburante e la batteria è carica) */
- avvioAuto(){if(!VEHOK||VEH.motore.acceso)return;VEH.v=0;IOW_FISICA.passo(VEH,0.7,{acc:0,iy:0,avvia:true},VEHX.amb());VEH.v=0;if(!VEH.motore.acceso)toast(VEH.carburante.vuoto?'Serbatoio vuoto: il motore non parte (cerca un benzinaio ⛽)':'Batteria scarica: il motore non parte')},
- /* notte secondo il ciclo giorno/notte del gioco (fari accesi → consumo della batteria) */
- notte(){try{return typeof UNI!=='undefined'&&UNI.uNight?UNI.uNight.value>.25:false}catch(e){return false}},
- /* superficie e pendenza sotto l'auto */
- amb(){const sn=Math.sin(C.h),cn=Math.cos(C.h),yf=GY(C.x+sn*1.5,C.z+cn*1.5,V.y),yb=GY(C.x-sn*1.5,C.z-cn*1.5,V.y);return{pendenza:Math.atan2(yf-yb,3),superficie:REAL.surf?REAL.surf(C.x,C.z):'asfalto',acqua:0,tempAria:VEHX.tempAria,quota:Math.max(0,V.y),vento:0}},
- /* chiamata da drive(): restituisce la nuova velocità longitudinale */
- drive(dt,vf,vl,iy,hb){if(!VEHOK)return vf;VEH.v=vf;VEHX.vl=Math.abs(vl);VEH.mod.attritoExtra=VEHX.attritoDAN+CARDMG.drag*VEH.par.massa;
-  const avvia=!VEH.motore.acceso&&Math.abs(iy)>.05;if(avvia&&VEH.mod.avviamento===0&&VEHX.toastT<VEHX.t){VEHX.toastT=VEHX.t+4;toast(VEH.carburante.vuoto?'Serbatoio vuoto: il motore non parte':'Batteria scarica: il motore non parte')}
-  if(avvia&&VEH.carburante.vuoto&&VEHX.toastT<VEHX.t){VEHX.toastT=VEHX.t+4;toast('Serbatoio vuoto: serve un benzinaio')}
-  const inp={iy,frenoMano:hb,scivolamentoLaterale:Math.abs(vl),marciaCmd:VEH.cambio.modo==='man'?VEHX.cmd:null,avvia};VEHX.cmd=null;
-  const acceso0=VEH.motore.acceso;IOW_FISICA.passo(VEH,dt,inp,VEHX.amb());if(!acceso0&&VEH.motore.acceso)toast('Motore avviato');return VEH.v},
- /* ogni fotogramma: danni → fisica, ECU, quadro, pannello */
- step(dt){if(!VEHOK)return;VEHX.t+=dt;const D=carA.dmg,R=D&&D.R,ty=carA.tyre;
-  const S=(D&&D.on)||ty?{zones:D&&D.on?D.zones:[0,0,0,0,0,0],fC:R?R.fC:0,rC:R?R.rC:0,sL:R?R.sL:0,sR:R?R.sR:0,fS:R?R.fS:0,hubs:R?R.hubs:[],engine:D&&D.on?D.engine:1,wl:D?D.wl:null,lampF:R?R.lampF:null,lampR:R?R.lampR:null,tyreF:ty?ty.f:null,tyreShred:ty?ty.shred:null}:null;
-  const ctx=IOW_DANNI.aggiorna(DANS,dt,S,VEH);VEHX.attritoDAN=VEH.mod.attritoExtra;
-  if(!inCar){VEH.v=0;IOW_FISICA.passo(VEH,dt,{acc:0,freno:1,iy:0},{pendenza:0,superficie:'asfalto',acqua:0,tempAria:VEHX.tempAria,quota:0,vento:0});VEH.v=0}
-  IOW_ECU.passo(ECUN,dt,{scivolamentoLaterale:inCar?VEHX.vl:0,danni:ctx,luci:inCar&&VEHX.notte(),notte:inCar&&VEHX.notte(),portaAperta:!!S_door(),escAttivo:true});
-  if(inCar&&VEH.carburante.vuoto&&!VEH.motore.acceso&&VEHX.toastT<VEHX.t&&Math.abs(cs.v)<.5){VEHX.toastT=VEHX.t+30;toast('Serbatoio vuoto: cerca un benzinaio (⛽ sulla minimappa) o apri il pannello 🚗')}
-  VEHX.hudT+=dt;if(VEHX.hudT>.25){VEHX.hudT=0;VEHX.hud();const poi=inCar&&Math.abs(cs.v)<2?(REAL.nearFuel?REAL.nearFuel(C.x,C.z):null):null;if(poi&&poi!==VEHX.ultimoPOI){VEHX.ultimoPOI=poi;toast((poi.cl==='car_repair'?'Officina':'Benzinaio')+(poi.name?' «'+poi.name+'»':'')+': apri il pannello 🚗 per '+(poi.cl==='car_repair'?'riparare':'fare rifornimento o riparare'))}}
-  if(VEHX.open){VEHX.panT+=dt;if(VEHX.panT>.5){VEHX.panT=0;VEHX.render()}}},
- hud(){const q=$('#qd');if(!q)return;if(!inCar){if(!q.hidden)q.hidden=true;return}q.hidden=false;const m=VEH.motore,c=VEH.cambio,sp=ECUN.ecu.BCM.uscite.spie||[];
-  const mar=c.marcia<0?'R':c.marcia===0?'N':c.marcia+'ª';q.textContent=(m.acceso?mar+' · '+Math.round(m.rpm/10)*10:'MOTORE SPENTO · gas per avviare')+' · ⛽ '+Math.round(VEH.carburante.litri)+' L · 🌡 '+Math.round(m.Tacqua)+'°'+(sp.length?' · ⚠ '+sp.join(', '):'');
-  q.style.background=sp.includes('temperatura')||sp.includes('avaria motore')?'rgba(170,30,30,.88)':sp.length?'rgba(190,120,20,.88)':'';q.style.color=sp.length?'#fff':'';
-  const gb=$('#gbx');if(gb)gb.style.display=inCar&&c.modo==='man'?'flex':'none'},
- /* --- pannello --- */
- apri(o){VEHX.open=o;const p=$('#vp');if(p)p.hidden=!o;if(o){VEHX.panT=9;VEHX.render()}},
- render(){const p=$('#vp');if(!p||!VEHOK)return;const T=VEHX.tab,tel=IOW_FISICA.telemetria(VEH),an=IOW_DANNI.analisi(DANS),h=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-  const tabs=[['quadro','Quadro'],['diagnosi','Diagnosi'],['danni','Danni e officina'],['lab','Laboratorio'],['scheda','Scheda'],['rapporto','Rapporto']];
-  let o='<div class="ph">🚗 Veicolo · '+h(VEH.par.nome)+'</div><div class="pr">'+tabs.map(t=>'<button class="b s'+(t[0]===T?' on':'')+'" data-vt="'+t[0]+'">'+t[1]+'</button>').join('')+'<button class="b s" id="vpx">Chiudi</button></div>';
-  const bar=(v,col)=>'<span class="vbar"><i style="width:'+Math.round(cl(v,0,1)*100)+'%;background:'+(col||(v>.7?'#3a9':v>.35?'#d93':'#c33'))+'"></i></span>';
-  if(T==='quadro'){const m=VEH.motore,c=VEH.cambio,R=VEH.ruote,fz=VEHX.pdv();
-   o+='<div class="vg"><b>'+tel.velocitaKmh+'</b> km/h · <b>'+(c.marcia<0?'R':c.marcia===0?'N':c.marcia+'ª')+'</b> · <b>'+tel.rpm+'</b> giri · cambio <b>'+(c.modo==='auto'?'automatico':'manuale')+'</b> · motore <b>'+(m.acceso?'acceso':'spento')+'</b></div>'
-   +'<div class="pr"><button class="b s" id="vmodo">Cambio: '+(c.modo==='auto'?'passa a manuale (Z/X)':'passa ad automatico')+'</button><button class="b s" id="vmot">'+(m.acceso?'Spegni motore':'Avvia motore')+'</button></div>'
-   +'<div class="vrow">Coppia '+tel.coppiaNm+' N·m · potenza '+tel.potenzaKW+' kW · carico '+Math.round(tel.carico*100)+'% · turbo '+tel.boostBar+' bar'+(tel.limitatore?' · <b>LIMITATORE</b>':'')+'</div>'
-   +'<div class="vrow">Refrigerante '+tel.Tacqua+' °C '+bar(1-(tel.Tacqua-60)/70,tel.Tacqua>108?'#c33':'#39c')+' · olio '+tel.Tolio+' °C</div>'
-   +'<div class="vrow">Carburante '+tel.carburanteL+' / '+VEH.par.serbatoio+' L '+bar(VEH.carburante.litri/VEH.par.serbatoio,tel.riserva?'#c33':'#3a9')+' · '+tel.consumoLh+' L/h'+(VEHX.consumoMedia!==null?' · media '+VEHX.consumoMedia.toFixed(1)+' L/100 km':'')+' · '+tel.odometroKm+' km</div>'
-   +'<div class="vrow">Gomme: pressione '+tel.pressioni.map(x=>x.toFixed(1)).join(' / ')+' bar · temperatura '+tel.Tgomme.join(' / ')+' °C · aderenza '+Math.round(tel.aderenza*100)+'%'+(tel.aquaplaning>.05?' · <b>AQUAPLANING</b>':'')+'</div>'
-   +'<div class="vrow">Superficie '+h(tel.superficie)+' · pendenza '+tel.pendenzaPct+'% · carichi assi '+tel.carichi.join(' / ')+' N · forze: trazione '+tel.forze.trazione+' N, freno '+tel.forze.freno+' N, aria '+tel.forze.aero+' N, rotolamento '+tel.forze.rotolamento+' N, pendenza '+tel.forze.pendenza+' N</div>'
-   +'<div class="vrow">ABS '+(VEH.ecu.abs?(tel.abs?'<b>IN REGOLAZIONE</b>':'pronto'):'<b>DISATTIVATO</b>')+' · ASR/ESC '+(VEH.ecu.asr?(R.slip>.11?'<b>INTERVIENE</b>':'pronto'):'<b>DISATTIVATO</b>')+(ECUN.ecu.ESC.uscite.intervento?' · <b>ESC taglia coppia</b>':'')+(tel.bloccate?' · <b>RUOTE BLOCCATE</b>':'')+(tel.slitta?' · <b>PATTINAMENTO</b>':'')+'</div>'
-   +'<div class="vrow">Spie: '+(ECUN.ecu.BCM.uscite.spie&&ECUN.ecu.BCM.uscite.spie.length?'<b>'+h(ECUN.ecu.BCM.uscite.spie.join(', '))+'</b>':'nessuna')+' · batteria '+ECUN.batteria.V.toFixed(1)+' V ('+Math.round(ECUN.batteria.soc*100)+'%)</div>'
-   +(fz?'<div class="pr"><button class="b s" id="vpieno">⛽ Fai il pieno ('+eur(Math.round((VEH.par.serbatoio-VEH.carburante.litri)*VEHX.prezzoL))+')</button><button class="b s" id="v20">⛽ 20 litri ('+eur(20*VEHX.prezzoL)+')</button></div><div class="vnote">Gasolio a '+eur(VEHX.prezzoL)+'/L (prezzo di gioco). Benzinaio di OpenStreetMap: '+h(fz.name||'senza nome')+'</div>':'<div class="vnote">Per fare rifornimento fermati a un benzinaio (⛽ sulla minimappa).</div>');}
-  else if(T==='diagnosi'){const dtc=IOW_ECU.leggiDTC(ECUN);
-   o+='<div class="vnote">Centraline <b>virtuali</b> (simulazione software: nessuna centralina fisica è collegata). Bus '+h(ECUN.bus.nome)+': stato <b>'+h(ECUN.bus.stato)+'</b>, messaggi '+ECUN.bus.messaggi+', errori '+Math.round(ECUN.bus.errori)+'.</div>';
-   o+='<table class="vt">'+Object.values(ECUN.ecu).map(e=>'<tr><td><b>'+h(e.id)+'</b><br><small>'+h(e.nome)+'</small></td><td>'+(e.online?'<span class="vok">online</span>':'<span class="vko">offline</span>')+'<br><small>'+h(e.stato)+'</small></td><td><small>'+h(e.modo)+'</small><br><small>SW '+h(e.versioneSW)+'</small></td></tr>').join('')+'</table>';
-   o+='<div class="pr"><button class="b s" id="vdtc">Tester: cancella codici memorizzati</button></div>';
-   o+=dtc.length?'<table class="vt">'+dtc.map(d=>'<tr><td><b>'+h(d.codice)+'</b><br><small>'+h(d.ecu)+'</small></td><td>'+(d.stato==='attivo'?'<span class="vko">ATTIVO</span>':'<span class="vmem">memorizzato</span>')+'<br><small>×'+d.conteggio+'</small></td><td><small>'+h(d.descrizione)+(d.freeze?'<br>freeze: '+d.freeze.rpm+' giri, '+d.freeze.kmh+' km/h, '+d.freeze.Tacqua+' °C, '+d.freeze.V+' V':'')+'</small></td></tr>').join('')+'</table>':'<div class="vrow">Nessun codice di guasto.</div>';
-   o+='<div class="vrow"><small>Ultimi messaggi sul bus:</small></div><pre class="vpre">'+h(ECUN.bus.log.slice(-8).map(f=>f.t.toFixed(2)+'s '+f.id+' '+f.nome+' ← '+f.mittente+' '+JSON.stringify(f.segnali)).join('\n'))+'</pre>';}
-  else if(T==='danni'){const pre=an.preventivo,off=VEHX.pdv(),fermo=inCar&&Math.abs(cs.v)<.5;
-   o+='<div class="vrow">Struttura <b>'+h(an.statoStrutturale)+'</b> ('+Math.round(an.integritaStrutturale*100)+'%) · meccanica <b>'+h(an.statoMeccanico)+'</b> ('+Math.round(an.integritaMeccanica*100)+'%) · deformazione max '+an.deformazioneMaxM+' m · urti '+an.nUrti+' · energia stimata '+an.energiaUrtiKJ+' kJ</div><div class="vnote">'+h(an.nota)+'</div>';
-   o+='<div class="vrow">Refrigerante '+Math.round(an.refrigerante*100)+'% '+bar(an.refrigerante)+' · danno termico motore '+Math.round(an.dannoTermicoMotore*100)+'%'+(an.perditaCarburanteLh>0?' · <b>perdita carburante '+an.perditaCarburanteLh+' L/h</b>':'')+'</div>';
-   o+='<table class="vt">'+an.componenti.map(c=>'<tr><td>'+h(c.nome)+'</td><td>'+(Array.isArray(c.integrita)?c.integrita.map(v=>bar(v)).join(' '):bar(c.integrita))+'</td><td><small>'+(Array.isArray(c.integrita)?c.integrita.map(v=>Math.round(v*100)+'%').join(' '):Math.round(c.integrita*100)+'%')+'</small></td></tr>').join('')+'</table>';
-   if(an.storico.length)o+='<div class="vrow"><small>Urti: '+h(an.storico.slice(-6).map(u=>u.faccia+' '+u.kmh+' km/h ('+u.energiaKJ+' kJ) contro '+u.contro).join(' · '))+'</small></div>';
-   o+='<div class="ph" style="margin-top:8px">Officina</div>';
-   if(!pre.voci.length)o+='<div class="vrow">Nessuna riparazione necessaria.</div>';
-   else{o+='<div class="vnote">'+(off?'Sei '+(off.cl==='car_repair'?'in officina':'da un benzinaio con officina')+': le riparazioni modificano davvero lo stato dell\'auto e costano.':'Per riparare a pagamento fermati da un benzinaio o in un\'officina (⛽/🔧 sulla minimappa). Il pulsante «Ripara l\'auto» resta la riparazione d\'emergenza gratuita: carrozzeria e gomme, meccanica solo fino al 70%.')+' Portafoglio: '+eur(S.cents)+'</div>';
-    o+='<div class="pr"><button class="b s" id="vtutto" '+(off&&fermo?'':'disabled')+'>Ripara tutto ('+eur(pre.totale)+')</button></div><table class="vt">'+pre.voci.map((q,i)=>'<tr><td>'+h(q.nome)+'</td><td><small>'+Math.round(q.integrita*100)+'%</small></td><td><button class="b s" data-vr="'+i+'" '+(off&&fermo?'':'disabled')+'>'+eur(q.costo)+'</button></td></tr>').join('')+'</table>';}}
-  else if(T==='lab'){const G=ECUN.guasti;
-   o+='<div class="vnote"><b>Laboratorio guasti virtuali.</b> I guasti vengono iniettati soltanto nei modelli software delle centraline di questa auto (nessun veicolo reale o centralina fisica). Servono a provare le reazioni delle ECU: codici, spie, modalità ridotta.</div>';
-   const B=[['Tacqua','perdita','Perdita sensore temperatura',null],['Tacqua','deriva','Sensore temperatura +40 °C (surriscaldamento apparente)',40],['pedale','implausibile','Pedale acceleratore implausibile',1.4],['giri','perdita','Perdita segnale giri (3 s)',null,3],['boost','implausibile','Sovralimentazione eccessiva',2.0],['ruotaAS','perdita','Perdita sensore ruota ant. sin.',null],['imbardata','perdita','Perdita sensore imbardata (ESC)',null],['ABS','timeout','Timeout centralina ABS (5 s)',null,5],['RETE','bus','Interruzione del bus CAN (4 s)',null,4],['tensione','implausibile','Tensione batteria 9 V (6 s)',9,6]];
-   o+='<div class="pr">'+B.map((b,i)=>'<button class="b s" data-vg="'+i+'">'+h(b[2])+'</button>').join('')+'<button class="b s" id="vgoff">Rimuovi tutti i guasti</button></div>';
-   o+='<div class="vrow">Guasti attivi: '+(G.length?h(G.map(g=>g.ecu+(g.sensore?'/'+g.sensore:'')+' '+g.tipo+(g.fino<Infinity?' (fino a '+(g.fino-ECUN.t).toFixed(0)+' s)':'')).join(', ')):'nessuno')+'</div>';
-   o+='<div class="vrow"><small>Registro eventi (ultimi):</small></div><pre class="vpre">'+h(ECUN.registro.slice(-10).map(e=>e.t+'s '+e.ecu+' '+e.tipo+' '+e.codice+' '+JSON.stringify(e.dati)).join('\n'))+'</pre>';
-   o+='<div class="vnote">Collegamento a centraline fisiche (HIL): <b>'+h(IOW_ECU.hardware.stato)+'</b> — '+h(IOW_ECU.hardware.collega().motivo)+'</div>';}
-  else if(T==='scheda'){const s=IOW_VEICOLI.VEICOLI[VEH.par.id],rows=[];const walk=(obj,pre)=>{for(const k in obj){const d=obj[k];if(d&&typeof d==='object'&&'att' in d){rows.push([pre+k,Array.isArray(d.v)?(Array.isArray(d.v[0])?'curva ('+d.v.length+' punti)':d.v.join(' – ')):String(d.v),d.u,d.att,d.ver,d.nota])}else if(d&&typeof d==='object')walk(d,pre+k+'.')}};walk(s,'');
-   o+='<div class="vrow"><b>'+h(s.marca+' '+s.modello+' '+s.versione)+'</b> · '+h(s.carrozzeria)+'<br><small>'+h(s.stato)+'</small></div><div class="vnote">Ogni dato riporta unità, fonte e attendibilità (alta = scheda ufficiale, media = più cataloghi concordi, bassa = una sola fonte o derivato, provvisoria = valore tipico di categoria da sostituire). Fonti in docs/VEICOLI.md.</div>';
-   o+='<table class="vt">'+rows.map(r=>'<tr><td><small>'+h(r[0])+'</small></td><td><b>'+h(r[1])+'</b> <small>'+h(r[2])+'</small></td><td><small class="'+(r[3]==='alta'?'vok':r[3]==='provvisoria'?'vko':'vmem')+'">'+h(r[3])+'</small><br><small>'+h(r[4])+'</small></td></tr>').join('')+'</table>';}
-  else if(T==='rapporto'){
-   o+='<div class="vnote">Il rapporto raccoglie: telemetria, centraline virtuali con codici e registro, danni e riparazioni, prove di calibrazione (confronto con i dati dichiarati), versioni dei moduli e un seme riproducibile. Tutto è <b>simulato</b>: nessuna misura su veicolo reale.</div><div class="pr"><button class="b s" id="vcal">Esegui prove di calibrazione (0-100, vmax, frenata, consumi)</button><button class="b s" id="vexp">Scarica rapporto JSON</button></div>';
-   if(VEHX.cal)o+='<pre class="vpre" style="max-height:40vh">'+h(IOW_CALIB.testo(VEHX.cal))+'</pre>';}
-  p.innerHTML=o;
-  p.querySelectorAll('[data-vt]').forEach(b=>b.onclick=e=>{e.stopPropagation();VEHX.tab=b.dataset.vt;VEHX.render()});
-  const on=(id,f)=>{const el=p.querySelector('#'+id);if(el)el.onclick=e=>{e.stopPropagation();f();VEHX.render()}};
-  on('vpx',()=>VEHX.apri(false));on('vmodo',()=>{VEH.cambio.modo=VEH.cambio.modo==='auto'?'man':'auto';toast(VEH.cambio.modo==='auto'?'Cambio automatico':'Cambio manuale: Z scala, X sale (o i pulsanti a destra)')});
-  on('vmot',()=>{if(VEH.motore.acceso){VEH.motore.acceso=false;toast('Motore spento')}else{VEHX.avviaManuale=true;VEH.motore.acceso=false;IOW_FISICA.passo(VEH,0.7,{acc:0,iy:0,avvia:true},VEHX.amb());toast(VEH.motore.acceso?'Motore avviato':'Il motore non parte')}});
-  on('vpieno',()=>VEHX.rifornisci(VEH.par.serbatoio));on('v20',()=>VEHX.rifornisci(20));on('vdtc',()=>{const n=IOW_ECU.cancellaDTC(ECUN);toast(n?'Cancellati '+n+' codici memorizzati':'Nessun codice cancellabile (quelli attivi restano finché c\'è la causa)')});
-  on('vtutto',()=>VEHX.ripara('tutto'));p.querySelectorAll('[data-vr]').forEach(b=>b.onclick=e=>{e.stopPropagation();const q=IOW_DANNI.preventivo(DANS).voci[+b.dataset.vr];if(q)VEHX.ripara(q.chiave,q.idx);VEHX.render()});
-  p.querySelectorAll('[data-vg]').forEach(b=>b.onclick=e=>{e.stopPropagation();const L=[['Tacqua','perdita','EMS'],['Tacqua','deriva','EMS',40],['pedale','implausibile','EMS',1.4],['giri','perdita','EMS',null,3],['boost','implausibile','EMS',2.0],['ruotaAS','perdita','ABS'],['imbardata','perdita','ESC'],['','timeout','ABS',null,5],['','bus','RETE',null,4],['tensione','implausibile','BMS',9,6]][+b.dataset.vg];IOW_ECU.iniettaGuasto(ECUN,{ecu:L[2],sensore:L[0],tipo:L[1],valore:L[3],durata:L[4]});toast('Guasto virtuale iniettato: '+L[2]+(L[0]?'/'+L[0]:'')+' '+L[1]);VEHX.render()});
-  on('vgoff',()=>{IOW_ECU.rimuoviGuasti(ECUN);toast('Guasti virtuali rimossi')});on('vcal',()=>{try{VEHX.cal=IOW_CALIB.esegui(VEH.par.id);toast('Prove eseguite in '+VEHX.cal.durataMs+' ms')}catch(e){toast('Errore nelle prove: '+e.message)}});on('vexp',()=>VEHX.esporta());},
- /* punto di servizio vicino (benzinaio o officina) con auto ferma */
- pdv(){if(!inCar||Math.abs(cs.v)>=.5||!REAL.nearFuel)return null;return REAL.nearFuel(C.x,C.z)},
- rifornisci(litri){const need=Math.min(litri,VEH.par.serbatoio-VEH.carburante.litri);if(need<=.05){toast('Serbatoio già pieno');return}const costo=Math.round(need*VEHX.prezzoL);if(S.cents<=0){toast('Fondi insufficienti');return}const paga=Math.min(costo,S.cents),L=paga/VEHX.prezzoL;IOW_FISICA.rifornisci(VEH,L);S.cents-=paga;S.log.push({t:Date.now(),w:'Gasolio '+L.toFixed(1)+' L',c:-paga});if(S.log.length>30)S.log.shift();save();hud();toast('Rifornimento: '+L.toFixed(1)+' L (−'+eur(paga)+')')},
- ripara(chiave,idx){const pre=IOW_DANNI.preventivo(DANS),voce=chiave==='tutto'?{costo:pre.totale,nome:'tutte le riparazioni'}:pre.voci.find(q=>q.chiave===chiave&&(idx===undefined||q.idx===idx));if(!voce)return;if(S.cents<voce.costo){toast('Fondi insufficienti: servono '+eur(voce.costo));return}
-  VEHX.inOfficina=true;try{const costo=IOW_DANNI.ripara(DANS,chiave,idx,VEH);S.cents-=costo;S.log.push({t:Date.now(),w:'Officina: '+voce.nome,c:-costo});if(S.log.length>30)S.log.shift();
-   if(chiave==='tutto'||chiave==='struttura'||chiave==='pneumatici'||chiave==='fari'||chiave==='fanali'){dmgRepair(carA);dmgDrive();dmgHud()}
-   if(chiave==='tutto'||chiave==='refrigerante'||chiave==='radiatore')VEH.mod.refrigerante=DANS.refrigerante;if(chiave==='tutto')IOW_ECU.cancellaDTC(ECUN);
-   save();hud();toast('Riparato: '+voce.nome+' (−'+eur(costo)+')')}finally{VEHX.inOfficina=false}},
- esporta(){try{const rep={gioco:'ITALIA OPEN WORLD',versioneMotore:IOW_FISICA.versione,generato:new Date().toISOString(),natura:'SIMULAZIONE SOFTWARE: centraline virtuali, nessun dato da veicolo reale',telemetria:IOW_FISICA.telemetria(VEH),parametriVeicolo:VEH.par,ecu:IOW_ECU.rapporto(ECUN),danni:IOW_DANNI.analisi(DANS),calibrazione:VEHX.cal||IOW_CALIB.esegui(VEH.par.id),posizione:{x:+C.x.toFixed(1),z:+C.z.toFixed(1),luogo:REAL.hudText(C.x,C.z)}};
-   const b=new Blob([JSON.stringify(rep,null,1)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='rapporto-veicolo-'+Date.now()+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast('Rapporto scaricato')}catch(e){toast('Esportazione non riuscita: '+e.message)}},
- /* --- salvataggio e ripristino (carburante, temperature, danni meccanici, codici, carrozzeria deformata, gomme) --- */
- serializza(){if(!VEHOK)return null;const D=carA.dmg,sb=carA.sb;try{return{v:1,fisica:IOW_FISICA.serializza(VEH),danni:IOW_DANNI.serializza(DANS),dtc:IOW_ECU.leggiDTC(ECUN).map(d=>({ecu:d.ecu,codice:d.codice,conteggio:d.conteggio})),batteria:+ECUN.batteria.soc.toFixed(3),modo:VEH.cambio.modo,
-   sb:D&&D.on&&sb?{P:Array.from(sb.P,x=>Math.round(x*1000)/1000),br:Array.from(sb.br).join(''),free:Array.from(sb.free).join(''),W:sb.W,hits:sb.hits}:null,tyre:carA.tyre?{f:carA.tyre.f.slice(),tgt:carA.tyre.tgt.slice(),rate:carA.tyre.rate.slice(),shred:carA.tyre.shred.slice(),d:carA.tyre.d.slice()}:null}}catch(e){return null}},
- ripristina(s){if(!VEHOK||!s||typeof s!=='object')return;try{if(s.fisica)IOW_FISICA.ripristina(VEH,s.fisica);if(s.danni)IOW_DANNI.ripristina(DANS,s.danni);if(Number.isFinite(s.batteria))ECUN.batteria.soc=cl(s.batteria,0,1);VEH.motore.acceso=false;VEH.motore.rpm=0;
-   if(Array.isArray(s.dtc))for(const d of s.dtc){if(ECUN.ecu[d.ecu]&&/^[PCBU]\d{4}$/.test(d.codice)){IOW_ECU.setDTC(ECUN,d.ecu,d.codice,true,null);IOW_ECU.setDTC(ECUN,d.ecu,d.codice,false);const q=ECUN.ecu[d.ecu].dtc[d.codice];if(q)q.conteggio=Math.max(1,d.conteggio|0)}}
-   if(s.tyre&&Array.isArray(s.tyre.f)&&s.tyre.f.length===4){const t=TYRE.st(carA);t.f=s.tyre.f.map(Number);t.tgt=s.tyre.tgt.map(Number);t.rate=s.tyre.rate.map(Number);t.shred=s.tyre.shred.map(x=>x?1:0);t.d=s.tyre.d.map(Number)}
-   if(s.sb&&Array.isArray(s.sb.P)&&s.sb.P.length===SBT.P0.length&&typeof s.sb.br==='string'&&s.sb.br.length===SBT.NB){const sb=sbNew(SBT);sb.P.set(s.sb.P);for(let i=0;i<SBT.NB;i++)sb.br[i]=s.sb.br[i]==='1'?1:0;if(typeof s.sb.free==='string'&&s.sb.free.length===SBT.N)for(let i=0;i<SBT.N;i++)sb.free[i]=s.sb.free[i]==='1'?1:0;sb.W=+s.sb.W||0;sb.hits=+s.sb.hits||0;carA.sb=sb;
-    const D=dmgPrep(carA,['l0','l1']);D.on=true;sbModel(carA,carA,{x:C.x,z:C.z,h:C.h,y:V.y,vx:0,vz:0,player:true},true);dmgDrive();dmgHud()}
-   IOW_DANNI.aggiorna(DANS,0,null,VEH)}catch(e){console.error('ripristino veicolo',e)}},
-};
-function S_door(){return !!(S&&S.door)}
-if(VEHOK){
- /* urti del giocatore → storico e energia stimata (la deformazione la calcola già la rete del gioco) */
- {const carHit0=carHit;carHit=function(a,car,wx,wz,dirx,dirz,imp,kind){carHit0(a,car,wx,wz,dirx,dirz,imp,kind);if(a===carA&&imp>=3.2){const c=Math.cos(car.h),s=Math.sin(car.h),dx=wx-car.x,dz=wz-car.z;IOW_DANNI.urto(DANS,{lx:dx*c-dz*s,lz:dx*s+dz*c,imp,kind:kind||'wall',massa:VEH.par.massa,t:VEHX.t})}}}
- /* riparazione d'emergenza (pulsante esistente): carrozzeria e gomme come prima, meccanica solo al 70% */
- {const dmgRepair0=dmgRepair;dmgRepair=function(a){dmgRepair0(a);if(a===carA&&!VEHX.inOfficina){IOW_DANNI.ripara(DANS,'emergenza',undefined,VEH);if(VEHX.open)VEHX.render()}}}
- const exitCar0=exitCar;exitCar=function(){const was=inCar;exitCar0();if(was&&!inCar){VEH.motore.acceso=false;VEH.motore.rpm=0}};
- VEHX.ripristina(S.veicolo);if(inCar)setTimeout(()=>VEHX.avvioAuto(),800);
- {let km0=VEH.odometro,L0=VEH.carburante.consumoTot;setInterval(()=>{const dk=VEH.odometro-km0,dL=VEH.carburante.consumoTot-L0;if(dk>500){VEHX.consumoMedia=dL/dk*1e5;km0=VEH.odometro;L0=VEH.carburante.consumoTot}},5000)}
- $('#vbtn').addEventListener('pointerdown',e=>{e.stopPropagation();VEHX.apri(!VEHX.open)});
- $('#gup').addEventListener('pointerdown',e=>{e.stopPropagation();VEHX.cmd='su'});$('#gdn').addEventListener('pointerdown',e=>{e.stopPropagation();VEHX.cmd='giu'});
- addEventListener('keydown',e=>{if(!inCar)return;const k=e.key.toLowerCase();if(k==='x')VEHX.cmd='su';else if(k==='z')VEHX.cmd='giu';else if(k==='n'){VEH.cambio.modo=VEH.cambio.modo==='auto'?'man':'auto';toast(VEH.cambio.modo==='auto'?'Cambio automatico':'Cambio manuale: Z scala, X sale')}});
-}
-function step(dt){const ts=performance.now()/1000;dmgDrive();dmgStep(dt);VEHX.step(dt);crStep(dt);if(inCar)dmgSmokeFor(carA,{x:C.x,z:C.z,h:C.h,y:V.y},dt);dmgUi(dt);if(RADIO.el&&!RADIO.el.paused){const tv=(VOICE.cur?.22:1)*RADIO.vol*(inCar?1:0);RADIO.el.volume+=(tv-RADIO.el.volume)*Math.min(1,dt*4)}
+function step(dt){const ts=performance.now()/1000;dmgDrive();dmgStep(dt);crStep(dt);if(inCar)dmgSmokeFor(carA,{x:C.x,z:C.z,h:C.h,y:V.y},dt);dmgUi(dt);if(RADIO.el&&!RADIO.el.paused){const tv=(VOICE.cur?.22:1)*RADIO.vol*(inCar?1:0);RADIO.el.volume+=(tv-RADIO.el.volume)*Math.min(1,dt*4)}
  const ix=cl(joy.x+(K.d||K.arrowright?1:0)-(K.a||K.arrowleft?1:0),-1,1),iy=cl(joy.y+(K.w||K.arrowup?1:0)-(K.s||K.arrowdown?1:0),-1,1);
  if(!menu&&!mapOpen){if(inCar)drive(dt,ix,iy);else walk(dt,ix,iy,!!K.shift)}if(!inCar)parked(dt);
  doorA+=((S.door?-PI/2:0)-doorA)*Math.min(1,dt*8);door.rotation.y=doorA;
@@ -19627,7 +19670,7 @@ function step(dt){const ts=performance.now()/1000;dmgDrive();dmgStep(dt);VEHX.st
  for(const a of [carA,CCa].concat(TR.map(t=>t.a))){const gp=a.g.position,nr=Math.hypot(cam.position.x-gp.x,cam.position.z-gp.z)<32;if(a.l0.visible!==nr){a.l0.visible=nr;a.l1.visible=!nr}}
  {const sv=$('#sp'),hh=$('#hb');if(sv.hidden===inCar){sv.hidden=!inCar;hh.hidden=!inCar}if(inCar)sv.textContent=Math.round(Math.hypot(V.vx,V.vz)*3.6)+' km/h'}
  const n=near(),lb=n?n.t:'—';if(lb!==lastLabel){lastLabel=lb;$('#act').textContent=lb;$('#act').classList.toggle('on',!!n)}}
-function savePos(){S.x=P.x;S.z=P.z;S.yaw=yaw;REAL.saveGeo();if(VEHOK){const sv=VEHX.serializza();if(sv)S.veicolo=sv}}
+function savePos(){S.x=P.x;S.z=P.z;S.yaw=yaw;REAL.saveGeo()}
 let last=performance.now();
 function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last)/1000);last=now;if(ARM.open){armView(dt)}else{step(dt*CINE.step(dt));R.render(sc,cam)}}
 function fit(){const w=window.innerWidth,h=window.innerHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
@@ -19649,7 +19692,7 @@ if(inCar&&RADIO.cur>0){const once=()=>{radioApply(false);removeEventListener('po
 $('#mx').addEventListener('pointerdown',e=>{e.stopPropagation();openMap(false)});
 addEventListener('keydown',e=>{if(e.key==='m'||e.key==='M')openMap(!mapOpen)});
 requestAnimationFrame(frame);
-window.__iow={ARM,ARMCAT,ARMGLB,GLBC,ARMV,AFX,ASND,armEquip,armUnequip,armShoot,armRay,armReload,armOpen,armClose,armSelect,armStep,armView,armBuild,armPose,armIK,armSnd,armBallistic,get yaw(){return yaw},set yaw(v){yaw=v},get pitch(){return pitch},set pitch(v){pitch=v},get fp(){return fp},set fp(v){fp=v},get inCar(){return inCar},R,AMBCFG,PD,DSP,VOICE,EV,RAD,pdAudio,ambUpdate,CARS,PEDS,CSOL,ADJ,WORLD,REAL,VITA,sc,CHK,CHS,CSO,worldUpdate,GY,drawMini,drawMap,openMap,MAPC,groundCar,rayBox,get mapOpen(){return mapOpen},get S(){return S},ITEMS,buy,step,near,push,solids,P,C,cs,doorS,joy,K,load,save,NP,TR,INB,VP,VN,VC,VI,CC,OF,CCa,ccS,ccStep,carA,doorS,V,placeCam,drive,cam,getView:()=>view,setView:v=>{view=v},look:()=>[lookYaw,lookPitch,lookT],lookBy,CARDMG,carHit,dmgApply,dmgRepair,dmgDrive,dmgPrep,DMGBOX,DEB,dmgRepairStart,get DMGREP(){return DMGREP},SBT,SBST,sbCrash,sbDerive,sbNew,sbBind,sbSkin,dmgKind,sbSync,dmgCrash,SBQ,SBF,sbQueueStep,dmgUnitCrash,get PO(){return PO},VEH,ECUN,DANS,VEHX};
+window.__iow={ARM,ARMCAT,ARMGLB,GLBC,ARMV,AFX,ASND,armEquip,armUnequip,armShoot,armRay,armReload,armOpen,armClose,armSelect,armStep,armView,armBuild,armPose,armIK,armSnd,armBallistic,get yaw(){return yaw},set yaw(v){yaw=v},get pitch(){return pitch},set pitch(v){pitch=v},get fp(){return fp},set fp(v){fp=v},get inCar(){return inCar},R,AMBCFG,PD,DSP,VOICE,EV,RAD,pdAudio,ambUpdate,CARS,PEDS,CSOL,ADJ,WORLD,REAL,VITA,sc,CHK,CHS,CSO,worldUpdate,GY,drawMini,drawMap,openMap,MAPC,groundCar,rayBox,get mapOpen(){return mapOpen},get S(){return S},ITEMS,buy,step,near,push,solids,P,C,cs,doorS,joy,K,load,save,NP,TR,INB,VP,VN,VC,VI,CC,OF,CCa,ccS,ccStep,carA,doorS,V,placeCam,drive,cam,getView:()=>view,setView:v=>{view=v},look:()=>[lookYaw,lookPitch,lookT],lookBy,CARDMG,carHit,dmgApply,dmgRepair,dmgDrive,dmgPrep,DMGBOX,DEB,dmgRepairStart,get DMGREP(){return DMGREP},SBT,SBST,sbCrash,sbDerive,sbNew,sbBind,sbSkin,dmgKind,sbSync,dmgCrash,SBQ,SBF,sbQueueStep,dmgUnitCrash,get PO(){return PO}};
 })();
 </script>
 </body>

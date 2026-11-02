@@ -21,6 +21,34 @@ function vtTile(z, x, y) { return lru(VTC, z + '/' + x + '/' + y, async () => { 
 async function demFor(zd, mx0, my0, mx1, my1) { const need = demTilesFor(zd, mx0, my0, mx1, my1), tiles = new Map();
   await Promise.all(need.map(async ([tx, ty]) => { tiles.set(tx * 65536 + ty, await demTile(zd, tx, ty)) }));
   return makeDem(zd, (tx, ty) => tiles.get(tx * 65536 + ty) || null) }
+// tile z14 con le tile vicine unite (strade ed edifici): le celle ai bordi della tile vedono le strade anche oltre il bordo (margine di calcolo),
+// così due celle di tile diverse calcolano le stesse quote sul bordo comune. Le linee della tile principale si tagliano esattamente sui quattro bordi
+// (la fascia di sicurezza della tile duplicherebbe le strade delle vicine e cambierebbe da quarto a quarto); le linee delle vicine si tagliano sulla
+// loro area; i pezzi della stessa strada che si toccano sul bordo (stessa classe, ponte/galleria, senso, livello) vengono ricuciti in una sola linea,
+// così ponti e gallerie lunghi hanno un profilo unico. Senza vicine, la tile resta com'è (con la sua fascia).
+function mergeTiles(main, neigh) { neigh = (neigh || []).filter(n => n && n.L && (n.L.transportation || n.L.building)); if (!neigh.length) return main;
+  const out = {}; for (const k in main) out[k] = main[k];
+  const shift = (p, ox, oy) => { const q = new Array(p.length); for (let j = 0; j < p.length; j += 2) { q[j] = p[j] + ox; q[j + 1] = p[j + 1] + oy } return q };
+  // edifici: unione semplice (traslati)
+  { const name = 'building', ly = main[name], ext = ly ? ly.ext : 4096, srcs = []; if (ly) srcs.push({ ly, dx: 0, dy: 0, n: ly.n });
+    for (const nb of neigh) { const l2 = nb.L[name]; if (l2 && l2.feat) srcs.push({ ly: l2, dx: nb.dx, dy: nb.dy, n: l2.n }) }
+    if (srcs.length) { const tot = srcs.reduce((a, s2) => a + s2.n, 0); out[name] = { name, ext, n: tot, feat: i => { let s2 = 0; while (i >= srcs[s2].n) { i -= srcs[s2].n; s2++ } const S = srcs[s2], ft = S.ly.feat(i); if (!S.dx && !S.dy) return ft; return { id: ft.id, type: ft.type, props: ft.props, parts: ft.parts.map(p => shift(p, S.dx * ext, S.dy * ext)) } } } } }
+  // strade: materializzate, ritagliate e ricucite sui bordi
+  { const name = 'transportation', ly = main[name], ext = ly ? ly.ext : 4096, feats = [], ends = [];
+    const add = (ft, parts, keyBase) => { for (const p of parts) { const f = { id: ft.id, type: ft.type, props: ft.props, parts: [p] }; feats.push(f);
+      const onB = (x, y) => Math.abs(x) < 1.5 || Math.abs(x - ext) < 1.5 || Math.abs(y) < 1.5 || Math.abs(y - ext) < 1.5; if (onB(p[0], p[1])) ends.push({ f, e: 0, x: p[0], y: p[1], k: keyBase }); if (onB(p[p.length - 2], p[p.length - 1])) ends.push({ f, e: 1, x: p[p.length - 2], y: p[p.length - 1], k: keyBase }) } };
+    const keyOf = pr => pr.class + '|' + (pr.brunnel || '') + '|' + (pr.oneway || 0) + '|' + (pr.layer || 0) + '|' + (pr.ramp || 0) + '|' + (pr.ref || '') + '|' + (pr.name || '');
+    if (ly) for (let i = 0; i < ly.n; i++) { const ft = ly.feat(i); if (ft.type !== 2) { feats.push(ft); continue } const parts = []; for (const p of ft.parts) for (const c of clipLineBox(p, 0, ext, 0, ext)) parts.push(c); add(ft, parts, keyOf(ft.props)) }
+    for (const nb of neigh) { const l2 = nb.L[name]; if (!l2 || !l2.feat) continue; const ox = nb.dx * ext, oy = nb.dy * ext, x0 = nb.dx < 0 ? -ext : nb.dx > 0 ? ext : 0, x1 = x0 + ext, y0 = nb.dy < 0 ? -ext : nb.dy > 0 ? ext : 0, y1 = y0 + ext;
+      for (let i = 0; i < l2.n; i++) { const ft = l2.feat(i); if (ft.type !== 2) { if (ft.type === 3) feats.push({ id: ft.id, type: 3, props: ft.props, parts: ft.parts.map(p => shift(p, ox, oy)) }); continue } const parts = []; for (const p of ft.parts) for (const c of clipLineBox(shift(p, ox, oy), x0, x1, y0, y1)) parts.push(c); add(ft, parts, keyOf(ft.props)) } }
+    // ricucitura: estremità sullo stesso punto di bordo con la stessa chiave
+    const byK = new Map(); for (const e of ends) { const kk = e.k + '|' + Math.round(e.x / 3) + '|' + Math.round(e.y / 3); let a = byK.get(kk); if (!a) byK.set(kk, a = []); a.push(e) }
+    // solo continuazioni nello stesso verso (fine di uno = inizio dell'altro): il senso unico resta giusto e il risultato non dipende dall'ordine
+    const alias = new Map(), find = f => { while (alias.has(f)) f = alias.get(f); return f }; let nst = 0;
+    for (const a of byK.values()) { if (a.length !== 2) continue; let [A, B] = a; if (Math.hypot(A.x - B.x, A.y - B.y) > 2 || A.e === B.e) continue; if (A.e === 0) { const t = A; A = B; B = t }
+      const fa = find(A.f), fb = find(B.f); if (fa === fb) continue; fa.parts[0] = fa.parts[0].concat(fb.parts[0].slice(2)); alias.set(fb, fa); nst++ }
+    const kept = feats.filter(f => !alias.has(f)); out[name] = { name, ext, n: kept.length, feat: i => kept[i], __stitched: nst } }
+  return out }
 // quarto (qx,qy) di una tile: stesse geometrie con coordinate ×f e traslate (la cella torna a coprire [0,ext]²)
 function subLayers(L, qx, qy, f) { const out = {};
   for (const name in L) { const ly = L[name]; if (!ly || !ly.feat) continue; const e = ly.ext, ox = qx * e, oy = qy * e;
@@ -60,9 +88,14 @@ function lcTile(z, x, y) { if (!CFG.lc || LCFAIL > 3) return Promise.resolve(nul
       LCFAIL = 0; STAT.lc = (STAT.lc || 0) + 1; return n ? { N, d: out } : null } catch (e) { return null } }, 12) }
 // --- celle 3D (z15, dal quarto della tile z14)
 async function cell(m) { const z = m.z, Sm = ME / (1 << z), mxL = -MH + m.x * Sm, myT = MH - m.y * Sm, K = CFG.K;
-  const [dem, L14, lc] = await Promise.all([demFor(Math.min(CFG.demMax || 12, 12), mxL - Sm, myT - 2 * Sm, mxL + 2 * Sm, myT + Sm), vtTile(z - 1, m.x >> 1, m.y >> 1), lcTile(z - 1, m.x >> 1, m.y >> 1).catch(() => null)]);
-  const L = subLayers(L14, m.x & 1, m.y & 1, 2), ext = 4096;
-  const r = buildCell(L, { S: Sm * K, mxL, myT, K, dem, lod: m.lod, earcut, cx: m.x, cy: m.y, blo: -ext, bhi: 2 * ext, dens: tileDens(L14), lc: lc ? { N: lc.N, d: lc.d, qx: m.x & 1, qy: m.y & 1 } : null });
+  // le 8 tile vicine (stesso insieme per i quattro quarti della tile: così le celle calcolano le stesse quote sui bordi e sui ponti/gallerie lunghi)
+  const x14 = m.x >> 1, y14 = m.y >> 1, nbT = (dx, dy) => vtTile(z - 1, x14 + dx, y14 + dy).then(L2 => ({ L: L2, dx, dy })).catch(() => null), NB = [];
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) NB.push(nbT(dx, dy));
+  // rilievo: tile z14 intera più una cella intorno (uguale per i quattro quarti: ponti e gallerie lunghi hanno lo stesso profilo in tutte le celle)
+  const qx = m.x & 1, qy = m.y & 1, tw = mxL - qx * Sm, tn = myT + qy * Sm;
+  const [dem, L14, lc, ...nbs] = await Promise.all([demFor(Math.min(CFG.demMax || 12, 12), tw - Sm, tn - 3 * Sm, tw + 3 * Sm, tn + Sm), vtTile(z - 1, x14, y14), lcTile(z - 1, x14, y14).catch(() => null)].concat(NB));
+  const L = subLayers(mergeTiles(L14, nbs), qx, qy, 2), ext = 4096;
+  const r = buildCell(L, { S: Sm * K, mxL, myT, K, dem, lod: m.lod, earcut, cx: m.x, cy: m.y, blo: -ext, bhi: 2 * ext, blou: -(1 + qx) * ext, bhiu: (3 - qx) * ext, blov: -(1 + qy) * ext, bhiv: (3 - qy) * ext, dens: tileDens(L14), lc: lc ? { N: lc.N, d: lc.d, qx, qy } : null });
   r.net = { vt: STAT.vt, dem: STAT.dem, kb: Math.round(STAT.bytes / 1024) }; return r }
 async function far(m) { const z = m.z, Sm = ME / (1 << z), mxL = -MH + m.x * Sm, myT = MH - m.y * Sm, N = m.N || 17, pad = Sm / (N - 1);
   const dem = await demFor(Math.min(m.zd || 11, CFG.demMax || 12), mxL - pad, myT - Sm - pad, mxL + Sm + pad, myT + pad); return buildFar({ S: Sm * CFG.K, mxL, myT, K: CFG.K, dem, N, q: [m.x & 1, m.y & 1] }) }
@@ -70,7 +103,7 @@ async function mapTile(m) { const L = await vtTile(m.z, m.x, m.y), Sm = ME / (1 
 function transfers(r) { const t = []; const add = a => { if (a && a.buffer && !t.includes(a.buffer)) t.push(a.buffer) };
   const geo = o => { if (o) { add(o.P); add(o.N); add(o.C); add(o.I); add(o.U) } };
   for (const k of ['T', 'R', 'Rst', 'Rdi', 'Rba', 'Rsw', 'Mc', 'MS', 'HG', 'M', 'W']) geo(r[k]); if (r.T && r.T.W) add(r.T.W); for (const k of ['BW', 'BR']) if (Array.isArray(r[k])) r[k].forEach(geo);
-  add(r.H); add(r.cls); add(r.wmask); add(r.RH); add(r.NR); add(r.GM); add(r.walls); add(r.trees); add(r.lamps); add(r.parked); add(r.objs); if (r.img) t.push(r.img); return t }
+  add(r.H); add(r.cls); add(r.wmask); add(r.RH); add(r.RH2); add(r.NR); add(r.GM); add(r.walls); add(r.trees); add(r.lamps); add(r.parked); add(r.objs); if (r.img) t.push(r.img); return t }
 onmessage = async e => { const m = e.data;
   if (m.t === 'cfg') { CFG = m.cfg; return }
   const job = m.t === 'cella' ? cell : m.t === 'lontano' ? far : m.t === 'mappa' ? mapTile : null; if (!job) return;

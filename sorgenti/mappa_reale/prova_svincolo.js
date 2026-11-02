@@ -1,5 +1,5 @@
 // prova in Node dello svincolo sintetico: uso node prova_svincolo.js [file cella]
-const fs = require('fs'), CELLA = process.argv[2] || 'cella.js';
+const fs = require('fs'), B = (process.env.DATI || __dirname) + '/' /* DATI: cartella che contiene next/<set> (tile di prova salvate col pulsante «Dati zona» e importate con importa_zona.py) */, CELLA = process.argv[2] || 'cella.js';
 const src = ['mvt.js', 'earcut.js', 'dem.js', CELLA].map(f => fs.readFileSync(__dirname + '/' + f, 'utf8').replace(/if \(typeof module[^\n]*\n/g, '')).join('\n');
 const M = new Function(src + ';return {buildCell,earcut,ME,MH}')(), { SVINCOLO } = require(__dirname + '/svincolo.js');
 const lat0 = 43.73, K = Math.cos(lat0 * Math.PI / 180), Sm = M.ME / 32768, S = Sm * K, k = S / 4096, cx = 17063, cy = 11946, mxL = -M.MH + cx * Sm, myT = M.MH - cy * Sm;

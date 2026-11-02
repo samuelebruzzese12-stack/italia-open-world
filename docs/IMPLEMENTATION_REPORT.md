@@ -1,6 +1,57 @@
-# ITALIA OPEN WORLD — Rapporto di implementazione (mappa reale, Versione 29.2)
+# ITALIA OPEN WORLD — Rapporto di implementazione (mappa reale, Versione 29.3)
 
-## 0. Versione 29.2 — correzione dei difetti della mappa visti sul telefono (2 novembre 2026)
+## 0. Versione 29.3 — correzione sistematica di tutta la mappa (2 novembre 2026)
+
+Dopo la 29.2 le foto (Diano Gorleri sull'A10, A3, e una strada degli Stati Uniti) mostravano ancora fasce di muro marrone, guardrail sospesi, strade su un argine di pietra, alberi dappertutto. Non si può controllare la mappa un angolo alla volta: in questa versione il generatore delle celle è stato messo alla prova su **classi di situazioni** con controlli automatici, e corretto finché i controlli non sono passati. Le classi: città densa con strade sovrapposte, gallerie e ponti (Monaco, dati OpenStreetMap veri e rilievo vero); strade di montagna vere con tornanti, ponti, gallerie e paesi (Andorra, dati OpenStreetMap veri; il rilievo non è scaricabile da qui ed è sintetico, con pendenze al massimo del 40 %); uno svincolo autostradale in collina inventato (sottopasso, cavalcavia con rampe e anello, viadotto, superstrada con tornante a due carreggiate, rotatoria, strade di campagna); una periferia residenziale su terreno "rumoroso". I controlli: misure numeriche su ogni cella (`metriche.js`), una **guida virtuale** che percorre tutte le strade metro per metro con la stessa funzione di quota dell'auto, sia in Node (`prova_guida.js`) sia nel gioco vero in Chromium, e fogli di immagini.
+
+**Limite importante (invariato):** le tile dell'A3, dell'A10 e di qualsiasi zona italiana non sono scaricabili dall'ambiente di sviluppo (`tiles.openfreemap.org` e il rilievo rispondono 403). Le zone delle foto non sono quindi state provate direttamente. Per questo nella mappa del gioco c'è ora il pulsante **📦 Dati zona**: salva in un file le tile vere del posto in cui ti trovi (3×3 tile vettoriali z14, rilievo z12, copertura del suolo se accesa); mandandolo in chat il difetto si può riprodurre e correggere con gli stessi strumenti (`importa_zona.py` lo trasforma nella cartella di prova che i test leggono).
+
+### Misure prima e dopo
+
+| Misura (stessi dati, stesso programma di misura) | Monaco 29.2 | Monaco 29.3 | Andorra 29.2 | Andorra 29.3 |
+|---|---|---|---|---|
+| Incroci con gradino oltre 30 cm (oltre 1 m) — massimo | 50 (15) — 4,13 m | **13 (0) — 0,82 m** | 45 (16) — 3,66 m | **5 (0) — 0,42 m** |
+| Gradini fra celle vicine oltre 30 cm (oltre 1 m) — massimo | 2 (2) — 1,38 m | **2 (0) — 0,56 m** | 7 (6) — 17,3 m | **1 (0) — 0,99 m** |
+| Bordo dell'asfalto sospeso sopra il terreno oltre 60 cm | 79,9 % (scarto medio 1,56 m) | **29,8 % (0,74 m)** | 90,5 % (2,09 m) | **20,8 % (0,54 m)** |
+| Bordo sospeso oltre 1,8 m (muro di pietra) | 29,4 % | **9,9 %** | 53,6 % | **4,8 %** |
+| Alberi, ciuffi d'erba sulla carreggiata | 0 | 0 | 0 | 0 |
+| Guida virtuale nel gioco vero (Chromium, pagina 29.2 e 29.3 sugli stessi dati): salti di quota oltre 0,45 m + 25 %/m (massimo) | 113 (3,2 m) su 31 km | **27 (2,6 m)** | 83 (12,2 m) su 27 km | **37 (2,4 m)** |
+| Svincolo sintetico, salti nel gioco | 12 (2,2 m) | **1 (0,8 m)** | | |
+| Guida virtuale in Node sulle celle (salti non spiegati dalla pendenza della strada) | — | 26 su 51 km (massimo 4,1 m, una rampa a spirale) | — | 7 su 36 km (massimo 0,9 m) |
+
+(I 27 salti di Monaco sono quasi tutti fra 0,8 e 1,3 m dove due vie corrono una sopra l'altra a quote diverse, più una rampa a spirale che OpenStreetMap disegna come anello piatto; i 37 di Andorra stanno su pendenze sintetiche del 40 %. All'inizio del lavoro, col rilievo sintetico senza limite di pendenza, Andorra dava 2389 salti con un massimo di 17,7 m: la maggior parte era colpa del rilievo di prova, rifatto con pendenze al massimo del 40 %; il confronto in tabella è sul rilievo nuovo per entrambe le versioni.)
+
+### Cause trovate e corrette (`sorgenti/mappa_reale/cella.js`, `real_main.js`, `worker_main.js`, `mvt.js`, dentro `index.html`)
+
+1. **Raccordo agli incroci.** Le correzioni dei nodi vicini si sommavano: al bordo del pianerottolo di un incrocio la quota saltava (ad Andorra 8 m in 5 m). Ora la correzione è una media continua che al bordo del pianerottolo vale esattamente quella del nodo. Il raccordo si ripete in quattro passate: una via breve fra due strade alte non trascina più l'incrocio in mezzo nel suo avvallamento (ci arriva già sollevata dalle estremità). La strada passante pesa otto volte quella che finisce sull'incrocio. Una sola voce per strada e per nodo (prima tre segmenti vicini davano tre pianerottoli consecutivi). Il pianerottolo piatto resta solo per la larghezza delle strade che attraversano il nodo (almeno 1,5 m). I nodi si raggruppano senza catene: nel centro di Monaco, fra scale e vicoli, si formava un gruppo di 22 rami largo 50 m con una sola quota (412 gradini). I ponti alzati per il franco comandano i loro nodi anche fra incroci fitti: prima il franco veniva annullato e il cavalcavia tornava sulla strada che scavalca.
+2. **Lisciatura delle quote.** Alle estremità la media vedeva un solo lato: in salita la strada arrivava all'incrocio più bassa di pendenza × mezza finestra (metri interi, e strade diverse arrivavano a quote diverse). Ora è una retta dei minimi quadrati pesati.
+3. **Carreggiate gemelle e confluenze.** Niente media fra carreggiate a senso unico quando il dislivello supera 2–4 m (a Monaco l'altra carreggiata passa 15 m più in basso, all'imbocco di una galleria: la strada si abbassava di 10 m per un campione). Una via che corre dentro la fascia di una strada più grande ma 1,5–3 m più in basso è una terrazza, non una confluenza: tiene la sua quota. Le confluenze non toccano i 6 m finali delle strade (lì comanda il nodo).
+4. **Raster delle quote stradali (ciò su cui poggia l'auto).** I segmenti avevano "tappi" piatti alle giunzioni e vinceva la quota più alta: su ogni discesa la strada diventava una scala con gradini di 2 m ogni 6 m. Ora la quota segue la pendenza del segmento, fra segmenti della stessa strada vince il più vicino, fra strade diverse vince il rango e poi la vicinanza (le superfici si incontrano a metà fra gli assi). Pixel da 3,5 m portati a 1,76 m. Il raster ha **due strati** a 16 bit (4 cm): dove due vie si sovrappongono a quote diverse l'auto sceglie lo strato più vicino alla sua quota e resta sulla sua carreggiata. Niente tappi oltre le estremità (finivano sopra l'impalcato o la galleria che seguono); i pezzi tagliati sul bordo della cella conservano il tappo (la strada continua di là).
+5. **Impalcati e gallerie nel gioco (`bridgeH`).** Stesso difetto dei tappi: su ogni ponte e galleria in pendenza l'auto saliva a gradini (quasi certamente l'"asfalto che vola" sui viadotti). Ora vince il segmento più vicino. Il piano di una galleria vale solo dove il suolo sta più di 2,5 m sopra (all'imbocco comanda il suolo: una via che passa sopra l'imbocco non "cade" nella galleria). Un impalcato a meno di 2 m dal suolo (dati incoerenti) non cattura chi passa sotto. Le passerelle pedonali valgono solo a piedi. Senza quota di riferimento (comparsa, pedoni) comanda sempre l'asfalto: prima si poteva comparire sul terreno sotto una strada sopraelevata e guidare "sotto" la strada.
+6. **Bordi di pietra.** La ricerca di strade vicine per i bordi scendeva con il pixel del raster: adeguata al nuovo passo (i bordi non invadono più le vie accanto).
+7. **Oggetti di OpenStreetMap** (cestini, cassette postali, telefoni) mai dentro una carreggiata; i dissuasori restano, sono barriere vere.
+8. Franco sotto i cavalcavia portato a 5,9 m (un decimetro di margine sulle 5,8 m dopo il raccordo).
+
+### Banco di prova (cartella `sorgenti/mappa_reale/`)
+
+- `prova_guida.js svincolo | periferia`, oppure `DATI=<cartella> SET=<set> node prova_guida.js x15 y15 …`: guida virtuale in Node su una cella; con `TRACE=u,v,metri` stampa metro per metro terreno, raster, quota propria e quota scelta; con `PROBE=u,v` i due strati del raster e i pezzi di strada attorno; con `PONTE=u,v` l'impalcato interpolato come nel gioco.
+- `metriche.js` (con `SET`, `NT`, `ESEMPI`): le misure della tabella; `prova_bordi.js`, `prova_svincolo.js`, `prova_cella.js`, `prova_sintetica.js` come prima.
+- `dbg17.js` (raster e nodi attorno a un punto), `dbg18.js` (profilo di una strada in ogni fase: rilievo, lisciato, scavalchi, raccordo, confluenze), `dbg19.js` (limiti del movimento terra su un vertice), `mkdbg.py` (prepara `cella_dbg.js` con le sonde).
+- `importa_zona.py file.json cartella`: trasforma un file «Dati zona» nella cartella `next/<set>` letta dai test. `andorra/dem_sintetico.py`: il rilievo sintetico di Andorra (paesi, corsi d'acqua e cime di OpenStreetMap, lisciato, pendenza massima 40 %, calcolato su un'unica griglia così le tile coincidono ai bordi).
+- Le tile di prova (Monaco, Andorra) non sono nella repository: pesano centinaia di MB. Si ottengono dal gioco col pulsante 📦.
+
+**Immagini:** [`img/v293_svincolo_periferia.jpg`](img/v293_svincolo_periferia.jpg), [`img/v293_monaco.jpg`](img/v293_monaco.jpg), [`img/v293_andorra.jpg`](img/v293_andorra.jpg).
+
+**Costo:** costruzione di una cella nel Web Worker di Chromium: media 188 ms, massimo 1,7 s (29.2: 369 / 2,8 s; 28: 93 / 0,7 s). Memoria in più per cella vicina: circa 1 MB per il raster a due strati (prima 0,25 MB). Il telefono vero non è stato misurato.
+
+**Che cosa resta (onestamente):**
+- Fra due vie sovrapposte a quote diverse (terrazze di Monaco, lungomare e strada alta) il terreno a maglia di 9,4 m non può seguire entrambe: la via alta mostra un muro di pietra fino a quella bassa. È una scelta: l'alternativa (terreno che buca l'asfalto della via bassa) è peggiore.
+- Strade che OpenStreetMap disegna sovrapposte a sé stesse (rampe a spirale) o incoerenti col rilievo (cavalcavia con 7 m di dislivello in 25 m, strade al 78 % su una scogliera a 30 m di risoluzione) restano con qualche salto.
+- Le zone delle tue foto (A10 Diano Gorleri, A3, Stati Uniti) vanno provate da te: col pulsante 📦 Dati zona i loro dati arrivano qui e si correggono con questo banco.
+
+---
+
+## 0.1 Versione 29.2 — correzione dei difetti della mappa visti sul telefono (2 novembre 2026)
 
 (Il motore fisico, le centraline virtuali e i danni meccanici della versione 29 sono descritti in `docs/CHANGELOG.md`, `docs/MOTORE_FISICO.md`, `docs/ECU.md` e `docs/DANNI.md`; queste correzioni non li toccano.)
 

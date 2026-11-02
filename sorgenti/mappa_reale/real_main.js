@@ -245,7 +245,7 @@ function plan(px,pz){const m=g2m(px,pz),cx=Math.floor((m[0]+MH)/S15),cy=Math.flo
 function geom(o,uv){const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(o.P,3));g.setAttribute('normal',new T.BufferAttribute(o.N,3));g.setAttribute('color',new T.BufferAttribute(o.C,3));if(uv&&o.U)g.setAttribute('uv',new T.BufferAttribute(o.U,2));if(o.W)g.setAttribute('tw',new T.BufferAttribute(o.W,4));g.setIndex(new T.BufferAttribute(o.I,1));g.computeBoundingSphere();return g}
 const _m4=new T.Matrix4(),_v=new T.Vector3(),_s=new T.Vector3(),_q=new T.Quaternion(),_y=new T.Vector3(0,1,0),_c=new T.Color();
 function mkCell(j,r){const mxL=-MH+j.x*S15,myT=MH-j.y*S15,g0=m2g(mxL,myT),X=g0[0],Z=g0[1],g=new T.Group();g.position.set(X,0,Z);g.updateMatrix();g.matrixAutoUpdate=false;
- const c={x:j.x,y:j.y,key:j.key,lod:j.lod,g,X,Z,S:r.S,NG:r.NG,d:r.S/(r.NG-1),H:r.H,cls:r.cls,CR:r.CR,wm:r.wmask,WM:r.WM,RH:r.RH,RHN:r.RHN,GM:r.GM,GMN:r.GMN,keys:new Set(),bk:new Set(),places:[],pois:[],mini:r.mini,tri:0};
+ const c={x:j.x,y:j.y,key:j.key,lod:j.lod,g,X,Z,S:r.S,NG:r.NG,d:r.S/(r.NG-1),H:r.H,cls:r.cls,CR:r.CR,wm:r.wmask,WM:r.WM,RH:r.RH,RH2:r.RH2,RHB:r.RHB||0,RHN:r.RHN,GM:r.GM,GMN:r.GMN,keys:new Set(),bk:new Set(),places:[],pois:[],mini:r.mini,tri:0};
  const add=(o,mt,cast,uv)=>{if(!o||!o.I||!o.I.length)return null;const me=new T.Mesh(geom(o,uv),mt);me.castShadow=!!cast;me.receiveShadow=true;me.matrixAutoUpdate=false;g.add(me);c.tri+=o.I.length/3;return me};
  add(r.T,MTR.ter,0,1);add(r.R,MTR.road,0,1);for(const k of ['Rst','Rdi','Rba','Rsw'])add(r[k],PBR.RMAT[k],0,1);add(r.Mc,MTR.conc,1,0);add(r.MS,MTR.mur,1,1);add(r.HG,MTR.siepe,1,0);add(r.M,MTR.misc,0,0);
  {let u=0,w=0;const cl=r.cls;if(cl){for(let i=0;i<cl.length;i++){if(cl[i]===2||cl[i]===11)u++;else if(cl[i]===1)w++}c.urb=Math.max(u/Math.max(1,cl.length-w),(r.dens||0)*1.5)}c.dens=r.dens||0;c.chiese=[];const ch=r.chiese||[];for(let i=0;i+2<ch.length;i+=3)c.chiese.push({x:X-ch[i],z:Z-ch[i+1],y:ch[i+2]})}
@@ -287,6 +287,16 @@ function satFor(f){if(!COP.on||COP.fail>3)return;const k=(f.x>>1)+'/'+(f.y>>1);l
   L.load(tplZ(CFG.sat,13,f.x>>1,f.y>>1),t=>{t.encoding=T.sRGBEncoding;t.anisotropy=4;e.tex=t;e.mat=new T.MeshStandardMaterial({map:t,roughness:1,metalness:0,color:new T.Color(1.12,1.12,1.12)});COP.ok++;COP.fail=0;for(const g of e.wait)if(g.me&&FARS.get(g.key)===g)g.me.material=[e.mat,MTR.farS];e.wait.length=0},undefined,()=>{COP.fail++;e.dead=1})}
  e.n++;f.sat=k;if(e.mat)f.me.material=[e.mat,MTR.farS];else if(!e.dead)e.wait.push(f)}
 function satRelease(f){if(!f.sat)return;const k=f.sat,e=COP.cache.get(k);f.sat=null;if(!e)return;if(--e.n<=0){if(e.tex)e.tex.dispose();if(e.mat)e.mat.dispose();COP.cache.delete(k)}}
+// «Dati zona»: salva in un file i dati pubblici che il gioco ha già scaricato per il posto in cui ti trovi (tile vettoriali OpenMapTiles z14 3×3,
+// rilievo Mapterhorn z12, copertura WorldCover se attiva) con la posizione: serve a riprodurre esattamente un difetto visto nel gioco.
+async function esportaZona(opt){opt=opt||{};const m=g2m(UPP[0],UPP[1]),x14=Math.floor((m[0]+MH)/S14),y14=Math.floor((MH-m[1])/S14),ll=m2ll(m[0],m[1]),out={versione:'29.3',quando:new Date().toISOString(),pos:{lat:ll[0],lon:ll[1],x:UPP[0],z:UPP[1]},x14,y14,vt:{},dem:{},lc:{},errori:[]};
+ const b64=b=>{const u=new Uint8Array(b);let s='';for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s)};
+ const get=async(url)=>{const r=await fetch(url,{mode:'cors',credentials:'omit'});if(!r.ok)throw new Error(r.status+' '+url);return b64(await r.arrayBuffer())};
+ const tp=(t,z,x,y)=>t.replace('{zz}',String(z).padStart(2,'0')).replace('{z}',z).replace('{x}',x).replace('{y}',y);
+ const jobs=[];for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const x=x14+dx,y=y14+dy;jobs.push(get(tp(CFG.vt,14,x,y)).then(d=>{out.vt['14/'+x+'/'+y]=d}).catch(e=>out.errori.push(String(e))));if(COP.on&&CFG.lc)jobs.push(get(tp(CFG.lc,14,x,y)).then(d=>{out.lc['14/'+x+'/'+y]=d}).catch(()=>{}))}
+ const seen=new Set();for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const x=(x14+dx)>>2,y=(y14+dy)>>2,k='12/'+x+'/'+y;if(seen.has(k))continue;seen.add(k);jobs.push(get(tp(CFG.dem,12,x,y)).then(d=>{out.dem[k]=d}).catch(e=>out.errori.push(String(e))))}
+ await Promise.all(jobs);const name='italia-open-world-zona-'+ll[0].toFixed(4)+'_'+ll[1].toFixed(4)+'.json';if(opt.testo)return JSON.stringify(out);const blob=new Blob([JSON.stringify(out)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);
+ return{name,kb:Math.round(blob.size/1024),vt:Object.keys(out.vt).length,dem:Object.keys(out.dem).length,errori:out.errori.length}}
 function copToggle(){COP.on=!COP.on;try{localStorage.setItem('iow_cop',COP.on?'1':'0')}catch(e){}cfgAll();for(const f of FARS.values()){if(COP.on)satFor(f);else{f.me.material=[MTR.farL,MTR.farS];satRelease(f)}}return COP.on}
 function applyFar(j,r){const mxL=-MH+j.x*S14,myT=MH-j.y*S14,g0=m2g(mxL,myT),ge=geom(r.T,1);ge.addGroup(0,r.nL,0);if(r.nS)ge.addGroup(r.nL,r.nS,1);
  const me=new T.Mesh(ge,[MTR.farL,MTR.farS]);me.position.set(g0[0],0,g0[1]);me.updateMatrix();me.matrixAutoUpdate=false;me.receiveShadow=false;sc.add(me);
@@ -302,19 +312,40 @@ function applyOne(){const t0=performance.now();while(RES.length){const [j,r]=RES
 // quota del terreno con gli stessi triangoli della mesh disegnata (auto, persone ed erba poggiano esattamente sul terreno visibile)
 function hCell(c,u,v){const d=c.d,NG=c.NG,fx=Math.min(NG-1.0001,Math.max(0,u/d)),fy=Math.min(NG-1.0001,Math.max(0,v/d)),i=fx|0,j=fy|0,a=fx-i,b=fy-j,p=j*NG+i,H=c.H;return a+b<=1?H[p]+(H[p+1]-H[p])*a+(H[p+NG]-H[p])*b:H[p+NG+1]+(H[p+NG]-H[p+NG+1])*(1-a)+(H[p+1]-H[p+NG+1])*(1-b)}
 // quota dell'asfalto dal raster delle strade (pixel di ~3,6 m): media bilineare dei soli pixel di strada vicini (niente gradini sulle strade strette e ripide)
-function rhCell(c,u,v){const n=c.RHN,px=c.S/n,fx=u/px-.5,fy=v/px-.5,i=Math.floor(fx),j=Math.floor(fy),a=fx-i,b=fy-j,R=c.RH,g=(ii,jj)=>ii<0||jj<0||ii>=n||jj>=n?NaN:R[jj*n+ii];
- const h00=g(i,j),h10=g(i+1,j),h01=g(i,j+1),h11=g(i+1,j+1);let sw=0,sh=0;const add=(h,w)=>{if(h===h&&w>0){sw+=w;sh+=h*w}};add(h00,(1-a)*(1-b));add(h10,a*(1-b));add(h01,(1-a)*b);add(h11,a*b);
- if(sw>.12)return sh/sw;const hn=g(Math.round(fx),Math.round(fy));return hn}
+// quota dell'asfalto dal raster delle strade (pixel di ~3,6 m): media bilineare dei soli pixel di strada vicini che stanno sulla stessa superficie
+// del pixel più vicino (entro 1,5 m): così due strade sovrapposte o un tornante non si mescolano
+// quota dell'asfalto in (u,v) dal raster a due strati (16 bit, 4 cm). Si sceglie prima la superficie: il valore (fra i due strati dei 4 pixel attorno)
+// più vicino alla quota di riferimento yh (senza yh: il primo strato del pixel più vicino); poi media bilineare dei pixel che appartengono alla stessa
+// superficie (entro 2,6 m), ciascuno con lo strato più vicino: chi sta sulla via bassa di una terrazza resta lì, e nessun pixel "salta" di strato da solo
+function rhCell(c,u,v,yh){const n=c.RHN,px=c.S/n,fx=u/px-.5,fy=v/px-.5,i=Math.floor(fx),j=Math.floor(fy),a=fx-i,b=fy-j,R=c.RH,R2=c.RH2,B=c.RHB,hy=yh!==undefined&&yh!==null;
+ const W=[(1-a)*(1-b),a*(1-b),(1-a)*b,a*b],H1=[NaN,NaN,NaN,NaN],H2=[NaN,NaN,NaN,NaN];
+ for(let k=0;k<4;k++){const ii=i+(k&1),jj=j+(k>>1);if(ii<0||jj<0||ii>=n||jj>=n)continue;const p=jj*n+ii,q=R[p];if(!q)continue;H1[k]=B+(q-1)*.04;if(R2){const q2=R2[p];if(q2)H2[k]=B+(q2-1)*.04}}
+ let hn=NaN;if(hy){let be=1e9;for(let k=0;k<4;k++){const h=H1[k],h2=H2[k];if(h===h&&Math.abs(h-yh)<be){be=Math.abs(h-yh);hn=h}if(h2===h2&&Math.abs(h2-yh)<be){be=Math.abs(h2-yh);hn=h2}}}
+ else{let wn=-1;for(let k=0;k<4;k++)if(H1[k]===H1[k]&&W[k]>wn){wn=W[k];hn=H1[k]}}
+ if(!(hn===hn))return hn;let sw=0,sh=0;for(let k=0;k<4;k++){let h=H1[k];const h2=H2[k];if(h2===h2&&(!(h===h)||Math.abs(h2-hn)<Math.abs(h-hn)))h=h2;if(h===h&&W[k]>0&&Math.abs(h-hn)<2.6){sw+=W[k];sh+=h*W[k]}}return sw>.12?sh/sw:hn}
 function farAt(x,z){const m=g2m(x,z);return FARS.get(key2(Math.floor((m[0]+MH)/S14),Math.floor((MH-m[1])/S14)))}
 // quota del suolo: terreno, o asfalto (raster delle quote stradali) se è vicino al terreno o alla quota attuale di chi si muove (yh): così l'auto resta sulla strada anche dove la strada è alta sul terreno
-function terrainH(x,z,yh){const c=cellAt(x,z);if(c){const u=c.X-x,v=c.Z-z;let h=hCell(c,u,v);if(c.RH){const r=rhCell(c,u,v);if(r===r&&r>h-.3&&(yh!==undefined&&yh!==null?yh>r-2.2:r-h<2.5))h=Math.max(r,h-.05)}return LASTH=h}
+// quota del suolo: dentro una carreggiata vale l'asfalto (raster), salvo che la quota di riferimento yh (veicolo) sia più vicina al terreno di oltre 1,5 m
+// (strada sopraelevata o terrazza accanto: chi sta sotto resta sotto); senza yh (comparsa, pedoni) l'asfalto comanda sempre
+function terrainH(x,z,yh){const c=cellAt(x,z);if(c){const u=c.X-x,v=c.Z-z;let h=hCell(c,u,v);if(c.RH){const r=rhCell(c,u,v,yh);if(r===r){const useR=(yh!==undefined&&yh!==null)?Math.abs(r-yh)<=Math.abs(h-yh)+1.5:true;if(useR)h=Math.max(r,h-.05)}}return LASTH=h}
  const f=farAt(x,z);if(f){const u=f.X-x,v=f.Z-z,d=f.S/(f.N-1),N=f.N,fx=Math.min(N-1.0001,Math.max(0,u/d)),fy=Math.min(N-1.0001,Math.max(0,v/d)),i=fx|0,j=fy|0,a=fx-i,b=fy-j,p=j*N+i,H=f.H;return Math.max(0,H[p]*(1-a)*(1-b)+H[p+1]*a*(1-b)+H[p+N]*(1-a)*b+H[p+N+1]*a*b)}
  return LASTH}
-function bridgeH(x,z,yh){const a=BRG.get(Math.floor(x/64)+','+Math.floor(z/64));if(!a)return null;let best=null,bd=1e9;
- for(const s of a){const dx=s.bx-s.ax,dz=s.bz-s.az,l2=dx*dx+dz*dz;if(l2<1e-4)continue;const t=Math.max(0,Math.min(1,((x-s.ax)*dx+(z-s.az)*dz)/l2)),px=s.ax+dx*t-x,pz=s.az+dz*t-z;if(px*px+pz*pz>s.hw*s.hw)continue;
-  const y=s.ha+(s.hb-s.ha)*t;if(yh!==undefined&&yh!==null){const e=Math.abs(yh-y);if(e>2.6)continue;if(e<bd){bd=e;best=y}}else if(!s.tun&&(best===null||y>best))best=y}
- return best}
-function ground(x,z,yh){const b=bridgeH(x,z,yh);return b!==null?b:terrainH(x,z,yh)}
+// quota dell'impalcato (o del piano di una galleria) sotto (x,z): vince il segmento più vicino, così i "tappi" dei segmenti contigui (proiezione
+// bloccata all'estremo, quota dell'estremo) non fanno una scala su un ponte in salita; a parità di distanza (impalcati sovrapposti) quello
+// più vicino alla quota attuale yh (o il più alto, senza yh). Con yh si considerano solo impalcati entro 2,6 m (gallerie: 1,2 m, chi sta su una via
+// che passa 2–3 m sopra una galleria poco profonda non deve "caderci" dentro): altrimenti si è sotto o sopra
+let LASTBT=false;
+function bridgeH(x,z,yh,ped){const a=BRG.get(Math.floor(x/64)+','+Math.floor(z/64));if(!a)return null;let best=null,bd=1e9,be=1e9,bt=false;
+ for(const s of a){if(!ped&&s.hw<2.5)continue;const dx=s.bx-s.ax,dz=s.bz-s.az,l2=dx*dx+dz*dz;if(l2<1e-4)continue;const t=Math.max(0,Math.min(1,((x-s.ax)*dx+(z-s.az)*dz)/l2)),px=s.ax+dx*t-x,pz=s.az+dz*t-z,d2=px*px+pz*pz;if(d2>s.hw*s.hw)continue;
+  const y=s.ha+(s.hb-s.ha)*t,d=Math.sqrt(d2);if(yh!==undefined&&yh!==null){const e=Math.abs(yh-y);if(e>(s.tun?1.2:2.6))continue;if(d<bd-1||(d<bd+1&&e<be)){bd=Math.min(bd,d);be=e;best=y;bt=!!s.tun}}
+  else if(!s.tun){if(d<bd-1||(d<bd+1&&(best===null||y>best))){bd=Math.min(bd,d);best=y}}}
+ LASTBT=bt;return best}
+// suolo per chi si muove: superficie (terreno o asfalto) oppure impalcato di un ponte / piano di una galleria, quello più vicino alla quota attuale (a parità, la superficie)
+// (a parità, entro 30 cm, vince l'impalcato: chi scende su un ponte in pendenza non deve restare agganciato all'asfalto della rampa accanto)
+// Gallerie: il piano della galleria vale solo dove il suolo sta chiaramente sopra (più di 2,5 m: si è dentro la montagna); all'imbocco, dove suolo e piano
+// coincidono, comanda il suolo, così una via che passa sopra l'imbocco non "cade" nella galleria. Ponti: un impalcato a meno di 2 m dal suolo
+// (dati incoerenti: ponte che non ha potuto alzarsi) non cattura chi passa sotto, lo prende solo chi ci è già sopra (entro 50 cm)
+function ground(x,z,yh,ped){const s=terrainH(x,z,yh),b=bridgeH(x,z,yh,ped);if(b===null)return s;if(yh===undefined||yh===null)return Math.max(s,b);if(LASTBT)return s-b>2.5&&Math.abs(b-yh)<=1?b:s;if(b-s<2&&Math.abs(b-yh)>=.5)return s;return Math.abs(b-yh)<Math.abs(s-yh)+.3?b:s}
 function wet(x,z){const c=cellAt(x,z);if(!c)return false;const u=c.X-x,v=c.Z-z;let w=false;
  if(c.wm){const n=c.WM,i=Math.min(n-1,Math.max(0,Math.floor(u/c.S*n))),j=Math.min(n-1,Math.max(0,Math.floor(v/c.S*n)));w=!!c.wm[j*n+i]}
  else if(c.cls){const n=c.CR,i=Math.min(n-1,Math.max(0,Math.floor(u/c.S*n))),j=Math.min(n-1,Math.max(0,Math.floor(v/c.S*n)));w=c.cls[j*n+i]===1}
@@ -412,7 +443,8 @@ function overlay(on){const o=$('#rld');if(!o)return;o.hidden=!on;if(on){$('#rlt'
 function retry(){ERR.net=0;ERR.msg='';LOAD.t0=performance.now();plan.force=true;$('#rlr').hidden=true}
 /* ---------- aggiornamento per fotogramma ---------- */
 let kT=0,labT=0,lastLab='';
-function update(px,pz,all){SKY.position.copy(cam.position);try{CIELO.update(px,pz);ERBA.update(px,pz)}catch(e){if(!update.e){update.e=1;console.error(e)}}if(!WK.length)return;const now=performance.now();if(RETRY.length&&RETRY.some(j=>j.retryAt<=now))plan.force=true;plan(px,pz);pump();applyOne();if(farVisDirty)farVis();checkLoad();mapTick();
+let UPP=[0,0];
+function update(px,pz,all){UPP[0]=px;UPP[1]=pz;SKY.position.copy(cam.position);try{CIELO.update(px,pz);ERBA.update(px,pz)}catch(e){if(!update.e){update.e=1;console.error(e)}}if(!WK.length)return;const now=performance.now();if(RETRY.length&&RETRY.some(j=>j.retryAt<=now))plan.force=true;plan(px,pz);pump();applyOne();if(farVisDirty)farVis();checkLoad();mapTick();
  if(!LOAD.on){if(now>kT){kT=now+2000;const ll=geoOf(px,pz),dr=Math.abs(Math.cos(ll[0]*PI/180)/K-1);if(dr>.02){const sp=Math.hypot(V.vx,V.vz);if(sp<25||dr>.04){const pg=geoOf(P.x,P.z),cg=geoOf(C.x,C.z);rescale(ll,pg,cg)}}}
   if(now>labT){labT=now+3000;const m=g2m(px,pz);for(const z of [11,9]){const n=1<<z,ts=ME/n,tx=Math.floor((m[0]+MH)/ts),ty=Math.floor((MH-m[1])/ts);mapTileGet(z,tx,ty,256,8)}}}}
 // cambio di scala: l'origine si sposta qui (oltre ~150 km a nord o a sud dal punto di partenza la scala di Mercatore cambierebbe del 2%)
@@ -431,10 +463,10 @@ function start(){PBR.load();mkWorkers();if(!WK.length){overlay(true);$('#rle').t
  const mc=$('#mcity');if(mc){mc.innerHTML=CITIES.map((q,i)=>'<button class="b s" data-i="'+i+'">'+q[0]+'</button>').join('');mc.addEventListener('click',e=>{const b=e.target.closest('button');if(b)mapCity(+b.dataset.i)})}
  const go=$('#mgo');if(go)go.onclick=()=>{if(!MAPV.mark)return;const ll=m2ll(MAPV.mark[0],MAPV.mark[1]);const nm=MAPV.markName||'';MAPV.mark=null;go.hidden=true;openMap(false);if(inCar&&Math.hypot(V.vx,V.vz)>3){V.vx=V.vz=0}travel(ll[0],ll[1],nm||'il punto scelto')};
  const rb=$('#rlr');if(rb)rb.onclick=retry;
- const cb=$('#mcred');if(cb)cb.onclick=()=>{const p=$('#rcred');p.hidden=!p.hidden};{const sb=$('#msat');if(sb){const lab=()=>{sb.textContent=COP.on?'🛰 Copernicus: sì':'🛰 Copernicus: no'};lab();sb.onclick=()=>{copToggle();lab();toast(COP.on?'Dati Copernicus attivi: boschi, campi e roccia da ESA WorldCover; terreno lontano dalle immagini Sentinel-2':'Dati Copernicus disattivati: solo OpenStreetMap')}}}const cx=$('#rcredx');if(cx)cx.onclick=()=>{$('#rcred').hidden=true}}
-return{start,update,ground,terrainH,wet,inside:(x,z)=>!LOAD.on&&!!cellAt(x,z),placeName,roadName,hudText,nearBar,saveGeo,travel,drawMini,drawMap,mapOpen:()=>{mapOpen_=true;mapOpen()},mapClose:()=>{mapOpen_=false},mapZoom,mapZoomTo,mapCenter,mapPan,mapTap,mapCity,
- sunPos:CIELO.sunPos,CIELO,PBR,UNI,ERBA,COP,copToggle,_mkCell:mkCell,busy:()=>LOAD.on,CSO:CSO2,CARG,MTR,CARCOLS,laneOff,MAPV,CELLS,FARS,STATS,ERR,CFG,geoOf,ll2m,m2g,g2m,get K(){return K},get GEN(){return GEN},nearRoad,cellAt,bridgeH,PLACES,MT2,QUEUE,JOBS}})();
-const WORLD={CSZ:32,WS:0,SEA:0,X0:-1e9,X1:1e9,Z0:-1e9,Z1:1e9,NCH:0,H:(x,z)=>REAL.terrainH(x,z),ground:(x,z,yh)=>REAL.ground(x,z,yh),wet:(x,z)=>REAL.wet(x,z),inside:(x,z)=>REAL.inside(x,z),chunkOK:()=>false,zone:()=>0,coastX:()=>0,
+ const cb=$('#mcred');if(cb)cb.onclick=()=>{const p=$('#rcred');p.hidden=!p.hidden};{const eb=$('#mdati');if(eb)eb.onclick=async()=>{eb.disabled=true;eb.textContent='📦 scarico…';try{const r=await esportaZona();toast('Salvato '+r.name+' ('+r.kb+' KB): mandalo in chat per far riprodurre il difetto');eb.textContent='📦 Dati zona'}catch(e){toast('Dati zona: errore '+e.message);eb.textContent='📦 Dati zona'}eb.disabled=false}}{const sb=$('#msat');if(sb){const lab=()=>{sb.textContent=COP.on?'🛰 Copernicus: sì':'🛰 Copernicus: no'};lab();sb.onclick=()=>{copToggle();lab();toast(COP.on?'Dati Copernicus attivi: boschi, campi e roccia da ESA WorldCover; terreno lontano dalle immagini Sentinel-2':'Dati Copernicus disattivati: solo OpenStreetMap')}}}const cx=$('#rcredx');if(cx)cx.onclick=()=>{$('#rcred').hidden=true}}
+return{start,update,ground,terrainH,bridgeH,wet,inside:(x,z)=>!LOAD.on&&!!cellAt(x,z),placeName,roadName,hudText,nearBar,saveGeo,travel,drawMini,drawMap,mapOpen:()=>{mapOpen_=true;mapOpen()},mapClose:()=>{mapOpen_=false},mapZoom,mapZoomTo,mapCenter,mapPan,mapTap,mapCity,
+ sunPos:CIELO.sunPos,CIELO,PBR,UNI,ERBA,COP,copToggle,esportaZona,_mkCell:mkCell,busy:()=>LOAD.on,CSO:CSO2,CARG,MTR,CARCOLS,laneOff,MAPV,CELLS,FARS,STATS,ERR,CFG,geoOf,ll2m,m2g,g2m,get K(){return K},get GEN(){return GEN},nearRoad,cellAt,bridgeH,PLACES,MT2,QUEUE,JOBS}})();
+const WORLD={CSZ:32,WS:0,SEA:0,X0:-1e9,X1:1e9,Z0:-1e9,Z1:1e9,NCH:0,H:(x,z)=>REAL.terrainH(x,z),ground:(x,z,yh,ped)=>REAL.ground(x,z,yh,ped),wet:(x,z)=>REAL.wet(x,z),inside:(x,z)=>REAL.inside(x,z),chunkOK:()=>false,zone:()=>0,coastX:()=>0,
  RS:[],SCH:new Map(),BCH:new Map(),RIV:[],BR:[],SPEC:[],MWS:[],CITIES:[],TOWNS:[],TOWN:{cx:0,cz:0,name:''},townAt:()=>null,LAKE:null,MILAN:null,MW:null,mwAt:()=>null,bridgeAt:(x,z)=>REAL.bridgeH(x,z),deckAt:()=>0,SGTXT:[]};
 const GY=(x,z,yh)=>REAL.ground(x,z,yh),CHS=new Map(),CSO=REAL.CSO,CHK=null,MAPC=null,MAPV=REAL.MAPV,ZN=['—'];
 let mmT=0,znT=0,znLast='';
