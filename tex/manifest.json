@@ -1,0 +1,658 @@
+{
+ "descrizione": "Texture del gioco preparate da tools/texture/prepara_texture.py a partire da texture CC0",
+ "texture": {
+  "asfalto": {
+   "file": [
+    "asfalto_c.jpg",
+    "asfalto_n.jpg"
+   ],
+   "uso": "carreggiate in asfalto (colore + normali + rugosità, coordinate del mondo)",
+   "lato_m": 3.0,
+   "sorgenti": [
+    "asphalt_02_diff",
+    "asphalt_02_nor",
+    "asphalt_02_rough",
+    "asphalt_02_arm"
+   ],
+   "lavorazione": "riduzione a 512 px; AO moltiplicata nel colore; normale+rugosità impacchettate"
+  },
+  "lastre": {
+   "file": [
+    "lastre_c.jpg",
+    "lastre_n.jpg"
+   ],
+   "uso": "marciapiedi in lastre e piazze",
+   "lato_m": 3.0,
+   "sorgenti": [
+    "concrete_pavement_diff",
+    "concrete_pavement_nor",
+    "concrete_pavement_rough"
+   ],
+   "lavorazione": "riduzione a 512 px; AO moltiplicata nel colore; normale+rugosità impacchettate"
+  },
+  "sterrato": {
+   "file": [
+    "sterrato_c.jpg",
+    "sterrato_n.jpg"
+   ],
+   "uso": "strade sterrate e strade bianche",
+   "lato_m": 2.0,
+   "sorgenti": [
+    "coast_sand_01_diff",
+    "coast_sand_01_nor",
+    "coast_sand_01_arm",
+    "coast_sand_01_arm"
+   ],
+   "lavorazione": "riduzione a 512 px; AO moltiplicata nel colore; normale+rugosità impacchettate"
+  },
+  "porfido": {
+   "file": [
+    "porfido_c.jpg",
+    "porfido_n.jpg"
+   ],
+   "uso": "centri storici e zone pedonali (cubetti di porfido a coda di pavone)",
+   "lato_m": 2.0,
+   "sorgenti": [
+    "paving_stones_050_color"
+   ],
+   "lavorazione": "normale e rugosità ricavate dalla luminosità (la sorgente è solo colore)"
+  },
+  "ghiaia": {
+   "file": [
+    "ghiaia_c.jpg",
+    "ghiaia_n.jpg"
+   ],
+   "uso": "massicciata dei binari, piazzali, tetti piani in ghiaia",
+   "lato_m": 2.0,
+   "sorgenti": [
+    "gravel_concrete_03_diff",
+    "gravel_concrete_03_disp",
+    "gravel_concrete_03_rough"
+   ],
+   "lavorazione": "normale ricavata dalla mappa di spostamento"
+  },
+  "erba": {
+   "file": [
+    "erba_c.jpg",
+    "erba_n.jpg"
+   ],
+   "uso": "prati e incolti (strato erba del terreno)",
+   "lato_m": 6.0,
+   "sorgenti": [
+    "aerial_grass_rock_diff",
+    "aerial_grass_rock_nor",
+    "aerial_grass_rock_arm"
+   ],
+   "lavorazione": "colore 1024 px con AO, normali 512 px; correzione colore per i paesaggi italiani"
+  },
+  "roccia": {
+   "file": [
+    "roccia_c.jpg",
+    "roccia_n.jpg"
+   ],
+   "uso": "pareti rocciose, pendii ripidi, montagne",
+   "lato_m": 4.0,
+   "sorgenti": [
+    "rock_boulder_dry_diff",
+    "rock_boulder_dry_nor",
+    "rock_boulder_dry_arm"
+   ],
+   "lavorazione": "colore 1024 px con AO, normali 512 px; correzione colore per i paesaggi italiani"
+  },
+  "terra": {
+   "file": [
+    "terra_c.jpg",
+    "terra_n.jpg"
+   ],
+   "uso": "sottobosco, campi arati, terra battuta",
+   "lato_m": 3.0,
+   "sorgenti": [
+    "forest_floor_diff",
+    "forest_floor_nor",
+    "forest_floor_arm"
+   ],
+   "lavorazione": "colore 512 px con AO, normali 512 px; correzione colore per i paesaggi italiani"
+  },
+  "tetto": {
+   "file": [
+    "tetto_c.jpg",
+    "tetto_n.jpg"
+   ],
+   "uso": "tetti a falde in tegole di laterizio",
+   "lato_m": 2.2,
+   "sorgenti": [
+    "roof_09_diff",
+    "roof_09_nor",
+    "roof_09_rough"
+   ],
+   "lavorazione": "riduzione a 512 px; AO moltiplicata nel colore; normale+rugosità impacchettate"
+  },
+  "muri": {
+   "file": [
+    "muri_c.jpg",
+    "muri_n.jpg"
+   ],
+   "uso": "pareti degli edifici (atlante 2×2: intonaco, mattoni, conci di pietra, calcestruzzo)",
+   "lato_m": [
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "sorgenti": [
+    "plaster001_color",
+    "plaster001_nor",
+    "plaster001_rough",
+    "red_brick_diff",
+    "red_brick_ao",
+    "red_brick_nor",
+    "red_brick_rough",
+    "rock_boulder_dry_diff",
+    "rock_boulder_dry_nor",
+    "gravel_concrete_03_diff",
+    "gravel_concrete_03_disp",
+    "gravel_concrete_03_rough"
+   ],
+   "lavorazione": "intonaco desaturato (prende il colore dell'edificio); conci di pietra composti a filari con la roccia rock_boulder_dry"
+  },
+  "cemento": {
+   "file": [
+    "cemento_c.jpg",
+    "cemento_n.jpg"
+   ],
+   "uso": "calcestruzzo di ponti, gallerie, muri di sostegno, spartitraffico",
+   "lato_m": 2.0,
+   "sorgenti": [
+    "gravel_concrete_03_diff",
+    "gravel_concrete_03_disp",
+    "gravel_concrete_03_rough"
+   ],
+   "lavorazione": "luminosità normalizzata (il colore viene dai vertici)"
+  },
+  "muretto": {
+   "file": [
+    "muretto_c.jpg",
+    "muretto_n.jpg"
+   ],
+   "uso": "muretti a secco lungo le strade di campagna",
+   "lato_m": 1.6,
+   "sorgenti": [
+    "rock_boulder_dry_diff"
+   ],
+   "lavorazione": "pietre irregolari (diagramma di Voronoi ripetibile) riempite con la roccia; fughe scure"
+  },
+  "ciuffi": {
+   "file": [
+    "ciuffi.png"
+   ],
+   "uso": "ciuffi d'erba fitta vicino al giocatore (carte incrociate con trasparenza)",
+   "lato_m": 0.6,
+   "sorgenti": [
+    "grass_medium_01_diff_png"
+   ],
+   "lavorazione": "ritagliati i 4 ciuffi già disegnati in fondo all'atlante del modello grass_medium_01; trasparenza dallo sfondo nero"
+  },
+  "ambiente_citta": {
+   "file": [
+    "ambiente_citta.jpg"
+   ],
+   "uso": "riflessi in città (carrozzerie, vetri, asfalto bagnato)",
+   "lato_m": null,
+   "sorgenti": [
+    "wide_street_01_hdr"
+   ],
+   "lavorazione": "HDR ridotto a 1024×512 e convertito in LDR (Reinhard, esposizione 1.10)"
+  },
+  "ambiente_campagna": {
+   "file": [
+    "ambiente_campagna.jpg"
+   ],
+   "uso": "riflessi fuori città (cielo sereno)",
+   "lato_m": null,
+   "sorgenti": [
+    "citrus_orchard_road_puresky_hdr"
+   ],
+   "lavorazione": "HDR ridotto a 1024×512 e convertito in LDR (Reinhard, esposizione 0.55)"
+  }
+ },
+ "sorgenti": [
+  {
+   "id": "asphalt_02_diff",
+   "asset": "Asphalt 02",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/asphalt_02",
+   "autore": "Rob Tuytel",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/sayantanmandal1/AsterCoast",
+   "percorso": "game/assets/vendor/polyhaven/asphalt_02/asphalt_02_diff_1k.jpg",
+   "url_originale": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_diff_1k.jpg",
+   "verifica": "SHA-256 uguale a quella registrata in tools/asset-lock.json di AsterCoast e identica al file asphalt_02_diffuse_1k.jpg del repository stepupgaming/infinite-backlot",
+   "sha256": "1aa5ce99f58a625c71d48cfc3e68b65ca85ccb00f39e045c0a928608a0ea25ed",
+   "copia_in": "sayantanmandal1_AsterCoast/game/assets/vendor/polyhaven/asphalt_02/asphalt_02_diff_1k.jpg"
+  },
+  {
+   "id": "asphalt_02_arm",
+   "asset": "Asphalt 02 (AO/rugosità/metallo)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/asphalt_02",
+   "autore": "Rob Tuytel",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/stepupgaming/infinite-backlot",
+   "percorso": "assets/source/polyhaven/asphalt_02/asphalt_02_arm_1k.jpg",
+   "canale_ao": "R",
+   "sha256": "56bd8e591a3db579846fcb5185f60b0651e0bd4ea85c3529c339e6746243c9cf",
+   "copia_in": "stepupgaming_infinite-backlot/assets/source/polyhaven/asphalt_02/asphalt_02_arm_1k.jpg"
+  },
+  {
+   "id": "asphalt_02_nor",
+   "asset": "Asphalt 02 (normale OpenGL)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/asphalt_02",
+   "autore": "Rob Tuytel",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/sayantanmandal1/AsterCoast",
+   "percorso": "game/assets/vendor/polyhaven/asphalt_02/asphalt_02_nor_gl_1k.jpg",
+   "url_originale": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_nor_gl_1k.jpg",
+   "verifica": "SHA-256 uguale a quella registrata in tools/asset-lock.json di AsterCoast",
+   "sha256": "42a1c381b53204e83a982db2864479a30bc127bbdeebb1006f8ee51bff099df3",
+   "copia_in": "sayantanmandal1_AsterCoast/game/assets/vendor/polyhaven/asphalt_02/asphalt_02_nor_gl_1k.jpg"
+  },
+  {
+   "id": "asphalt_02_rough",
+   "asset": "Asphalt 02 (rugosità)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/asphalt_02",
+   "autore": "Rob Tuytel",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/sayantanmandal1/AsterCoast",
+   "percorso": "game/assets/vendor/polyhaven/asphalt_02/asphalt_02_rough_1k.jpg",
+   "url_originale": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_rough_1k.jpg",
+   "verifica": "SHA-256 uguale a quella registrata in tools/asset-lock.json di AsterCoast",
+   "sha256": "70ba3edc65525eb4dc366cf010ca7ae0bd34e0251ff0225c2dad627a873d0712",
+   "copia_in": "sayantanmandal1_AsterCoast/game/assets/vendor/polyhaven/asphalt_02/asphalt_02_rough_1k.jpg"
+  },
+  {
+   "id": "concrete_pavement_diff",
+   "asset": "Concrete Pavement",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/concrete_pavement",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/alexbieber/GTA-mini",
+   "percorso": "assets/pbr/concrete_pavement/concrete_pavement_diff_1k.jpg",
+   "verifica": "il repository (licenza MIT) dichiara in assets/CREDITS.txt: «Poly Haven PBR + HDRIs — polyhaven.com — CC0»",
+   "sha256": "70d3ff969a7421c7ae057b5d16386d11f5e59c6740db643352e1039413f419c4",
+   "copia_in": "alexbieber_GTA-mini/assets/pbr/concrete_pavement/concrete_pavement_diff_1k.jpg"
+  },
+  {
+   "id": "concrete_pavement_nor",
+   "asset": "Concrete Pavement (normale OpenGL)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/concrete_pavement",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/alexbieber/GTA-mini",
+   "percorso": "assets/pbr/concrete_pavement/concrete_pavement_nor_1k.jpg",
+   "verifica": "convenzione OpenGL controllata: canale verde correlato a 0,987 con una normale OpenGL nota (red_brick)",
+   "sha256": "a5009e409ff0f7b2d19e1316fe5e2b2b4f28e4a6b79990a664be69d4e8a0e690",
+   "copia_in": "alexbieber_GTA-mini/assets/pbr/concrete_pavement/concrete_pavement_nor_1k.jpg"
+  },
+  {
+   "id": "concrete_pavement_rough",
+   "asset": "Concrete Pavement (rugosità)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/concrete_pavement",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/alexbieber/GTA-mini",
+   "percorso": "assets/pbr/concrete_pavement/concrete_pavement_rough_1k.jpg",
+   "sha256": "99f81099af07b009134b6a81bf0f95ab16da09c57156cc2ed534975664a68533",
+   "copia_in": "alexbieber_GTA-mini/assets/pbr/concrete_pavement/concrete_pavement_rough_1k.jpg"
+  },
+  {
+   "id": "coast_sand_01_diff",
+   "asset": "Coast Sand 01",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/coast_sand_01",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/sayantanmandal1/AsterCoast",
+   "percorso": "game/assets/vendor/polyhaven/coast_sand_01/coast_sand_01_diff_2k.jpg",
+   "url_originale": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/coast_sand_01/coast_sand_01_diff_2k.jpg",
+   "verifica": "SHA-256 uguale a tools/asset-lock.json di AsterCoast",
+   "sha256": "e1c37ea8b4282fda612b0584d864ca4eef2da28c2fa9f3930cad9209414eb979",
+   "copia_in": "sayantanmandal1_AsterCoast/game/assets/vendor/polyhaven/coast_sand_01/coast_sand_01_diff_2k.jpg"
+  },
+  {
+   "id": "coast_sand_01_arm",
+   "asset": "Coast Sand 01 (AO/rugosità/metallo)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/coast_sand_01",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/sayantanmandal1/AsterCoast",
+   "percorso": "game/assets/vendor/polyhaven/coast_sand_01/coast_sand_01_arm_2k.jpg",
+   "url_originale": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/coast_sand_01/coast_sand_01_arm_2k.jpg",
+   "canale_ao": "R",
+   "canale_r": "G",
+   "verifica": "SHA-256 uguale a tools/asset-lock.json di AsterCoast",
+   "sha256": "0e1cc154bc6163f1f7f48aa4839876f6cae84b5b53f9ac3c2bf4c54057373e00",
+   "copia_in": "sayantanmandal1_AsterCoast/game/assets/vendor/polyhaven/coast_sand_01/coast_sand_01_arm_2k.jpg"
+  },
+  {
+   "id": "coast_sand_01_nor",
+   "asset": "Coast Sand 01 (normale OpenGL)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/coast_sand_01",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/sayantanmandal1/AsterCoast",
+   "percorso": "game/assets/vendor/polyhaven/coast_sand_01/coast_sand_01_nor_gl_2k.jpg",
+   "url_originale": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/coast_sand_01/coast_sand_01_nor_gl_2k.jpg",
+   "verifica": "SHA-256 uguale a tools/asset-lock.json di AsterCoast",
+   "sha256": "e5b1430c751727c8ab0332adfd8960c48342936146de258aa9b7736630cdbb62",
+   "copia_in": "sayantanmandal1_AsterCoast/game/assets/vendor/polyhaven/coast_sand_01/coast_sand_01_nor_gl_2k.jpg"
+  },
+  {
+   "id": "paving_stones_050_color",
+   "asset": "PavingStones050",
+   "sito": "ambientCG",
+   "pagina": "https://ambientcg.com/a/PavingStones050",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/boku-ilen/landscapelab",
+   "percorso": "Layers/Renderers/Path/Roads/RoadLanes/Textures/PavingStones050_1K_Color.jpg",
+   "verifica": "LandscapeLab (BOKU Vienna) indica nel README ambientCG e Poly Haven come fonti delle texture PBR",
+   "sha256": "fc31cb3a8429f439cd11e6b59eda6f6b79b17774477f8040536d2664c9fc7ec3",
+   "copia_in": "boku-ilen_landscapelab/Layers/Renderers/Path/Roads/RoadLanes/Textures/PavingStones050_1K_Color.jpg"
+  },
+  {
+   "id": "gravel_concrete_03_diff",
+   "asset": "Gravel Concrete 03",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/gravel_concrete_03",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/boku-ilen/landscapelab",
+   "percorso": "addons/modular_buildings/example/Textures/gravel_concrete_03_diff_2k.jpg",
+   "sha256": "371a6cbe1f03f1117eb46e2fa26e11f80ac1c7cc361b4807d3990b6eb2704501",
+   "copia_in": "boku-ilen_landscapelab/addons/modular_buildings/example/Textures/gravel_concrete_03_diff_2k.jpg"
+  },
+  {
+   "id": "gravel_concrete_03_disp",
+   "asset": "Gravel Concrete 03 (spostamento)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/gravel_concrete_03",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/boku-ilen/landscapelab",
+   "percorso": "addons/modular_buildings/example/Textures/gravel_concrete_03_disp_2k.jpg",
+   "sha256": "359b182bf31f44f2dd9213ed4ed87e2235e40fd56b813c033a49d4c045864b63",
+   "copia_in": "boku-ilen_landscapelab/addons/modular_buildings/example/Textures/gravel_concrete_03_disp_2k.jpg"
+  },
+  {
+   "id": "gravel_concrete_03_rough",
+   "asset": "Gravel Concrete 03 (rugosità)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/gravel_concrete_03",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/boku-ilen/landscapelab",
+   "percorso": "addons/modular_buildings/example/Textures/gravel_concrete_03_rough_2k.jpg",
+   "sha256": "2f1e61c34c46e6f32f5692214997d65afd938dfd2a26d8586bd3bb37d352d882",
+   "copia_in": "boku-ilen_landscapelab/addons/modular_buildings/example/Textures/gravel_concrete_03_rough_2k.jpg"
+  },
+  {
+   "id": "aerial_grass_rock_diff",
+   "asset": "Aerial Grass Rock",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/aerial_grass_rock",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/sayantanmandal1/AsterCoast",
+   "percorso": "game/assets/vendor/polyhaven/aerial_grass_rock/aerial_grass_rock_diff_2k.jpg",
+   "url_originale": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/aerial_grass_rock/aerial_grass_rock_diff_2k.jpg",
+   "verifica": "SHA-256 uguale a tools/asset-lock.json di AsterCoast",
+   "sha256": "1a2ddfa4652adbe00447b940c40019d46f4b88245bc1b341cdf622c2110b7bc5",
+   "copia_in": "sayantanmandal1_AsterCoast/game/assets/vendor/polyhaven/aerial_grass_rock/aerial_grass_rock_diff_2k.jpg"
+  },
+  {
+   "id": "aerial_grass_rock_arm",
+   "asset": "Aerial Grass Rock (AO/rugosità/metallo)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/aerial_grass_rock",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/sayantanmandal1/AsterCoast",
+   "percorso": "game/assets/vendor/polyhaven/aerial_grass_rock/aerial_grass_rock_arm_2k.jpg",
+   "url_originale": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/aerial_grass_rock/aerial_grass_rock_arm_2k.jpg",
+   "verifica": "SHA-256 uguale a tools/asset-lock.json di AsterCoast",
+   "sha256": "a7daabd9aa877f861ced2830b792709f31a399324db47df2bdac256c0414fc14",
+   "copia_in": "sayantanmandal1_AsterCoast/game/assets/vendor/polyhaven/aerial_grass_rock/aerial_grass_rock_arm_2k.jpg"
+  },
+  {
+   "id": "aerial_grass_rock_nor",
+   "asset": "Aerial Grass Rock (normale OpenGL)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/aerial_grass_rock",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/sayantanmandal1/AsterCoast",
+   "percorso": "game/assets/vendor/polyhaven/aerial_grass_rock/aerial_grass_rock_nor_gl_2k.jpg",
+   "url_originale": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/aerial_grass_rock/aerial_grass_rock_nor_gl_2k.jpg",
+   "verifica": "SHA-256 uguale a tools/asset-lock.json di AsterCoast",
+   "sha256": "c6aa14b042ce243f93a6ca807f46a085711c23ad316b104578e92df7770ee285",
+   "copia_in": "sayantanmandal1_AsterCoast/game/assets/vendor/polyhaven/aerial_grass_rock/aerial_grass_rock_nor_gl_2k.jpg"
+  },
+  {
+   "id": "rock_boulder_dry_diff",
+   "asset": "Rock Boulder Dry",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/rock_boulder_dry",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/sayantanmandal1/AsterCoast",
+   "percorso": "game/assets/vendor/polyhaven/rock_boulder_dry/rock_boulder_dry_diff_2k.jpg",
+   "url_originale": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rock_boulder_dry/rock_boulder_dry_diff_2k.jpg",
+   "verifica": "SHA-256 uguale a tools/asset-lock.json di AsterCoast",
+   "sha256": "c66de7f7b48ef1ba542c17af780787ca6d43da2160a46ff3544dd9fcdf65ca30",
+   "copia_in": "sayantanmandal1_AsterCoast/game/assets/vendor/polyhaven/rock_boulder_dry/rock_boulder_dry_diff_2k.jpg"
+  },
+  {
+   "id": "rock_boulder_dry_arm",
+   "asset": "Rock Boulder Dry (AO/rugosità/metallo)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/rock_boulder_dry",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/sayantanmandal1/AsterCoast",
+   "percorso": "game/assets/vendor/polyhaven/rock_boulder_dry/rock_boulder_dry_arm_2k.jpg",
+   "url_originale": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rock_boulder_dry/rock_boulder_dry_arm_2k.jpg",
+   "verifica": "SHA-256 uguale a tools/asset-lock.json di AsterCoast",
+   "sha256": "9ef398eebef2a9477daa6a260ebe85003de0790bb7d8f7e5fd0d80b6943ea70e",
+   "copia_in": "sayantanmandal1_AsterCoast/game/assets/vendor/polyhaven/rock_boulder_dry/rock_boulder_dry_arm_2k.jpg"
+  },
+  {
+   "id": "rock_boulder_dry_nor",
+   "asset": "Rock Boulder Dry (normale OpenGL)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/rock_boulder_dry",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/sayantanmandal1/AsterCoast",
+   "percorso": "game/assets/vendor/polyhaven/rock_boulder_dry/rock_boulder_dry_nor_gl_2k.jpg",
+   "url_originale": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rock_boulder_dry/rock_boulder_dry_nor_gl_2k.jpg",
+   "verifica": "SHA-256 uguale a tools/asset-lock.json di AsterCoast",
+   "sha256": "72a3c96d563fc17ac36c568802e106222e6480512d98e07318e1f431cea33dd6",
+   "copia_in": "sayantanmandal1_AsterCoast/game/assets/vendor/polyhaven/rock_boulder_dry/rock_boulder_dry_nor_gl_2k.jpg"
+  },
+  {
+   "id": "forest_floor_diff",
+   "asset": "Forest Floor",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/forest_floor",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/sayantanmandal1/AsterCoast",
+   "percorso": "game/assets/vendor/polyhaven/forest_floor/forest_floor_diff_2k.jpg",
+   "url_originale": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forest_floor/forest_floor_diff_2k.jpg",
+   "verifica": "SHA-256 uguale a tools/asset-lock.json di AsterCoast",
+   "sha256": "308bc5f916dcc113bf276cbfdc411bed48b6a9ce5e3bc0c228faa3d54acf125d",
+   "copia_in": "sayantanmandal1_AsterCoast/game/assets/vendor/polyhaven/forest_floor/forest_floor_diff_2k.jpg"
+  },
+  {
+   "id": "forest_floor_arm",
+   "asset": "Forest Floor (AO/rugosità/metallo)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/forest_floor",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/sayantanmandal1/AsterCoast",
+   "percorso": "game/assets/vendor/polyhaven/forest_floor/forest_floor_arm_2k.jpg",
+   "url_originale": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forest_floor/forest_floor_arm_2k.jpg",
+   "verifica": "SHA-256 uguale a tools/asset-lock.json di AsterCoast",
+   "sha256": "c5d7ae6d2f6a5b801235b0592e62e67c05f25d41d3f5abd8a68565fdec52fbe9",
+   "copia_in": "sayantanmandal1_AsterCoast/game/assets/vendor/polyhaven/forest_floor/forest_floor_arm_2k.jpg"
+  },
+  {
+   "id": "forest_floor_nor",
+   "asset": "Forest Floor (normale OpenGL)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/forest_floor",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/sayantanmandal1/AsterCoast",
+   "percorso": "game/assets/vendor/polyhaven/forest_floor/forest_floor_nor_gl_2k.jpg",
+   "url_originale": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/forest_floor/forest_floor_nor_gl_2k.jpg",
+   "verifica": "SHA-256 uguale a tools/asset-lock.json di AsterCoast",
+   "sha256": "27ea9cf7778fd3f5eacc24159d2cfc040878125c2289c3bccc49be5806e87bd1",
+   "copia_in": "sayantanmandal1_AsterCoast/game/assets/vendor/polyhaven/forest_floor/forest_floor_nor_gl_2k.jpg"
+  },
+  {
+   "id": "roof_09_diff",
+   "asset": "Roof 09",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/roof_09",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/alexbieber/GTA-mini",
+   "percorso": "assets/pbr/roof_09/roof_09_diff_1k.jpg",
+   "sha256": "6baaf5dca30d14566791ad6603e3b3dbd69b76990fd8d1314efc35dd2655e818",
+   "copia_in": "alexbieber_GTA-mini/assets/pbr/roof_09/roof_09_diff_1k.jpg"
+  },
+  {
+   "id": "roof_09_nor",
+   "asset": "Roof 09 (normale OpenGL)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/roof_09",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/alexbieber/GTA-mini",
+   "percorso": "assets/pbr/roof_09/roof_09_nor_1k.jpg",
+   "sha256": "60fc61343316bbe73399cdddfb3da8b47d41c2d147e2b3384f244f8be9ed1668",
+   "copia_in": "alexbieber_GTA-mini/assets/pbr/roof_09/roof_09_nor_1k.jpg"
+  },
+  {
+   "id": "roof_09_rough",
+   "asset": "Roof 09 (rugosità)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/roof_09",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/alexbieber/GTA-mini",
+   "percorso": "assets/pbr/roof_09/roof_09_rough_1k.jpg",
+   "sha256": "82ebb728f9e128202b9f03f2be4589331c02517a86b6921002af203b20fef124",
+   "copia_in": "alexbieber_GTA-mini/assets/pbr/roof_09/roof_09_rough_1k.jpg"
+  },
+  {
+   "id": "plaster001_color",
+   "asset": "Plaster001",
+   "sito": "ambientCG",
+   "pagina": "https://ambientcg.com/a/Plaster001",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/boku-ilen/landscapelab",
+   "percorso": "Resources/Textures/Buildings/facade/UncleanPlaster/Plaster001_2K-JPG_Color.jpg",
+   "sha256": "8cac8b7439bdd8d4695c64302c8f1f57af5ecff57c4754d0f04601bd0eb80ce5",
+   "copia_in": "boku-ilen_landscapelab/Resources/Textures/Buildings/facade/UncleanPlaster/Plaster001_2K-JPG_Color.jpg"
+  },
+  {
+   "id": "plaster001_nor",
+   "asset": "Plaster001 (normale OpenGL)",
+   "sito": "ambientCG",
+   "pagina": "https://ambientcg.com/a/Plaster001",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/boku-ilen/landscapelab",
+   "percorso": "Resources/Textures/Buildings/facade/UncleanPlaster/Plaster001_2K-JPG_NormalGL.jpg",
+   "sha256": "3474c779968a42112240695fd4da5281d646b3bbf1e15c29e37df1476a58f598",
+   "copia_in": "boku-ilen_landscapelab/Resources/Textures/Buildings/facade/UncleanPlaster/Plaster001_2K-JPG_NormalGL.jpg"
+  },
+  {
+   "id": "plaster001_rough",
+   "asset": "Plaster001 (rugosità)",
+   "sito": "ambientCG",
+   "pagina": "https://ambientcg.com/a/Plaster001",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/boku-ilen/landscapelab",
+   "percorso": "Resources/Textures/Buildings/facade/UncleanPlaster/Plaster001_2K-JPG_Roughness.jpg",
+   "sha256": "3a6b46ab479fa6410f65387a7345647b8d1baa3d63a6e9f5285a74ccaf0cde52",
+   "copia_in": "boku-ilen_landscapelab/Resources/Textures/Buildings/facade/UncleanPlaster/Plaster001_2K-JPG_Roughness.jpg"
+  },
+  {
+   "id": "red_brick_diff",
+   "asset": "Red Brick",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/red_brick",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/boku-ilen/landscapelab",
+   "percorso": "Resources/Textures/Buildings/brick/red_brick_diff_2k.jpg",
+   "sha256": "a1ae5ba7e63026971ceaf68ebbcf8982d9c2dadde1c99996c49b8ac1160af995",
+   "copia_in": "boku-ilen_landscapelab/Resources/Textures/Buildings/brick/red_brick_diff_2k.jpg"
+  },
+  {
+   "id": "red_brick_ao",
+   "asset": "Red Brick (AO)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/red_brick",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/boku-ilen/landscapelab",
+   "percorso": "Resources/Textures/Buildings/brick/red_brick_ao_2k.jpg",
+   "sha256": "5527fb221bf4506a2c5eb78d0b94e442ea4ec91cfa2ae17ae93bc78e88bd05ed",
+   "copia_in": "boku-ilen_landscapelab/Resources/Textures/Buildings/brick/red_brick_ao_2k.jpg"
+  },
+  {
+   "id": "red_brick_nor",
+   "asset": "Red Brick (normale OpenGL)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/red_brick",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/boku-ilen/landscapelab",
+   "percorso": "Resources/Textures/Buildings/brick/red_brick_nor_gl_2k.jpg",
+   "sha256": "dd2ce5b5c42f04f02fce555d53eae42503733a0a42e76ae9a18bfb9d0680da5b",
+   "copia_in": "boku-ilen_landscapelab/Resources/Textures/Buildings/brick/red_brick_nor_gl_2k.jpg"
+  },
+  {
+   "id": "red_brick_rough",
+   "asset": "Red Brick (rugosità)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/red_brick",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/boku-ilen/landscapelab",
+   "percorso": "Resources/Textures/Buildings/brick/red_brick_rough_2k.jpg",
+   "sha256": "b8b6b882b467647162433914b3e4db16e91852a0bdf866e6bcea4a76683ea00d",
+   "copia_in": "boku-ilen_landscapelab/Resources/Textures/Buildings/brick/red_brick_rough_2k.jpg"
+  },
+  {
+   "id": "grass_medium_01_diff_png",
+   "asset": "Grass Medium 01 (modello 3D: atlante del colore)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/grass_medium_01",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/sayantanmandal1/AsterCoast",
+   "percorso": "game/assets/vendor/polyhaven/vegetation/grass_medium_01.glb (immagine incorporata grass_medium_01_diff_1k)",
+   "url_originale": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/grass_medium_01/grass_medium_01_1k.gltf",
+   "verifica": "il .glb ha la SHA-256 registrata in tools/asset-lock.json di AsterCoast; l'immagine è estratta dal .glb senza modifiche",
+   "sha256": "a54498131c9b06c4d25c9a5b9f24a2625adb84c92647362800ca50fd294be52e",
+   "copia_in": "estratti/grass_medium_01_diff_1k.png"
+  },
+  {
+   "id": "wide_street_01_hdr",
+   "asset": "Wide Street 01 (HDRI)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/wide_street_01",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/alexbieber/GTA-mini",
+   "percorso": "assets/pbr/hdri/wide_street_01_2k.hdr",
+   "sha256": "fd1d60b212dea726d27fdb6265d82b69eff0a40470e80fb180658f118ac40f86",
+   "copia_in": "alexbieber_GTA-mini/assets/pbr/hdri/wide_street_01_2k.hdr"
+  },
+  {
+   "id": "citrus_orchard_road_puresky_hdr",
+   "asset": "Citrus Orchard Road (Pure Sky) (HDRI)",
+   "sito": "Poly Haven",
+   "pagina": "https://polyhaven.com/a/citrus_orchard_road_puresky",
+   "licenza": "CC0 1.0",
+   "repo": "https://github.com/darkyboys/Drunk-Driving-Simulator",
+   "percorso": "assets/hdri/polyhaven/citrus_orchard_road_puresky_4k.hdr",
+   "sha256": "89c6067c9961fb70cd7a529ce4ded64610ab29c916bdc75e0d9e9bd59720a3da",
+   "copia_in": "darkyboys_Drunk-Driving-Simulator/assets/hdri/polyhaven/citrus_orchard_road_puresky_4k.hdr"
+  }
+ ]
+}

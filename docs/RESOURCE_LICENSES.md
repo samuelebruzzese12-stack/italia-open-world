@@ -38,3 +38,12 @@ THIS SOFTWARE.
 
 ## Cosa NON è usato
 Nessun dato, immagine o tile di Google Maps, Google Earth o Street View è incluso nel gioco (consultati solo come riferimento visivo esterno).
+
+
+## Texture PBR (Versione 28)
+
+Tutte le texture fotografiche in `tex/` derivano da asset **CC0 1.0** (pubblico dominio) di **Poly Haven** (https://polyhaven.com/license) e **ambientCG** (https://docs.ambientcg.com/license). CC0 non richiede attribuzione; la citiamo comunque. L'elenco preciso (asset, sito, repository da cui è stata presa la copia, impronta SHA-256, lavorazione) è in `tools/texture/sorgenti.json` e `tex/manifest.json`. Le texture composte dal gioco (conci di pietra, muretti a secco) sono opere derivate da asset CC0 e restano libere.
+
+## Dati Copernicus (Versione 28)
+
+**ESA WorldCover 2021** (mappa della copertura del suolo e mosaico Sentinel-2 a colori veri): licenza **Creative Commons Attribution 4.0 International**. Attribuzione richiesta e mostrata nel gioco: «© ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium». Tile servite da Terrascope (VITO), strati pubblici senza autenticazione.
