@@ -67,7 +67,7 @@ Stesso misuratore (`sorgenti/mappa_reale/difetti.js`) e stessi dati, generatore 
 | Misura | Monaco | Andorra | Svincolo | Periferia |
 |---|---|---|---|---|
 | Guardrail dentro un'altra carreggiata alla stessa quota | 19,1 % → **0 %** | 10,2 % → **0,02 %** | 6,0 % → **0,04 %** | — |
-| Punti dell'asse delle strade dove un'auto resta ferma (ogni 2 m, regola del gioco) | 763 → **236** | 129 → **29** | 0 → 0 | 0 → 0 |
+| Punti dell'asse delle strade dove un'auto resta ferma (ogni 2 m, regola del gioco) | 763 → **69** (31.1; 236 nella 31) | 129 → **5** (31.1; 29 nella 31) | 0 → 0 | 0 → 0 |
 | … di cui dentro le gallerie, fermati da un muro | 319 → **22** | 2 → **0** | 0 → 0 | — |
 | Triangoli d'asfalto con la faccia verso il basso | 4,83 % → **0,07 %** | 2,02 % → **0,05 %** | 3,02 % → **0 %** | 5,13 % → **0 %** |
 | Facce dei tetti verso il basso | 99,5 % → **0,5 %** ¹ | 99,1 % → **0,95 %** ¹ | — | 100 % → **0 %** |
@@ -78,6 +78,16 @@ Stesso misuratore (`sorgenti/mappa_reale/difetti.js`) e stessi dati, generatore 
 
 ¹ Le facce rimaste sono i sottotetti delle chiese, che devono guardare verso il basso.
 ² Per Monaco su una sola cella (17058/11948, quella con la galleria lunga), misura fatta con lo stesso programma.
+
+**Versione 31.1** (difetti delle foto dal telefono a Pont Canavese, Frassinetto, sulla SP460 e a Genova; correzioni in `cella.js`):
+sagome degli edifici che entrano nella carreggiata spostate sul bordo della strada (607 vertici su 24 celle a Monaco, 78 su 72 ad Andorra;
+passaggi sotto gli edifici conservati: 1,79 → 1,88 km); siepi e muretti solo dove il terreno è alla quota della strada (tolti 1,1 km a
+Monaco e 40,6 km sul rilievo ripido di Andorra, dove restavano sospesi o affondati); righe dipinte tolte dove una strada sta dentro la
+carreggiata di un'altra di pari o maggiore importanza (3,7 km a Monaco, 4,3 km ad Andorra). Tre test nuovi, falliscono col generatore
+precedente. Immagine: [`img/v31_1_sagome.jpg`](img/v31_1_sagome.jpg) (Monaco dall'alto e di lato: nessuna sagoma rotta).
+Resta aperta la **fascia marrone** sotto il bordo delle strade costruite a sbalzo su un pendio ripido (foto di Pont Canavese delle 14:18 e
+ultima riga dell'immagine): è la parete verticale di terra che chiude il vuoto fra il bordo della strada e il terreno più in basso.
+Serve una scarpata inclinata al posto della parete, non ancora fatta.
 
 I «punti dove un'auto resta ferma» contano anche gli ostacoli nuovi (guardrail, parapetti, piloni, pareti dei passaggi). Dei 236 rimasti
 a Monaco, 199 sono edifici di OpenStreetMap che coprono la carreggiata **per il lungo** (portici, sagome sovrapposte alla strada: vedi

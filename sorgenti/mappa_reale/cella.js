@@ -643,6 +643,16 @@ function buildCell(L, opt) {
   let nb = 0; stat.falde = 0; { const ly = L.building; if (ly) { const ext = ext0(ly), k = S / ext, cku = q => Math.min(BHIu * k, Math.max(BLOu * k, q * k)), ckv = q => Math.min(BHIv * k, Math.max(BLOv * k, q * k)); stat.edifici_dati = 0;
     for (let i = 0; i < ly.n; i++) { const f = ly.feat(i), p = f.props; if (f.type !== 3 || p.hide_3d) continue;
       for (const pg of polygons(f.parts)) { const rings = pg.map(r => clipRing(r, 0, ext)).filter(r => r.length >= 6); if (!rings.length) continue;
+        // v31: sagome di OpenStreetMap che entrano nella carreggiata (vie strette dei centri storici, dove la larghezza della strada è stimata):
+        // l'auto entrava nelle facciate o restava ferma. I vertici della sagoma dentro la carreggiata di una strada alla stessa quota si
+        // spostano sul bordo della carreggiata, dal lato dove sta l'edificio (non per gallerie, ponti, sentieri, binari)
+        { let cu0 = 0, cv0 = 0, cn0 = 0; for (let q = 0; q < rings[0].length; q += 2) { cu0 += rings[0][q]; cv0 += rings[0][q + 1]; cn0++ } cu0 = cu0 / cn0 * k; cv0 = cv0 / cn0 * k;
+          for (const rg of rings) for (let q = 0; q < rg.length; q += 2) { let u = rg[q] * k, v = rg[q + 1] * k, mosso = false;
+            for (let it = 0; it < 2; it++) segNear(u, v, 9, (P, pi, q2, dd, t2) => { if (nonConta(P)) return; const hw = P.r.w / 2 + .3; if (dd >= hw - .05) return;
+              const ax = P.S2[q2 * 2], ay = P.S2[q2 * 2 + 1], sx = P.S2[q2 * 2 + 2] - ax, sy = P.S2[q2 * 2 + 3] - ay, l2 = sx * sx + sy * sy || 1e-9, tt = Math.max(0, Math.min(1, ((u - ax) * sx + (v - ay) * sy) / l2)), px = ax + sx * tt, py = ay + sy * tt, d = Math.hypot(u - px, v - py);
+              if (d >= hw - .05 || Math.abs(hAtQ(P, q2, tt) + liftOf(P.r) - ghT(u, v)) > 1.5) return; const ll = Math.sqrt(l2); let nx = -sy / ll, ny = sx / ll; if ((cu0 - px) * nx + (cv0 - py) * ny < 0) { nx = -nx; ny = -ny }
+              u = px + nx * hw; v = py + ny * hw; mosso = true });
+            if (mosso) { rg[q] = u / k; rg[q + 1] = v / k; stat.sagomeSpostate = (stat.sagomeSpostate || 0) + 1 } } }
         let area = 0; for (const r of rings) area += ringArea(r) * k * k; if (area < 6) continue;
         let fa = 0; for (const r of pg) fa += ringArea(r) * k * k; const whole = rings.length === pg.length && rings.every((r, q) => r.length === pg[q].length);
         let ex = 0, ey = 0, ne = 0; for (let q = 0; q < pg[0].length; q += 2) { ex += pg[0][q]; ey += pg[0][q + 1]; ne++ } ex = ex / ne * k; ey = ey / ne * k;

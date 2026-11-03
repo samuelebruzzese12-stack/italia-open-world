@@ -8,7 +8,7 @@
 // Uso: DATI=<cartella che contiene next/> node difetti.js [monaco|andorra|svincolo|periferia|tutti] [file cella]
 //      ESEMPI=n stampa i primi n casi di ogni difetto (coordinate della cella in metri: u verso est, v verso sud)
 const fs = require('fs'), B = (process.env.DATI || __dirname) + '/';
-const CELLA = process.argv[3] || 'cella.js';
+const CELLA = (require.main === module && process.argv[3]) || 'cella.js';
 const src = ['mvt.js', 'earcut.js', 'dem.js', CELLA].map(f => fs.readFileSync(__dirname + '/' + f, 'utf8').replace(/if \(typeof module[^\n]*\n/g, '')).join('\n');
 const wsrc = fs.readFileSync(__dirname + '/worker_main.js', 'utf8');
 const pick = n => { const i = wsrc.indexOf('function ' + n + '('); let d = 0, j = wsrc.indexOf('{', i); for (; j < wsrc.length; j++) { if (wsrc[j] === '{') d++; else if (wsrc[j] === '}' && --d === 0) break } return wsrc.slice(i, j + 1) };
@@ -17,18 +17,21 @@ const ESEMPI = +(process.env.ESEMPI || 0);
 
 // ---------- costruzione delle celle ----------
 function celleSet(SET) {
-  const DD = B + 'next/' + SET + '/', out = [];
-  const TC = new Map(), tileAt = (x, y) => { const k = x + ',' + y; if (TC.has(k)) return TC.get(k); const f = DD + `vt/14/${x}/${y}.pbf`; const L = fs.existsSync(f) ? M.decodeMVT(fs.readFileSync(f)) : null; TC.set(k, L); return L };
+  const DD = B + 'next/' + SET + '/';
   let TILES; if (SET === 'real_test') TILES = [[8529, 5973], [8529, 5974], [8529, 5975], [8530, 5973], [8530, 5974], [8530, 5975]];
-  else { TILES = []; for (const xs of fs.readdirSync(DD + 'vt/14')) for (const f of fs.readdirSync(DD + 'vt/14/' + xs)) { const L = tileAt(+xs, +f.split('.')[0]); const n = L && L.transportation ? L.transportation.n : 0; if (n >= 12) TILES.push([+xs, +f.split('.')[0]]) } }
-  const y14m = TILES.reduce((a, t) => a + t[1], 0) / TILES.length, lat0 = Math.atan(Math.sinh(Math.PI * (1 - 2 * (y14m + .5) / 16384))) * 180 / Math.PI, K = Math.cos(lat0 * Math.PI / 180), Sm = M.ME / 32768;
+  return celleDa(DD, TILES) }
+// celle z15 delle tile z14 TILES (null: tutte quelle della cartella con almeno 12 strade), dati nella cartella DD (vt/14/x/y.pbf, dem/12/x/y.f32)
+function celleDa(DD, TILES, opz) { opz = opz || {}; const out = [];
+  const TC = new Map(), tileAt = (x, y) => { const k = x + ',' + y; if (TC.has(k)) return TC.get(k); const f = DD + `vt/14/${x}/${y}.pbf`; const L = fs.existsSync(f) ? M.decodeMVT(fs.readFileSync(f)) : null; TC.set(k, L); return L };
+  if (!TILES) { TILES = []; for (const xs of fs.readdirSync(DD + 'vt/14')) for (const f of fs.readdirSync(DD + 'vt/14/' + xs)) { const L = tileAt(+xs, +f.split('.')[0]); const n = L && L.transportation ? L.transportation.n : 0; if (n >= 12) TILES.push([+xs, +f.split('.')[0]]) } }
+  if (!TILES.length) return out; const y14m = TILES.reduce((a, t) => a + t[1], 0) / TILES.length, lat0 = Math.atan(Math.sinh(Math.PI * (1 - 2 * (y14m + .5) / 16384))) * 180 / Math.PI, K = Math.cos(lat0 * Math.PI / 180), Sm = M.ME / 32768;
   const dem = M.makeDem(12, (tx, ty) => { const f = DD + `dem/12/${tx}/${ty}.f32`; return fs.existsSync(f) ? new Float32Array(fs.readFileSync(f).buffer.slice(0)) : null });
-  for (const [x14, y14] of TILES) { const L14 = tileAt(x14, y14);
+  for (const [x14, y14] of TILES) { const L14 = tileAt(x14, y14); if (!L14) continue;
     for (let q = 0; q < 4; q++) { const x = x14 * 2 + (q & 1), y = y14 * 2 + (q >> 1), mxL = -M.MH + x * Sm, myT = M.MH - y * Sm;
       const nb = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) { const L2 = tileAt(x14 + dx, y14 + dy); if (L2) nb.push({ L: L2, dx, dy }) }
       const L = M.subLayers(M.mergeTiles(L14, nb), q & 1, q >> 1, 2);
       const r = M.buildCell(L, { S: Sm * K, mxL, myT, K, dem, lod: 'A', earcut: M.earcut, cx: x, cy: y, blo: -4096, bhi: 8192, blou: -(1 + (x & 1)) * 4096, bhiu: (3 - (x & 1)) * 4096, blov: -(1 + (y & 1)) * 4096, bhiv: (3 - (y & 1)) * 4096, dens: M.tileDens(L14), dbg: 1, RHN: 512 });
-      out.push({ name: x + '/' + y, r }) } }
+      out.push({ name: x + '/' + y, x, y, r, L }); if (opz.uno) opz.uno(out.pop()) } }
   return out }
 function celleSintetiche(nome) {
   const { SVINCOLO, PERIFERIA } = require(__dirname + '/svincolo.js'); const lat0 = 43.73, K = Math.cos(lat0 * Math.PI / 180), Sm = M.ME / 32768, S = Sm * K, k = S / 4096, cx = 17063, cy = 11946, mxL = -M.MH + cx * Sm, myT = M.MH - cy * Sm;
@@ -49,7 +52,7 @@ const capovolti = (g, ex, nome) => { if (!g) return [0, 0]; const P = g.P, I = g
   const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, l = Math.hypot(nx, ny, nz); if (l < .04) continue; n++; if (ny / l < -.05) { bad++; if (ex && ex.length < ESEMPI * 4) ex.push([nome, 'colonna ' + (U ? Math.floor(U[I[k] * 2] * 12) : '-'), (-P[a]).toFixed(1), (-P[a + 2]).toFixed(1), 'area ' + (l / 2).toFixed(2), 'ny ' + (ny / l).toFixed(2)]) } } return [bad, n] };
 
 // ---------- misure ----------
-function misura(celle, nomeSet) {
+function misura(celle, nomeSet, zitto) { const console = zitto ? { log() {} } : globalThis.console;
   const T = { grM: 0, grDentroM: 0, campStrada: 0, muroInv: 0, muroVero: 0, capR: 0, totR: 0, capT: 0, totT: 0, bordoM: 0, parete6: 0, parete12: 0, pontiM: 0, intradossoM: 0, ms: 0, ex: { gr: [], inv: [], vero: [], par: [], cap: [], capB: [], blocco: [] } };
   for (const C of celle) { const r = C.r, D = r.stat._dbg, RD = D.RD, I = indice(RD), byIdx = new Map(); RD.forEach(R => byIdx.set(R.idx, R));
     // 1) guardrail
@@ -98,9 +101,10 @@ function misura(celle, nomeSet) {
   if (ESEMPI) for (const [k, a] of Object.entries(T.ex)) for (const e of a) console.log('   esempio', k, e.join(' '));
   return T }
 
+if (typeof module !== 'undefined' && require.main !== module) module.exports = { M, celleDa, misura }; else {
 const quale = process.argv[2] || 'tutti', R = {};
 if (quale === 'monaco' || quale === 'tutti') R.monaco = misura(celleSet('real_test'), 'Monaco (OpenStreetMap e rilievo veri)');
 if (quale === 'andorra' || quale === 'tutti') R.andorra = misura(celleSet('real_test_andorra'), 'Andorra (OpenStreetMap vero, rilievo sintetico)');
 if (quale === 'svincolo' || quale === 'tutti') R.svincolo = misura(celleSintetiche('svincolo'), 'svincolo sintetico');
 if (quale === 'periferia' || quale === 'tutti') R.periferia = misura(celleSintetiche('periferia'), 'periferia sintetica');
-if (process.env.JSON) fs.writeFileSync(process.env.JSON, JSON.stringify(Object.fromEntries(Object.entries(R).map(([k, T]) => [k, Object.fromEntries(Object.entries(T).filter(([kk]) => kk !== 'ex'))])), null, 1));
+if (process.env.JSON) fs.writeFileSync(process.env.JSON, JSON.stringify(Object.fromEntries(Object.entries(R).map(([k, T]) => [k, Object.fromEntries(Object.entries(T).filter(([kk]) => kk !== 'ex'))])), null, 1)); }

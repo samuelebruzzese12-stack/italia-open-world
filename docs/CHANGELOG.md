@@ -1,5 +1,12 @@
 # Cronologia delle versioni
 
+## Versione 31.1 — 2026-11-03 — difetti delle foto dal telefono (Pont Canavese, Frassinetto, SP460, Genova)
+Correzioni del generatore delle celle, valide per tutta l'Italia: sagome di OpenStreetMap che entrano nella carreggiata (vie strette dei
+centri storici: l'auto entrava nelle facciate) spostate sul bordo della strada; siepi e muretti solo dove il terreno è alla quota della
+strada (prima sospesi sul lato a valle o affondati a monte); righe dipinte tolte dove due strade si sovrappongono (prima si incrociavano a
+zig-zag). Punti delle strade dove l'auto resta ferma: Monaco 236 → 69, Andorra 29 → 5. Strumento `tools/collaudo/` per misurare ogni
+cella d'Italia (108 943 tile, 435 772 celle): pronto, ma da qui non può scaricare le tile (domini bloccati). Test: 68 superati, 0 falliti.
+
 ## Versione 31 — 2026-11-03 — audit e correzione strutturale della mappa
 Audit del generatore delle celle e del nucleo del gioco con misure su dati veri (Monaco, Andorra) e celle sintetiche (svincolo,
 periferia); rapporto completo in `docs/AUDIT_V31.md`. Corretti: verso dei triangoli di `tri3` (tetti, cime, cupole, balconi: dall'alto

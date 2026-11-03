@@ -312,7 +312,8 @@ const MAPPA = (() => { const fs = require('fs'), dir = path.join(__dirname, '..'
     line([[0, 450], [150, 450]], { class: 'primary' }); line([[150, 450], [750, 450]], { class: 'primary', brunnel: 'tunnel' }); line([[750, 450], [880, 450]], { class: 'primary' });
     line([[150, 450], [300, 458], [750, 475]], { class: 'primary', brunnel: 'tunnel' }); line([[750, 475], [880, 520]], { class: 'primary' });   // secondo ramo dallo stesso imbocco: per 100 m le due canne si sovrappongono
     const r = [[200, 440], [260, 440], [260, 460], [200, 460]], ring = []; for (const [u, v] of r.concat([r[0]])) ring.push(T(u), T(v));
-    const BLD = [{ type: 3, props: {}, parts: [ring] }], h = (u, v) => 20 + 30 * Math.exp(-(((u - 450) / 170) ** 2 + ((v - 480) / 140) ** 2));
+    const r2 = [[60, 451], [90, 451], [90, 470], [60, 470]], ring2 = []; for (const [u, v] of r2.concat([r2[0]])) ring2.push(T(u), T(v));   // palazzo che entra di 3,5 m nella carreggiata della strada d'accesso
+    const BLD = [{ type: 3, props: {}, parts: [ring] }, { type: 3, props: {}, parts: [ring2] }], h = (u, v) => 20 + 30 * Math.exp(-(((u - 450) / 170) ** 2 + ((v - 480) / 140) ** 2));
     return { L: { transportation: { ext: E, n: L.length, feat: i => L[i] }, building: { ext: E, n: BLD.length, feat: i => BLD[i] } }, h } };
   return { M, sv: cella(SVINCOLO, .02), pe: cella(PERIFERIA, .3), ga: cella(GALLERIA, .3) } })();
 // faccia anteriore (antioraria, come la disegna three.js) rispetto alla normale dichiarata e rispetto all'alto
@@ -359,6 +360,12 @@ test('mappa: siepi e muretti poggiano sul terreno (prima, sui pendii, restavano 
   let n = 0, fuori = 0; const es = []; for (const [k, y] of basso) { const [x, z] = k.split(',').map(Number), e = y - ter(-x / 4, -z / 4); n++; if (e > .45 || e < -.85) { fuori++; if (es.length < 3) es.push([-x / 4, -z / 4, +e.toFixed(2)]) } }
   ok(fuori <= n * .02, fuori + ' basi di siepe su ' + n + ' lontane dal terreno, es. ' + JSON.stringify(es));
   let L = 0; for (const R of r.stat._dbg.RD) for (let q = 0; q < R.m - 1; q++) L += Math.hypot(R.S2[q * 2 + 2] - R.S2[q * 2], R.S2[q * 2 + 3] - R.S2[q * 2 + 1]); ok((r.stat.segniTolti || 0) > 0, 'nello svincolo le rampe si sovrappongono: qualche tratto senza righe'); ok((r.stat.segniTolti || 0) < L * .05, 'righe tolte ' + Math.round(r.stat.segniTolti) + ' m su ' + Math.round(L) + ' m: troppe') });
+test('mappa: una sagoma di edificio che entra nella carreggiata si ferma al bordo della strada (prima l\'auto entrava nella facciata o restava ferma)', () => {
+  const r = MAPPA.ga, RD = r.stat._dbg.RD.filter(R => !R.tun && !R.bridge), W = r.walls, WY = r.wallsY; ok(WY, 'manca wallsY'); let campioni = 0, bloccati = 0;
+  for (const R of RD) for (let q = 0; q < R.m - 1; q++) { const ax = R.S2[q * 2], ay = R.S2[q * 2 + 1], bx = R.S2[q * 2 + 2], by = R.S2[q * 2 + 3], L = Math.hypot(bx - ax, by - ay);
+    for (let t = .5; t < L; t += 1) { const f = t / L, u = ax + (bx - ax) * f, v = ay + (by - ay) * f, y = R.h[q] + (R.h[q + 1] - R.h[q]) * f + (R.lift || 0) + .1; if (u < 20 || u > 140) continue; campioni++;
+      for (let i = 0, w = 0; i + 5 < W.length; i += 6, w++) { if (y > WY[w * 2 + 1] + .35 || y < WY[w * 2] - 2.2) continue; const du = W[i + 2], dv = W[i + 3], ru = u - W[i], rv = v - W[i + 1], ea = Math.max(0, Math.abs(ru * du + rv * dv) - W[i + 4] - .05), en = Math.max(0, Math.abs(-ru * dv + rv * du) - .25); if (Math.hypot(ea, en) < .9) { bloccati++; break } } } }
+  ok(campioni > 100, 'campioni ' + campioni); ok(bloccati === 0, bloccati + ' campioni della strada d\'accesso fermati dalla facciata'); ok((r.stat.sagomeSpostate || 0) > 0, 'la sagoma deve essere stata spostata') });
 test('collisioni con la quota (index.html): un ostacolo con yb/yt non ferma chi passa sopra o sotto, ferma chi è alla sua quota; senza quota come prima', () => {
   const fs = require('fs'), html = fs.readFileSync(process.env.IOW_PAGINA || path.join(__dirname, '..', 'index.html'), 'utf8'), i = html.indexOf('function pushS(s,r)'), j = html.indexOf('function push(x,z,r', i), k2 = html.indexOf('return[PO.x,PO.z,PO.hit]}', j);
   ok(i > 0 && j > i && k2 > j, 'pushS/push non trovate'); const cl = (v, a, b) => Math.max(a, Math.min(b, v)), PO = {};
