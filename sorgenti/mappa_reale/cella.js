@@ -371,6 +371,9 @@ function buildCell(L, opt) {
   // v31: un punto di barriera (guardrail, parapetto) della strada r è libero se non sta dentro la carreggiata di un'altra strada alla stessa quota
   // (mg: margine oltre il bordo dell'altra carreggiata; negativo = deve entrarci di almeno -mg metri)
   // (sx, sy): punto dell'asse da cui nasce la barriera; la strada stessa conta solo lontano da lì (l'altro ramo di un tornante)
+  // v31: il punto (u,v) a quota y della strada r sta dentro la carreggiata di un'altra strada di pari o maggiore importanza (righe dipinte da togliere)
+  const segniSotto = (u, v, y, r) => { let sotto = false; segNear(u, v, 9, (P, pi, q2, dd, t2) => { if (sotto || P.r === r) return; const c2 = P.r.c; if (c2 === 'path' || c2 === 'rail' || c2 === 'transit' || c2 === 'ferry') return;
+    if ((P.r.rank || 0) < (r.rank || 0)) return; if (dd < P.r.w / 2 - .5 && Math.abs(hAtQ(P, q2, t2) + liftOf(P.r) - y) < 1.5) sotto = true }); return sotto };
   const barFree = (u, v, y, r, mg, sx, sy) => { let ok = true; segNear(u, v, 9, (P, pi, q2, dd, t2) => { if (!ok) return; if (P.r === r) { if (sx === undefined) return; let bs = 0, bd = 1e18; for (let k = 0; k < P.m - 1; k++) { const ax = P.S2[k * 2], ay = P.S2[k * 2 + 1], dx = P.S2[k * 2 + 2] - ax, dy = P.S2[k * 2 + 3] - ay, l2 = dx * dx + dy * dy || 1e-9, tt = Math.max(0, Math.min(1, ((sx - ax) * dx + (sy - ay) * dy) / l2)), d2 = (ax + dx * tt - sx) ** 2 + (ay + dy * tt - sy) ** 2; if (d2 < bd) { bd = d2; bs = P.s[k] + (P.s[k + 1] - P.s[k]) * tt } } if (Math.abs(P.s[q2] + (P.s[q2 + 1] - P.s[q2]) * t2 - bs) < r.w * 1.5 + 6) return /* stesso tratto (distanza lungo la strada): non conta */ } const c2 = P.r.c; if (c2 === 'path' || c2 === 'rail' || c2 === 'transit' || c2 === 'ferry') return; if (dd < P.r.w / 2 + mg && Math.abs(hAtQ(P, q2, t2) + liftOf(P.r) - y) < 2.5) ok = false }); return ok };
   // v31: un oggetto a terra (fermata, cartello, semaforo) non sta dentro una carreggiata: si sposta sul bordo della strada più vicina, o si scarta
   // se anche lì c'è una strada (null); libero(u,v): il punto non è dentro nessuna carreggiata
@@ -406,7 +409,14 @@ function buildCell(L, opt) {
     const noFold = sd => { for (let q = 1; q < m; q++) { const fx = S2[q * 2] - S2[q * 2 - 2], fz = S2[q * 2 + 1] - S2[q * 2 - 1]; if ((sd[q * 3] - sd[q * 3 - 3]) * fx + (sd[q * 3 + 1] - sd[q * 3 - 2]) * fz <= 0) { sd[q * 3] = sd[q * 3 - 3]; sd[q * 3 + 1] = sd[q * 3 - 2] } } };
     noFold(sideL); noFold(sideR);
     const G2 = rgOf(r.sty), base = G2.n; for (let q = 0; q < m; q++) { const vv = R.s[q] / 10; G2.v(-sideL[q * 3], sideL[q * 3 + 2], -sideL[q * 3 + 1], 0, 1, 0, [1, 1, 1], u0, vv); G2.v(-sideR[q * 3], sideR[q * 3 + 2], -sideR[q * 3 + 1], 0, 1, 0, [1, 1, 1], u1, vv) }
-    for (let q = 0; q < m - 1; q++) { const a = base + q * 2; G2.I.push(a, a + 2, a + 1, a + 1, a + 2, a + 3) }
+    // v31: dove due strade si sovrappongono (rampe che si uniscono, carreggiate doppie, incroci) ogni nastro disegnava le sue righe e le
+    // righe si incrociavano a zig-zag. Il tratto che sta dentro la carreggiata di una strada di pari o maggiore importanza è asfalto senza segni (colonna 0)
+    const coperto = []; if (r.sty === 1 || r.sty === 2) for (let q = 0; q < m - 1; q++) { const mu = (S2[q * 2] + S2[q * 2 + 2]) / 2, mv = (S2[q * 2 + 1] + S2[q * 2 + 3]) / 2; coperto.push(segniSotto(mu, mv, (R.h[q] + R.h[q + 1]) / 2 + lift, r)) }
+    for (let q = 0; q < m - 1; q++) { if (coperto[q]) { const b = G2.n, c0 = .004, c1 = 1 / COLS - .004, va = R.s[q] / 10, vb = R.s[q + 1] / 10;
+        G2.v(-sideL[q * 3], sideL[q * 3 + 2], -sideL[q * 3 + 1], 0, 1, 0, [1, 1, 1], c0, va); G2.v(-sideR[q * 3], sideR[q * 3 + 2], -sideR[q * 3 + 1], 0, 1, 0, [1, 1, 1], c1, va);
+        G2.v(-sideL[q * 3 + 3], sideL[q * 3 + 5], -sideL[q * 3 + 4], 0, 1, 0, [1, 1, 1], c0, vb); G2.v(-sideR[q * 3 + 3], sideR[q * 3 + 5], -sideR[q * 3 + 4], 0, 1, 0, [1, 1, 1], c1, vb);
+        G2.I.push(b, b + 2, b + 1, b + 1, b + 2, b + 3); stat.segniTolti = (stat.segniTolti || 0) + (R.s[q + 1] - R.s[q]); continue }
+      const a = base + q * 2; G2.I.push(a, a + 2, a + 1, a + 1, a + 2, a + 3) }
     // bordi verticali (nascondono i dislivelli fra nastro e terreno)
     const skirt = (side, sgn) => { const SG = r.bridge ? MC : MG, c = r.bridge ? conc : dirt; for (let q = 0; q < m - 1; q++) { const ax = side[q * 3], az = side[q * 3 + 1], ay = side[q * 3 + 2], bx = side[q * 3 + 3], bz = side[q * 3 + 4], by = side[q * 3 + 5];
       let ba, bb; if (r.bridge) { ba = ay - 1.1; bb = by - 1.1 } else { ba = deep(ax, az, ay, R); bb = deep(bx, bz, by, R) }
@@ -839,6 +849,9 @@ function buildCell(L, opt) {
             const gA = ghT(au + nx * 3.2, av + nz * 3.2), gB = ghT(bu + nx * 3.2, bv + nz * 3.2), up = Math.min(gA - yA, gB - yB);
             if (up > 2 && r.c !== 'track' && free(au + nx * 6, av + nz * 6, R, 4)) { const tA = Math.min(yA + 2.6, gA + .2), tB = Math.min(yB + 2.6, gB + .2); wallS(MS, sgn > 0 ? au : bu, sgn > 0 ? av : bv, sgn > 0 ? bu : au, sgn > 0 ? bv : av, (sgn > 0 ? yA : yB) - .3, sgn > 0 ? tA : tB, (sgn > 0 ? yB : yA) - .3, sgn > 0 ? tB : tA, stoneC); stat.sostegno = (stat.sostegno || 0) + L2; continue }
             if (!kind) continue;
+            // v31: siepi e muretti erano messi alla quota della strada senza guardare il terreno dove stanno: sul lato a valle di un rilevato
+            // restavano sospesi nel vuoto (muri verdi alti visti da sotto), sul lato a monte affondavano nel pendio. Solo dove il terreno è alla quota della strada
+            if (Math.abs(ghT(au, av) - yA) > .5 || Math.abs(ghT(bu, bv) - yB) > .5 || Math.abs(ghT((au + bu) / 2, (av + bv) / 2) - (yA + yB) / 2) > .5) { stat.siepeTolta = (stat.siepeTolta || 0) + L2; continue }
             if (kind === 1) { const ht = .85 + hsh(e, 3) * .25, ou = nx * .5, ov = nz * .5;
               wallS(MS, sgn > 0 ? au : bu, sgn > 0 ? av : bv, sgn > 0 ? bu : au, sgn > 0 ? bv : av, (sgn > 0 ? yA : yB) - .25, (sgn > 0 ? yA : yB) + ht, (sgn > 0 ? yB : yA) - .25, (sgn > 0 ? yB : yA) + ht, stoneC);
               wallS(MS, sgn > 0 ? bu + ou : au + ou, sgn > 0 ? bv + ov : av + ov, sgn > 0 ? au + ou : bu + ou, sgn > 0 ? av + ov : bv + ov, (sgn > 0 ? yB : yA) - .25, (sgn > 0 ? yB : yA) + ht, (sgn > 0 ? yA : yB) - .25, (sgn > 0 ? yA : yB) + ht, stoneC);
