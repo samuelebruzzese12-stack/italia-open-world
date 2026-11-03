@@ -2,6 +2,8 @@
 
 Gioco open world 3D per telefono (una sola pagina web, three.js) ambientato sulla mappa reale dell'Italia: città con i nomi veri delle vie, le insegne dei negozi veri, i numeri civici e le fermate dell'autobus di OpenStreetMap; facciate con balconi e finestre incassate, tetti a falde, strisce pedonali, semafori, binari del tram, gallerie stradali percorribili, guardrail, cartelli delle uscite autostradali, terreno con erba/roccia/terra, specie di alberi per zona (pini, cipressi, ulivi, pioppi), cielo con nuvole, lampioni, auto in sosta, traffico, passanti e polizia sulle strade vere.
 
+**Versione 31:** **audit e correzione strutturale della mappa** (rapporto con cause, misure prima/dopo e limiti in [`docs/AUDIT_V31.md`](docs/AUDIT_V31.md)): edifici con i tetti anche visti dall'alto (prima i tetti erano rivolti verso il basso), strisce pedonali e linee di arresto visibili, strade in rilevato con i fianchi visibili (prima sembravano sospese), gallerie con pareti e soffitto visti da dentro, viadotti con l'intradosso e piloni mai sopra una strada, guardrail e parapetti interrotti agli svincoli e agli incroci (prima attraversavano le corsie) e diventati veri ostacoli, collisioni con la quota (niente muri invisibili in galleria o sui viadotti, niente facciate dentro le gallerie, auto contro auto solo alla stessa quota), fermate e cartelli fuori dalla carreggiata, passaggi sotto gli edifici, alberi senza strisce. La pagina si ricostruisce dal repository con `python3 tools/build/build.py`.
+
 **Versione 30:** **Vehicle Damage Solver** — un solo risolutore coordina urti, deformazione, meccanica, sospensioni, ruote, pezzi staccati, grafica, audio e guida, usando i sistemi che c'erano già (rete deformabile, `danni_meccanici.js`, motore fisico, centraline) senza riscriverli: energia d'urto da massa effettiva, velocità normale, restituzione e materiale dell'ostacolo (muro, guardrail, palo, albero, altra auto, terreno), ripartita fra i due veicoli; mai la stessa energia due volte; 15 zone strutturali nominate (paraurti, cofano, muso, longheroni, vano motore, abitacolo, montanti, tetto, porte, bagagliaio, pianale, vetri, bracci) configurabili per veicolo (profili non certificati); frizione, differenziale e centraline danneggiabili con effetti reali; ruote con braccio, ammortizzatore, molla, mozzo e cerchio che cambiano aderenza, vibrazione, stabilità e tiro; pezzi staccabili con massa, resistenza, soglia e attacco; 56 test automatici sulla rete vera del gioco (`docs/DANNI.md`).
 
 **Versione 29.3:** correzione sistematica della mappa provata su classi di situazioni (città densa con strade sovrapposte, montagna con tornanti e gallerie, svincolo autostradale, periferia) con guida virtuale automatica: raccordo degli incroci continuo e iterato, lisciatura senza errore alle estremità, raster delle quote stradali a due strati senza gradini sulle discese, impalcati e gallerie senza scala, pulsante **📦 Dati zona** nella mappa per salvare i dati del posto in cui si vede un difetto (vedi `docs/IMPLEMENTATION_REPORT.md`, sezione 0).
@@ -35,13 +37,16 @@ Catalogo delle fonti e licenze: [docs/RESOURCE_CATALOG.md](docs/RESOURCE_CATALOG
 - `motore/danni_solver.js` — Vehicle Damage Solver: energia d'urto, registro degli eventi, stato per zona, ruote e sospensioni, componenti distaccabili
 - `motore/profili_danno.js` — zone strutturali nominate sulla rete deformabile e profili di danno per veicolo (importazione del JSON del progetto)
 - `motore/calibrazione.js` — prove riproducibili e confronto con i dati dichiarati (`node motore/calibrazione.js`)
-- `test/run.js` — test automatici dei moduli e del solver sulla rete deformabile estratta da `index.html` (`node test/run.js`: 56 test)
+- `test/run.js` — test automatici dei moduli, del solver e della mappa (cause dei difetti della v31: verso dei triangoli, guardrail, viadotti, pareti, collisioni con la quota, gallerie) (`node test/run.js`: 66 test)
+- `test/scene_chromium.js`, `test/browser_mappa_v31_*.js` — prove nel gioco vero in Chromium (immagini prima/dopo, guida contro un guardrail, su un cavalcavia e nelle gallerie di Monaco); risultati in `docs/test/v31_chromium.txt`
 - `armi/modelli/*.json` — modelli 3D delle armi
 - `radio/` — brano della radio di bordo
 - `tex/` — texture del gioco (e `tex/manifest.json` con fonti e licenze)
 - `tools/texture/` — script che prepara le texture dalle sorgenti CC0
 - `sorgenti/mappa_reale/` — codice della mappa reale (lo stesso che sta dentro `index.html`) e script di prova (`prova_cella.js`, `prova_sintetica.js`, `metriche.js` con le misure dei difetti, `prova_svincolo.js` con lo svincolo sintetico di `svincolo.js`)
-- `docs/` — rapporto di implementazione, catalogo delle risorse, licenze, immagini delle prove
+- `sorgenti/mappa_reale/difetti.js` — misure dei difetti della v31 (guardrail, muri invisibili e ostacoli sulla strada, triangoli capovolti, pareti alte, viadotti); `sorgenti/patch_mappa_v31.py` — collisioni con la quota nel nucleo del gioco
+- `tools/build/` — catena di costruzione di `index.html` (`python3 tools/build/build.py`)
+- `docs/` — rapporto di implementazione, audit della v31 (`docs/AUDIT_V31.md`), catalogo delle risorse, licenze, immagini delle prove
 
 ## Comandi in auto
 - Gas/freno e sterzo come prima (levetta o W/A/S/D); il motore si avvia tenendo il gas. Spazio: freno a mano.

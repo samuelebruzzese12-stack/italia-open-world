@@ -299,6 +299,81 @@ test('compatibilità: la pagina index.html collega il solver (script, VDS, dmgCr
   ok(!html.includes("carHit0(a,car,wx,wz,dirx,dirz,imp,kind);if(a===carA&&imp>=3.2)"), 'vecchio wrapper di carHit ancora attivo'); ok(!/Math\.random\(\)<Math\.min\(\.4,\.12/.test(html), 'serrature ancora casuali');
 });
 
+/* ------------------------------------------------------------ mappa (versione 31): le cause dei difetti visti nelle foto, sul codice vero
+   del generatore delle celle (sorgenti/mappa_reale/cella.js) e su due celle sintetiche (svincolo in collina, periferia): niente dati esterni */
+const MAPPA = (() => { const fs = require('fs'), dir = path.join(__dirname, '..', 'sorgenti', 'mappa_reale') + '/';
+  const src = ['mvt.js', 'earcut.js', 'dem.js', 'cella.js'].map(f => fs.readFileSync(f === 'cella.js' && process.env.IOW_CELLA ? process.env.IOW_CELLA : dir + f, 'utf8').replace(/if \(typeof module[^\n]*\n/g, '')).join('\n');
+  const M = new Function(src + ';return {buildCell,earcut,ME,MH,GB,tri3,wall,wallS,wallB,obox,balc}')();
+  const { SVINCOLO, PERIFERIA } = require(dir + 'svincolo.js'), K = Math.cos(43.73 * Math.PI / 180), Sm = M.ME / 32768, S = Sm * K, k = S / 4096, cx = 17063, cy = 11946, mxL = -M.MH + cx * Sm, myT = M.MH - cy * Sm;
+  const cella = (F, dens) => { const SV = F(k), dem = (mx, my) => SV.h((mx - mxL) * K, (myT - my) * K); return M.buildCell(SV.L, { S, mxL, myT, K, dem, lod: 'A', earcut: M.earcut, cx, cy, blo: -4096, bhi: 8192, dens, lc: SV.lc || null, dbg: 1, RHN: 512 }) };
+  // galleria sintetica: collina, due gallerie che partono dallo stesso imbocco e si separano piano, palazzo sopra l'imbocco con la sagoma che scende
+  // lungo il pendio (base della facciata più bassa della volta della galleria): i due casi di Monaco (cause 13 e 14 di docs/AUDIT_V31.md)
+  const GALLERIA = k => { const E = 4096, T = m => m / k, L = [], line = (pts, props) => L.push({ type: 2, props, parts: [pts.flatMap(([u, v]) => [T(u), T(v)])] });
+    line([[0, 450], [150, 450]], { class: 'primary' }); line([[150, 450], [750, 450]], { class: 'primary', brunnel: 'tunnel' }); line([[750, 450], [880, 450]], { class: 'primary' });
+    line([[150, 450], [300, 458], [750, 475]], { class: 'primary', brunnel: 'tunnel' }); line([[750, 475], [880, 520]], { class: 'primary' });   // secondo ramo dallo stesso imbocco: per 100 m le due canne si sovrappongono
+    const r = [[200, 440], [260, 440], [260, 460], [200, 460]], ring = []; for (const [u, v] of r.concat([r[0]])) ring.push(T(u), T(v));
+    const BLD = [{ type: 3, props: {}, parts: [ring] }], h = (u, v) => 20 + 30 * Math.exp(-(((u - 450) / 170) ** 2 + ((v - 480) / 140) ** 2));
+    return { L: { transportation: { ext: E, n: L.length, feat: i => L[i] }, building: { ext: E, n: BLD.length, feat: i => BLD[i] } }, h } };
+  return { M, sv: cella(SVINCOLO, .02), pe: cella(PERIFERIA, .3), ga: cella(GALLERIA, .3) } })();
+// faccia anteriore (antioraria, come la disegna three.js) rispetto alla normale dichiarata e rispetto all'alto
+const MP = { concordi: g => { let c = 0, d = 0; const P = g.P, I = g.I, N = g.N; for (let q = 0; q < I.length; q += 3) { const a = I[q] * 3, b = I[q + 1] * 3, e = I[q + 2] * 3, u = [P[b] - P[a], P[b + 1] - P[a + 1], P[b + 2] - P[a + 2]], v = [P[e] - P[a], P[e + 1] - P[a + 1], P[e + 2] - P[a + 2]], n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]; if (Math.hypot(...n) < 1e-9) continue; (n[0] * N[a] + n[1] * N[a + 1] + n[2] * N[a + 2] > 0) ? c++ : d++ } return [c, d] },
+  giu: g => { if (!g) return [0, 0]; let n = 0, bad = 0; const P = g.P, I = g.I; for (let q = 0; q < I.length; q += 3) { const a = I[q] * 3, b = I[q + 1] * 3, e = I[q + 2] * 3, ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], vx = P[e] - P[a], vy = P[e + 1] - P[a + 1], vz = P[e + 2] - P[a + 2], ny = uz * vx - ux * vz, l = Math.hypot(uy * vz - uz * vy, ny, ux * vy - uy * vx); if (l < .04) continue; n++; if (ny / l < -.05) bad++ } return [bad, n] } };
+test('mappa: ogni primitiva geometrica ha la faccia concorde con la normale dichiarata (tri3, muri, facciate, scatole, balconi)', () => { const M = MAPPA.M;
+  for (const [nome, fn] of [['tri3 su', g => M.tri3(g, [[0, 0, 0], [1, 0, 0], [0, 0, 1]], [1, 1, 1])], ['tri3 giù', g => M.tri3(g, [[0, 0, 0], [1, 0, 0], [0, 0, 1]], [1, 1, 1], null, [0, -1, 0])], ['wall', g => M.wall(g, 0, 0, 4, 0, 0, 3, [1, 1, 1], 0, 1)], ['wallS', g => M.wallS(g, 0, 0, 4, 1, 0, 3, .2, 3.5, [1, 1, 1])], ['wallB', g => M.wallB(g, 0, 0, 4, 1, 0, 3, [1, 1, 1], 0, 2)], ['obox', g => M.obox(g, 5, 5, .6, .8, 4, 2, 0, 3, [1, 1, 1])], ['balc', g => M.balc(g, 5, 5, 1, 0, 0, 1, 3, 1.2, 6, [1, 1, 1], [1, 1, 1])]]) {
+    const g = new M.GB(true); fn(g); const [c, d] = MP.concordi(g); ok(c > 0 && d === 0, nome + ': ' + d + ' facce col verso opposto alla normale') } });
+test('mappa: asfalto, strisce pedonali, linee di arresto, piazzole e piazze con la faccia verso l\'alto (prima strisce, arresti e piazzole erano invisibili)', () => {
+  for (const [nome, r] of [['svincolo', MAPPA.sv], ['periferia', MAPPA.pe]]) for (const key of ['R', 'Rst', 'Rdi', 'Rba', 'Rsw']) { const [bad, n] = MP.giu(r[key]); ok(bad === 0, nome + ' ' + key + ': ' + bad + ' triangoli verso il basso su ' + n) }
+  ok(MP.giu(MAPPA.pe.R)[1] > 1000, 'periferia senza asfalto?') });
+test('mappa: tetti verso l\'alto (prima, visti dall\'alto, gli edifici erano vuoti e i comignoli sospesi)', () => { let bad = 0, n = 0; for (const o of MAPPA.pe.BR || []) { const [b, m] = MP.giu(o); bad += b; n += m } ok(n > 100, 'tetti ' + n); ok(bad / n < .02, bad + ' facce dei tetti verso il basso su ' + n) });
+test('mappa: nessun guardrail dentro la carreggiata di un\'altra strada alla stessa quota; ogni guardrail è un ostacolo con la sua quota', () => {
+  for (const [nome, r] of [['svincolo', MAPPA.sv], ['periferia', MAPPA.pe]]) { const D = r.stat._dbg, GR = D.GR || [], RD = D.RD; let dentro = 0;
+    for (let i = 0; i < GR.length; i += 7) { const u = (GR[i] + GR[i + 3]) / 2, v = (GR[i + 1] + GR[i + 4]) / 2, y = (GR[i + 2] + GR[i + 5]) / 2; for (const R of RD) { if (R.idx === GR[i + 6] || R.tun || R.c === 'path' || R.c === 'rail') continue; for (let q = 0; q < R.m - 1; q++) { const ax = R.S2[q * 2], ay = R.S2[q * 2 + 1], dx = R.S2[q * 2 + 2] - ax, dy = R.S2[q * 2 + 3] - ay, l2 = dx * dx + dy * dy || 1e-9, t = Math.max(0, Math.min(1, ((u - ax) * dx + (v - ay) * dy) / l2)); if (Math.hypot(ax + dx * t - u, ay + dy * t - v) < R.w / 2 + .2 && Math.abs(R.h[q] + (R.h[q + 1] - R.h[q]) * t + R.lift - y) < 2.5) { dentro++; q = R.m } } } }
+    ok(dentro === 0, nome + ': ' + dentro + ' tratti di guardrail dentro un\'altra carreggiata');
+    const rl = r.rails || []; ok(rl.length / 7 >= GR.length / 7, nome + ': ostacoli ' + rl.length / 7 + ' per ' + GR.length / 7 + ' tratti'); for (let i = 0; i < rl.length; i += 7) ok(rl[i + 6] > rl[i + 5], 'quota della cima sotto la base') }
+  ok((MAPPA.sv.stat.guardrail || 0) > 1000 && (MAPPA.sv.stat.guardrailTolto || 0) > 0, 'svincolo: guardrail ' + MAPPA.sv.stat.guardrail + ' m, tolti ' + MAPPA.sv.stat.guardrailTolto + ' m') });
+test('mappa: viadotti con intradosso su tutta la lunghezza (prima, visti da sotto, erano trasparenti) e parapetti con collisione', () => { const r = MAPPA.sv; let L = 0; for (const R of r.stat._dbg.RD) if (R.bridge) for (let q = 0; q < R.m - 1; q++) L += Math.hypot(R.S2[q * 2 + 2] - R.S2[q * 2], R.S2[q * 2 + 3] - R.S2[q * 2 + 1]);
+  ok(L > 100, 'ponti ' + L); vicino(r.stat.intradosso || 0, L, .5, 'metri di intradosso') });
+test('mappa: le pareti sotto il bordo dell\'asfalto guardano fuori, cordoli verso la strada (prima il contrario: strade "sospese" viste da fuori)', () => {
+  const conta = (r, key) => { const g = r[key], RD = r.stat._dbg.RD, c = { sottoFuori: 0, sottoDentro: 0 }; if (!g) return c; const P = g.P, I = g.I;
+    for (let q = 0; q < I.length; q += 3) { const a = I[q] * 3, b = I[q + 1] * 3, e = I[q + 2] * 3, ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], vx = P[e] - P[a], vy = P[e + 1] - P[a + 1], vz = P[e + 2] - P[a + 2]; let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const l = Math.hypot(nx, ny, nz); if (l < .02 || Math.abs(ny / l) > .2) continue;
+      const cu = -(P[a] + P[b] + P[e]) / 3, cv = -(P[a + 2] + P[b + 2] + P[e + 2]) / 3, ym = (P[a + 1] + P[b + 1] + P[e + 1]) / 3; let best = null;
+      for (const R of RD) for (let s = 0; s < R.m - 1; s++) { const ax = R.S2[s * 2], ay = R.S2[s * 2 + 1], dx = R.S2[s * 2 + 2] - ax, dy = R.S2[s * 2 + 3] - ay, l2 = dx * dx + dy * dy || 1e-9, t = Math.max(0, Math.min(1, ((cu - ax) * dx + (cv - ay) * dy) / l2)), px = ax + dx * t, py = ay + dy * t, d = Math.hypot(cu - px, cv - py); if (!best || d < best[0]) best = [d, px, py, R, R.h[s] + (R.h[s + 1] - R.h[s]) * t + R.lift] }
+      if (!best || best[3].tun || Math.abs(best[0] - best[3].w / 2) > .25 || ym > best[4] - .3) continue; ((cu - best[1]) * -nx / l + (cv - best[2]) * -nz / l > 0) ? c.sottoFuori++ : c.sottoDentro++ } return c };
+  for (const [nome, r] of [['svincolo', MAPPA.sv], ['periferia', MAPPA.pe]]) for (const key of ['M', 'MS']) { const c = conta(r, key); ok(c.sottoFuori + c.sottoDentro === 0 || c.sottoFuori / (c.sottoFuori + c.sottoDentro) > .97, nome + ' ' + key + ': ' + JSON.stringify(c)) }
+  const c = conta(MAPPA.sv, 'M'); ok(c.sottoFuori > 500, 'svincolo: poche pareti misurate ' + JSON.stringify(c)) });
+test('mappa: ogni muro di collisione porta la quota assoluta della base e della cima (wallsY)', () => { for (const r of [MAPPA.sv, MAPPA.pe]) { ok(r.wallsY && r.wallsY.length / 2 === r.walls.length / 6, 'wallsY ' + (r.wallsY || []).length / 2 + ' per ' + r.walls.length / 6 + ' muri'); for (let i = 0; i < r.wallsY.length; i += 2) ok(r.wallsY[i + 1] > r.wallsY[i] && isFinite(r.wallsY[i]), 'muro ' + i / 2) } });
+test('mappa: in galleria nessun muro alla quota dell\'auto (facciata del palazzo sopra l\'imbocco, parete dell\'altro ramo dove la galleria si divide)', () => {
+  const r = MAPPA.ga, D = r.stat._dbg, RD = D.RD.filter(R => R.tun), W = r.walls, WY = r.wallsY; ok(WY, 'manca wallsY'); ok(RD.length >= 2, 'gallerie nella cella: ' + RD.length);
+  let campioni = 0, bloccati = 0; const es = [];
+  for (const R of RD) for (let q = 0; q < R.m - 1; q++) { const ax = R.S2[q * 2], ay = R.S2[q * 2 + 1], bx = R.S2[q * 2 + 2], by = R.S2[q * 2 + 3], L = Math.hypot(bx - ax, by - ay);
+    for (let t = .5; t < L; t += 1) { const f = t / L, u = ax + (bx - ax) * f, v = ay + (by - ay) * f, y = R.h[q] + (R.h[q + 1] - R.h[q]) * f + (R.lift || 0) + .1; campioni++;
+      for (let i = 0, w = 0; i + 5 < W.length; i += 6, w++) { const yb = WY[w * 2], yt = WY[w * 2 + 1]; if (y > yt + .35 || y < yb - 2.2) continue;
+        const du = W[i + 2], dv = W[i + 3], ru = u - W[i], rv = v - W[i + 1], a = ru * du + rv * dv, n = -ru * dv + rv * du, ea = Math.max(0, Math.abs(a) - W[i + 4] - .05), en = Math.max(0, Math.abs(n) - .25);
+        if (Math.hypot(ea, en) < .9) { bloccati++; if (es.length < 3) es.push([+u.toFixed(1), +v.toFixed(1), +y.toFixed(1), +yb.toFixed(1), +yt.toFixed(1)]); break } } } }
+  ok(campioni > 500, 'campioni ' + campioni); ok(bloccati === 0, bloccati + ' campioni dell\'asse in galleria fermati da un muro, es. ' + JSON.stringify(es));
+  ok((r.stat.galleriaSottoEdificio || 0) > 0, 'il caso del palazzo sopra la galleria deve presentarsi'); ok((r.stat.galleriaPareteTolta || 0) > 0, 'il caso dei due rami deve presentarsi') });
+test('collisioni con la quota (index.html): un ostacolo con yb/yt non ferma chi passa sopra o sotto, ferma chi è alla sua quota; senza quota come prima', () => {
+  const fs = require('fs'), html = fs.readFileSync(process.env.IOW_PAGINA || path.join(__dirname, '..', 'index.html'), 'utf8'), i = html.indexOf('function pushS(s,r)'), j = html.indexOf('function push(x,z,r', i), k2 = html.indexOf('return[PO.x,PO.z,PO.hit]}', j);
+  ok(i > 0 && j > i && k2 > j, 'pushS/push non trovate'); const cl = (v, a, b) => Math.max(a, Math.min(b, v)), PO = {};
+  const muro = { x: 0, z: 0, c: 1, s: 0, hx: 3, hz: .2, yb: 10, yt: 11 }, M = new Map([['0,0', [muro]], ['-1,0', [muro]], ['0,-1', [muro]], ['-1,-1', [muro]]]);
+  const push = new Function('PO', 'solids', 'CSO', 'WORLD', 'cl', html.slice(i, k2 + 25) + ';return push')(PO, [], M, { CSZ: 32, WS: 0 }, cl);
+  ok(push(0, .5, 1, 10.2)[2] === 1, 'alla quota del guardrail deve fermare'); ok(push(0, .5, 1, 16)[2] === 0, 'sul viadotto 5 m sopra non deve fermare'); ok(push(0, .5, 1, 4)[2] === 0, 'nella galleria 6 m sotto non deve fermare'); ok(push(0, .5, 1)[2] === 1, 'senza quota (chiamanti vecchi) deve fermare come prima');
+  const vecchio = { x: 0, z: 0, c: 1, s: 0, hx: 3, hz: .2 }; M.set('0,0', [vecchio]); ok(push(0, .5, 1, 50)[2] === 1, 'ostacolo senza quota: ferma a qualsiasi quota (come prima)');
+  for (const s of ["push(fx,fz,1,V.y)", "push(fx,fz,1,u.y)", "push(P.x+vx*dt,P.z+vz*dt,P.r,P.y)", "clipDist(C.x,C.z,-dx,-dz,7.5,1,V.y)", "r.rails", "r.wallsY"]) ok(html.includes(s), 'manca nella pagina: ' + s) });
+
+test('auto contro auto con la quota (index.html): un\'auto del traffico sulla via sopra non urta l\'auto nella galleria; alla stessa quota sì', () => {
+  const fs = require('fs'), html = fs.readFileSync(process.env.IOW_PAGINA || path.join(__dirname, '..', 'index.html'), 'utf8'), i = html.indexOf('function pushS(s,r)'), j = html.indexOf('function push(x,z,r', i), k2 = html.indexOf('return[PO.x,PO.z,PO.hit]}', j);
+  ok(i > 0 && j > i && k2 > j, 'pushS/push non trovate'); const cl = (v, a, b) => Math.max(a, Math.min(b, v)), PO = {};
+  // sagoma di un'auto del traffico (scatola in `solids`, come in ambUpdate) sulla via a quota 30: l'auto del giocatore è a 22 (galleria) o a 30
+  const auto = { on: 1, x0: -1.25, x1: 1.25, z0: -1.25, z1: 1.25, nc: 1, amb: 1, yb: 29.7, yt: 31.6 };
+  const push = new Function('PO', 'solids', 'CSO', 'WORLD', 'cl', html.slice(i, k2 + 25) + ';return push')(PO, [auto], new Map(), { CSZ: 32, WS: 0 }, cl);
+  ok(push(0, 1.8, 1, 30)[2] === 1, 'alla stessa quota deve urtare'); ok(push(0, 1.8, 1, 22)[2] === 0, 'nella galleria 8 m sotto non deve urtare');
+  // le sagome del traffico e delle pattuglie prendono la quota; i contatti fra auto e lo speronamento controllano la differenza di quota
+  for (const s of ['s.yb=c.y-.3;s.yt=c.y+1.6', 'u.sol.yb=u.y-.3;u.sol.yt=u.y+1.6', 'bs.push({p:1,x:C.x,z:C.z,y:V.y,', 'bs.push({p:0,u,x:u.x,z:u.z,y:u.y,', 'Math.abs(A.y-B.y)>2.5)continue;', 'u.v>6&&!(Math.abs(u.y-V.y)>2.5)',
+    // traffico di VITA: l'ostacolo prende posizione e quota prima di accendersi (prima: auto invisibile per un passo nell'origine del mondo)
+    'a.sol.x=a.x;a.sol.z=a.z;a.sol.c=0;a.sol.s=1;a.sol.yb=a.y-.3;a.sol.yt=a.y+1.6;a.sol.on=1;', 's.yb=a.y-.3;s.yt=a.y+1.6'])
+    ok(html.includes(s), 'manca nella pagina: ' + s) });
+
 console.log('\nRISULTATI REALI (rete di gioco + solver):'); console.log(JSON.stringify(RIS, null, 1));
 console.log(esiti.join('\n'));
 console.log('\n' + passati + ' test superati, ' + falliti + ' falliti');

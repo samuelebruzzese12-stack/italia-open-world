@@ -34,7 +34,8 @@ const P2={x:0,z:0,dx:0,dz:0,i:0};
 let imCar=null;const NCAR=18,SOL=[];
 function carInit(){imCar=new T.InstancedMesh(REAL.CARG.clone(),REAL.MTR.car,NCAR);imCar.count=0;imCar.frustumCulled=false;imCar.castShadow=true;sc.add(imCar);for(let i=0;i<NCAR;i++){const s={x:0,z:0,c:1,s:0,hx:2.15,hz:.9,on:0,nc:1,amb:1,traffic:1};SOL.push(s);solids.push(s)}}
 function spawnCar(px,pz){if(!G.ways.length)return;let w=null;for(let k=0;k<12&&!w;k++){const c=G.ways[Math.floor(Math.random()*G.ways.length)];if(!SPD[c.c]||c.len<30)continue;const p={x:0,z:0};const s=Math.random()*c.len;at(c,s,1,p);const d=Math.hypot(p.x-px,p.z-pz);if(d<90||d>330||inView(p.x,p.z)||REAL.wet(p.x,p.z))continue;w=c;const dir=(c.one||Math.random()<.5)?1:-1,off=REAL.laneOff(c.w,c.one,c.pk,dir);
-   const a={way:c,s,dir,off,v:0,vmax:c.spd*(.85+Math.random()*.25),x:p.x,z:p.z,h:0,col:Math.floor(Math.random()*REAL.CARCOLS.length),idle:0,hit:0,sol:SOL.find(q=>!q.on)};if(!a.sol)return;a.sol.on=1;G.cars.push(a);CARS.push(a)}}
+   const a={way:c,s,dir,off,v:0,vmax:c.spd*(.85+Math.random()*.25),x:p.x,z:p.z,h:0,col:Math.floor(Math.random()*REAL.CARCOLS.length),idle:0,hit:0,sol:SOL.find(q=>!q.on)};if(!a.sol)return;a.y=REAL.ground(a.x,a.z);a.sol.x=a.x;a.sol.z=a.z;a.sol.c=0;a.sol.s=1;a.sol.yb=a.y-.3;a.sol.yt=a.y+1.6;a.sol.on=1;   /* v31: posizione e quota prima di accendere l'ostacolo (prima restava un'auto invisibile per un passo nell'origine del mondo, il punto di partenza) */
+   G.cars.push(a);CARS.push(a)}}
 function carStep(a,dt,px,pz){const w=a.way;if(!w||a.dead){a.dead=true;return}
  // velocità: segue il mezzo davanti, frena per il giocatore e per gli ostacoli, si ferma dopo un urto
  let tv=a.vmax;if(a.hit>0){a.hit-=dt;tv=0}
@@ -42,13 +43,13 @@ function carStep(a,dt,px,pz){const w=a.way;if(!w||a.dead){a.dead=true;return}
  for(const o of G.cars){if(o===a||o.way!==w||o.dir!==a.dir)continue;const g=(o.s-a.s)*a.dir;if(g>0&&g<16){tv=Math.min(tv,g<6?0:o.v*Math.min(1,(g-5)/8))}}
  {const dx=C.x-a.x,dz=C.z-a.z,d=Math.hypot(dx,dz);if(d<18&&d>.1){const ah=(dx*fx+dz*fz)/d;if(ah>.75){tv=Math.min(tv,d<6?0:Math.max(0,Math.hypot(V.vx,V.vz))*Math.min(1,(d-5)/10))}}}
  for(const u of PL.units){const dx=u.x-a.x,dz=u.z-a.z,d=Math.hypot(dx,dz);if(d<16&&d>.1&&(dx*fx+dz*fz)/d>.75&&u.v<a.v+1)tv=Math.min(tv,d<6?0:u.v)}
- if(!a.hit&&a.v>2){const dd=clipDist(a.x,a.z,fx,fz,12,1);if(dd<11)tv=Math.min(tv,dd<5?0:a.v*.5)}
+ if(!a.hit&&a.v>2){const dd=clipDist(a.x,a.z,fx,fz,12,1,a.y);if(dd<11)tv=Math.min(tv,dd<5?0:a.v*.5)}
  a.v+=(tv-a.v)*Math.min(1,dt*(tv<a.v?3.2:1.1));
  a.s+=a.v*dt*a.dir;
  if(a.s<0||a.s>w.len){const n=nextWay(w,P2.x,P2.z,fx,fz,false);if(!n){a.dead=true;return}a.way=n.w;a.dir=n.dir;a.s=n.s+n.dir*Math.min(2,n.w.len*.1);a.off=REAL.laneOff(n.w.w,n.w.one,n.w.pk,n.dir);a.vmax=n.w.spd*(.85+Math.random()*.25);at(a.way,a.s,a.dir,P2)}
  else if(a.v>1&&Math.random()<dt*.06){const n=nextWay(w,P2.x,P2.z,fx,fz,false);if(n&&Math.random()<.4&&Math.abs(n.s-(n.w.s[0]))>=0){a.way=n.w;a.dir=n.dir;a.s=n.s+n.dir*1;a.off=REAL.laneOff(n.w.w,n.w.one,n.w.pk,n.dir);a.vmax=n.w.spd*(.85+Math.random()*.25);at(a.way,a.s,a.dir,P2)}}
  const rx=-P2.dz,rz=P2.dx;a.x=P2.x+rx*a.off;a.z=P2.z+rz*a.off;a.h=Math.atan2(P2.dx,P2.dz);
- const s=a.sol;s.x=a.x;s.z=a.z;s.c=Math.sin(a.h);s.s=Math.cos(a.h)}
+ const s=a.sol;s.x=a.x;s.z=a.z;s.c=Math.sin(a.h);s.s=Math.cos(a.h);if(a.y!==undefined){s.yb=a.y-.3;s.yt=a.y+1.6}}   /* v31: quota (un'auto sulla via sopra non urta chi è nella galleria sotto) */
 function carsUpdate(dt,px,pz){for(const a of G.cars){carStep(a,dt,px,pz);const d=Math.hypot(a.x-px,a.z-pz);if(d>420||a.dead){a.dead=true}}
  if(G.cars.some(a=>a.dead)){for(const a of G.cars)if(a.dead){a.sol.on=0;const i=CARS.indexOf(a);if(i>=0)CARS.splice(i,1)}G.cars=G.cars.filter(a=>!a.dead)}
  const want=Math.min(NCAR,Math.round(G.ways.length>40?NCAR:G.ways.length/3));if(G.cars.length<want&&G.fr%4===0)spawnCar(px,pz);
@@ -107,10 +108,10 @@ PL.offence=function(kind,sev,prio){if(!PD.cfg.enabled)return;const now=PL.t;if(P
 function unitDrive(u,dt,target,vmax){// guida cinematica: sterza verso il bersaglio, accelera, frena davanti agli ostacoli
  const dx=target.x-u.x,dz=target.z-u.z,d=Math.hypot(dx,dz)||1e-6,want=Math.atan2(dx,dz);let da=want-u.h;da=Math.atan2(Math.sin(da),Math.cos(da));
  const turn=Math.min(1,.5+u.v/6)*2.4;u.h+=Math.max(-turn*dt,Math.min(turn*dt,da));
- let tv=vmax*(1-Math.min(.6,Math.abs(da)*.8));const fx=Math.sin(u.h),fz=Math.cos(u.h),dd=clipDist(u.x,u.z,fx,fz,14,1);if(dd<13)tv=Math.min(tv,dd<4?0:u.v*(dd/13));
+ let tv=vmax*(1-Math.min(.6,Math.abs(da)*.8));const fx=Math.sin(u.h),fz=Math.cos(u.h),dd=clipDist(u.x,u.z,fx,fz,14,1,u.y);if(dd<13)tv=Math.min(tv,dd<4?0:u.v*(dd/13));
  for(const a of G.cars){const ex=a.x-u.x,ez=a.z-u.z,e=Math.hypot(ex,ez);if(e<14&&(ex*fx+ez*fz)/e>.8)tv=Math.min(tv,e<5?0:a.v+1)}
  u.v+=(tv-u.v)*Math.min(1,dt*(tv<u.v?3.5:1.3));
- const nx=u.x+fx*u.v*dt,nz=u.z+fz*u.v*dt;u.sol.on=0;const q=push(nx,nz,1.1);u.sol.on=1;
+ const nx=u.x+fx*u.v*dt,nz=u.z+fz*u.v*dt;u.sol.on=0;const q=push(nx,nz,1.1,u.y);u.sol.on=1;
  if(q[2]){const ux=q[0]-nx,uz=q[1]-nz,l=Math.hypot(ux,uz);if(l>1e-4){u.v*=.4;u.stuck+=dt}u.x=q[0];u.z=q[1]}else{u.x=nx;u.z=nz;u.stuck=Math.max(0,u.stuck-dt*.5)}
  if(REAL.wet(u.x,u.z)){u.x-=fx*u.v*dt;u.z-=fz*u.v*dt;u.v=0}
  return d}
@@ -129,11 +130,11 @@ function unitStep(u,dt,px,pz){const T=inCar?C:P;u.see=losTo(u,T.x,T.z)&&Math.hyp
    else unitDrive(u,dt,{x:T.x,z:T.z},16)}
   if(u.stuck>2.5){u.v=-4;u.h+=dt*1.5;if(u.stuck>4)u.stuck=0}
   // speronamento: contatto con l'auto del giocatore
-  if(inCar&&d<5.2&&u.v>6){const sp=Math.hypot(V.vx,V.vz),ux=Math.sin(u.h),uz=Math.cos(u.h);if(PL.t-(u.ramT||-9)>1.5){u.ramT=PL.t;const imp=Math.max(3.5,u.v-sp*.5);try{carHit(carA,{x:C.x,z:C.z,h:C.h,y:V.y,vx:V.vx,vz:V.vz,player:true},u.x+ux*2.3,u.z+uz*2.3,ux,uz,imp,'car')}catch(e){}V.vx+=ux*imp*.25;V.vz+=uz*imp*.25;V.ywW=cl(V.ywW+(Math.random()-.5)*1.2,-2.4,2.4);u.v*=.5}}
+  if(inCar&&d<5.2&&u.v>6&&!(Math.abs(u.y-V.y)>2.5)){const sp=Math.hypot(V.vx,V.vz),ux=Math.sin(u.h),uz=Math.cos(u.h);if(PL.t-(u.ramT||-9)>1.5){u.ramT=PL.t;const imp=Math.max(3.5,u.v-sp*.5);try{carHit(carA,{x:C.x,z:C.z,h:C.h,y:V.y,vx:V.vx,vz:V.vz,player:true},u.x+ux*2.3,u.z+uz*2.3,ux,uz,imp,'car')}catch(e){}V.vx+=ux*imp*.25;V.vz+=uz*imp*.25;V.ywW=cl(V.ywW+(Math.random()-.5)*1.2,-2.4,2.4);u.v*=.5}}
   if(PL.heat<=0)u.state='leave'}
  else if(u.state==='leave'){unitDrive(u,dt,{x:u.x+Math.sin(u.h)*30,z:u.z+Math.cos(u.h)*30},12);if(Math.hypot(u.x-px,u.z-pz)>260)u.gone=true}
  else if(u.state==='hold'){u.v=Math.max(0,u.v-dt*8);const fx=Math.sin(u.h),fz=Math.cos(u.h);u.x+=fx*u.v*dt;u.z+=fz*u.v*dt}
- u.y=REAL.ground(u.x,u.z,u.y);u.sol.x=u.x;u.sol.z=u.z;u.sol.c=Math.sin(u.h);u.sol.s=Math.cos(u.h);
+ u.y=REAL.ground(u.x,u.z,u.y);u.sol.x=u.x;u.sol.z=u.z;u.sol.yb=u.y-.3;u.sol.yt=u.y+1.6;u.sol.c=Math.sin(u.h);u.sol.s=Math.cos(u.h);
  const g=u.mdl.g;g.position.set(u.x,u.y,u.z);g.rotation.set(0,u.h,0);const fl=u.state==='chase'||u.state==='hold';u.mdl.bl.forEach((m,i)=>{m.emissiveIntensity=fl?(((PL.t*7)|0)%2===i?2.6:.15):.15})}
 function hud(){const h=$('#heat');if(!h)return;if(PL.heat<=0||!PD.cfg.enabled){h.style.display='none';return}const n=PL.units.filter(u=>u.state==='chase').length;h.style.display='block';h.textContent='🚔 '+(PL.seenNow?'INSEGUIMENTO':'RICERCA')+' · '+'★'.repeat(Math.max(1,Math.round(PL.heat)))+'☆'.repeat(Math.max(0,5-Math.max(1,Math.round(PL.heat))))+' · '+n+' pattuglie';h.className='chip heat'+(PL.seenNow?'':' srch')}
 function pdUpdate(dt,px,pz){PL.t+=dt;PD.t=PL.t;const T=inCar?C:P;

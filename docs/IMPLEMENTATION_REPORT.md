@@ -1,6 +1,15 @@
-# ITALIA OPEN WORLD — Rapporto di implementazione (Versione 30)
+# ITALIA OPEN WORLD — Rapporto di implementazione (Versione 31)
 
-## 0. Versione 30 — Vehicle Damage Solver (2 novembre 2026)
+## 0. Versione 31 — audit e correzione strutturale della mappa (3 novembre 2026)
+Rapporto completo, con cause per file e funzione, misure prima/dopo, prove di guida, confronto dei danni con BeamNG.drive, prestazioni e
+limiti: **[`AUDIT_V31.md`](AUDIT_V31.md)**. In breve, sugli stessi dati e con lo stesso misuratore (`sorgenti/mappa_reale/difetti.js`):
+guardrail dentro altre carreggiate 19,1 % → 0 % (Monaco), 10,2 % → 0,02 % (Andorra); asfalto capovolto 4,83 % → 0,07 %; tetti verso il
+basso 99,5 % → 0,5 % (sottotetti delle chiese); viadotti con intradosso 0 → 100 %; punti dell'asse delle strade dove un'auto resta ferma
+763 → 236 (Monaco; dentro le gallerie 319 → 22) e 129 → 29 (Andorra). Nelle gallerie di Monaco l'auto ora percorre le tre gallerie
+provate senza urti (la v30 si fermava contro la facciata di un palazzo che attraversava la canna e contro un albero della via sopra).
+Test: 66 superati, 0 falliti. Zone delle foto (A3, A10) ancora non scaricabili da qui: da verificare sul telefono.
+
+## 0.0 Versione 30 — Vehicle Damage Solver (2 novembre 2026)
 Risolutore unificato dei danni collegato ai sistemi esistenti senza riscriverli: `motore/danni_solver.js` (evento d'urto con massa effettiva, impulso, energia, restituzione, materiale, ripartizione fra i corpi, registro anti-duplicati; stato per zona; modello ruote; componenti distaccabili; persistenza), `motore/profili_danno.js` (15 zone strutturali nominate sulle 467 travi della rete esistente, profili per veicolo, importazione del JSON del progetto), ponte `VDS` in `index.html` (patch di costruzione `w2/patch_solver_v30.py`, 32 sostituzioni su ancore uniche: la costruzione si ferma se una manca). Aggiunte a `danni_meccanici.js` (frizione, differenziale, centraline, energia dal solver, integrità limitate), `fisica_veicolo.js` (`mod.frizione`, `mod.differenziale`, `mod.muRuota`), `ecu.js` (centraline danneggiate). Verifica: `node test/run.js` → 56 test superati, 0 falliti (18 nuovi, sulla rete deformabile estratta da `index.html`); Chromium senza GPU con la pagina costruita (`br/sc_v30.js`): moduli, urti frontale/albero/auto, duplicati, passo, salvataggio, riparazione, urto guidando contro un muro, funzionamento senza solver, 0 errori. Misure, architettura, interfacce e limiti dichiarati in `docs/DANNI.md` (sezione «Vehicle Damage Solver»). Non fatto, e dichiarato: calibrazione su prove d'urto reali (nessun dato), geometrie di rete diverse per veicolo (un solo modello 3D), terminale di scarico staccabile (non esiste come mesh), modello ruote per traffico e pattuglie (budget mobile).
 
 ## 0.1 Versione 29.3 — correzione sistematica di tutta la mappa (2 novembre 2026)

@@ -148,3 +148,27 @@ Profili (classificazione completa, copia del modello, importazione JSON); muro (
 - Le auto del traffico e delle pattuglie hanno il registro degli eventi del solver ma non il modello delle ruote né la meccanica (budget mobile).
 - La rilevazione dei contatti resta quella del gioco (impronte in pianta, velocità normale): niente contatti 3D per punto di contatto in quota.
 - In Chromium senza rete la mappa non si carica: la prova di guida contro il muro usa un muro sintetico e il ciclo di gioco senza disegno.
+
+## 13. Versione 31 — confronto tecnico con BeamNG.drive e collegamento con la mappa reale
+
+**Non è la qualità di BeamNG.drive.** BeamNG simula in continuo (circa 2000 passi al secondo) una rete di nodi e travi costruita per
+ogni modello, con centinaia o migliaia di nodi, contatti nodo per nodo con l'ambiente, gomme e trasmissione dentro la stessa simulazione.
+Qui la rete è una sola (88 nodi, 467 travi, la stessa geometria per tutte le auto) e si simula **a eventi** quando c'è un urto
+(`sbCrash`), mentre la guida usa il modello separato `fisica_veicolo.js`. La mesh si aggiorna dopo l'urto, a code, con un budget di
+60 000 vertici per fotogramma. Tabella completa in `docs/AUDIT_V31.md` § 4.
+
+Che cosa cambia per i danni nella v31 (patch `sorgenti/patch_mappa_v31.py` e `sorgenti/mappa_reale/`):
+- **guardrail e parapetti della mappa vera sono ostacoli** con la loro quota: l'urto arriva al risolutore come materiale «guardrail»
+  (`dmgKind` → `'rail'`, restituzione e assorbimento del guardrail in `danni_solver.js`). Prova nel gioco: a 60 km/h e 20° la v30
+  attraversava il guardrail e finiva contro un albero (166 kJ); la v31 urta il guardrail (5,9 kJ all'auto) e resta in carreggiata;
+- **niente urti contro muri invisibili**: le collisioni usano la quota degli ostacoli (muri degli edifici, pareti delle gallerie, auto in
+  sosta, alberi, lampioni, auto del traffico e pattuglie); i contatti fra auto avvengono solo alla stessa quota. Nelle gallerie di Monaco
+  la v30 registrava urti «muro» a 35 e 39 km/h e un urto «albero» a 28 km/h contro ostacoli della via sopra o contro la facciata di un
+  palazzo che attraversava la canna (danni falsi); la v31 nessuno (registro in `docs/test/v31_chromium.txt`);
+- le prove della versione 30 (frontale a 50 km/h, meccanica, duplicati, albero, auto, passo, salvataggio) danno gli stessi numeri sulla
+  pagina definitiva della v31, con 0 errori; riparazione e urto guidando contro il muro variano un poco da una prova all'altra anche
+  sulla stessa pagina (integrità del paraurti dopo la riparazione 0,7 o 1; 154,4–154,9 kJ contro il muro).
+
+Riparazione: «Ripara l'auto» è la riparazione d'emergenza a bordo strada (carrozzeria rifatta, meccanica riportata almeno al 70 %);
+l'officina (`'tutto'` nel pannello «Danni e officina») ripristina tutto. È una scelta di gioco, non un ripristino incompleto.
+

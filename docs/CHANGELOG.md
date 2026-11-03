@@ -1,5 +1,18 @@
 # Cronologia delle versioni
 
+## Versione 31 — 2026-11-03 — audit e correzione strutturale della mappa
+Audit del generatore delle celle e del nucleo del gioco con misure su dati veri (Monaco, Andorra) e celle sintetiche (svincolo,
+periferia); rapporto completo in `docs/AUDIT_V31.md`. Corretti: verso dei triangoli di `tri3` (tetti, cime, cupole, balconi: dall'alto
+gli edifici erano vuoti), strisce pedonali, linee di arresto e piazzole invisibili, tetti piani e piazze capovolti, verso delle pareti
+lungo le strade (gonne e fasce invisibili da fuori: strade «sospese»; pareti delle gallerie aperte da dentro e «blocchi scuri» da fuori),
+pieghe dell'asfalto nelle curve strette, guardrail e parapetti dentro altre carreggiate (svincoli, incroci sui viadotti, tornanti),
+viadotti senza intradosso, piloni sopra le strade, collisioni solo in pianta (muri invisibili in galleria e sui viadotti; guardrail
+attraversabili), fermate, cartelli e semafori in mezzo alla strada, strade che attraversano gli edifici (passaggi con volta, pareti e
+soffitto), facciate dei palazzi che attraversavano le gallerie sotto di loro, pareti di galleria in mezzo all'altra carreggiata dove
+due rami si uniscono, contatti fra auto a quote diverse e auto invisibile del traffico nel punto di partenza, chiome degli alberi a
+strisce. Catena di costruzione portata nel repository (`tools/build/`, pagina identica byte per byte). Test: 66 superati, 0 falliti;
+i 10 nuovi falliscono con la versione 30.
+
 ## Versione 30 — 2026-11-02 — Vehicle Damage Solver
 Risolutore unificato dei danni (`motore/danni_solver.js`) e profili di danno per veicolo (`motore/profili_danno.js`) collegati al gioco (`VDS` in `index.html`) senza riscrivere né duplicare la rete deformabile, `dmgCrash`, `dmgDeform`, `dmgDetach`, `dmgWheel` o `danni_meccanici.js`: energia d'urto da massa effettiva, velocità normale, restituzione dipendente dalla velocità, materiale dell'ostacolo (muro, guardrail, palo, albero distinto dal palo, terreno) e rigidezza relativa delle facce fra due veicoli; la rete riceve la velocità equivalente `u = √(2·E_propria/M)`; registro degli eventi che impedisce di applicare due volte la stessa energia (rimosso il doppio conteggio dello storico); 15 zone strutturali nominate sulle travi esistenti (nessun nodo in più) con resistenza e rottura configurabili per profilo (predefinito, Alfa 159 con massa dal database, esempio Alfa 75 importato dal JSON, tutti dichiarati non certificati); interfaccia S esplicita rete → `danni_meccanici.js`; nuovi componenti frizione, differenziale, centraline con effetti reali in `fisica_veicolo.js` e `ecu.js`; modello delle ruote (braccio, ammortizzatore, molla, mozzo, cerchio, convergenza, campanatura, foratura, battistrada) → aderenza per ruota nel motore fisico, vibrazione, stabilità, tiro, rollio/beccheggio molli; componenti distaccabili configurati (massa, resistenza, soglia, attacco, integrità, stato) con serrature deterministiche; suoni di ferraglia e scarico rotto; salvataggio e riparazioni estesi; 18 nuovi test automatici sulla rete reale estratta da `index.html` (56 in tutto, 0 falliti) e prova in Chromium con urto guidando contro un muro. Dettagli e misure: `docs/DANNI.md`.
 

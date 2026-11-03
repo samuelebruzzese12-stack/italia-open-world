@@ -40,8 +40,10 @@ function tri3(g, P, c, uv, hint) { const [a, b, d] = P, ux = b[0] - a[0], uy = b
   // coordinate del gioco: x = −u, z = −v → normale (−nx, ny, −nz); la faccia deve guardare verso hint (default: alto)
   const hx = hint ? hint[0] : 0, hy = hint ? hint[1] : 1, hz = hint ? hint[2] : 0; let flip = (-nx) * hx + ny * hy + (-nz) * hz < 0; if (flip) { nx = -nx; ny = -ny; nz = -nz }
   const ids = P.map((p, i) => g.v(-p[0], p[1], -p[2], -nx, ny, -nz, c, uv ? uv[i][0] : 0, uv ? uv[i][1] : 0));
-  // con x = −u e z = −v l'orientamento (antiorario visto dalla normale) si inverte rispetto allo spazio (u,v): ordine a, c, b salvo flip
-  if (flip) g.I.push(ids[0], ids[1], ids[2]); else g.I.push(ids[0], ids[2], ids[1]) }
+  // v31: (x, y, z) = (−u, y, −v) è una rotazione di 180° attorno all'asse verticale: l'orientamento NON si inverte. Prima qui l'ordine era a, c, b
+  // salvo flip, cioè il contrario della normale dichiarata: tetti, falde, cime delle scatole, cupole e campanili guardavano verso il basso
+  // (dall'alto gli edifici erano vuoti e i comignoli sospesi) e le facce chieste verso il basso guardavano in alto
+  if (flip) g.I.push(ids[0], ids[2], ids[1]); else g.I.push(ids[0], ids[1], ids[2]) }
 // rettangolo minimo orientato di un anello (coordinate est/sud): {cu, cv, ex, ez (asse lungo), L, W, area}
 function obb(r) { let best = null; const n = r.length / 2;
   for (let q = 0; q < n; q++) { const ax = r[(q * 2 + 2) % r.length] - r[q * 2], az = r[(q * 2 + 3) % r.length] - r[q * 2 + 1], l = Math.hypot(ax, az); if (l < .3) continue; const ex = ax / l, ez = az / l;
@@ -61,11 +63,11 @@ const SIGNCAT = p => SIGN[p.subclass] || SIGN[p.class] || null;
 function obox(g, cu, cv, du, dv, w, d, y0, y1, c) { const px = -dv, pz = du, a = [cu - du * w / 2 - px * d / 2, cv - dv * w / 2 - pz * d / 2], b = [cu + du * w / 2 - px * d / 2, cv + dv * w / 2 - pz * d / 2], e = [cu + du * w / 2 + px * d / 2, cv + dv * w / 2 + pz * d / 2], f = [cu - du * w / 2 + px * d / 2, cv - dv * w / 2 + pz * d / 2];
   wall(g, a[0], a[1], b[0], b[1], y0, y1, c, 0, 1); wall(g, b[0], b[1], e[0], e[1], y0, y1, c, 0, 1); wall(g, e[0], e[1], f[0], f[1], y0, y1, c, 0, 1); wall(g, f[0], f[1], a[0], a[1], y0, y1, c, 0, 1);
   tri3(g, [[a[0], y1, a[1]], [b[0], y1, b[1]], [e[0], y1, e[1]]], c); tri3(g, [[a[0], y1, a[1]], [e[0], y1, e[1]], [f[0], y1, f[1]]], c);
-  tri3(g, [[a[0], y0, a[1]], [e[0], y0, e[1]], [b[0], y0, b[1]]], c, [0, -1, 0]); tri3(g, [[a[0], y0, a[1]], [f[0], y0, f[1]], [e[0], y0, e[1]]], c, [0, -1, 0]) }
+  tri3(g, [[a[0], y0, a[1]], [e[0], y0, e[1]], [b[0], y0, b[1]]], c, null, [0, -1, 0]); tri3(g, [[a[0], y0, a[1]], [f[0], y0, f[1]], [e[0], y0, e[1]]], c, null, [0, -1, 0]) }
 // balcone: lastra (sopra, davanti, sotto) e parapetto pieno (davanti, dietro, sopra); centro del bordo facciata (cu,cv), asse (du,dv), normale esterna (nx,nz)
 function balc(g, cu, cv, du, dv, nx, nz, w, d, y, slabC, parC) { const a = [cu - du * w / 2, cv - dv * w / 2], b = [cu + du * w / 2, cv + dv * w / 2], e = [b[0] + nx * d, b[1] + nz * d], f = [a[0] + nx * d, a[1] + nz * d];
   tri3(g, [[a[0], y, a[1]], [b[0], y, b[1]], [e[0], y, e[1]]], slabC); tri3(g, [[a[0], y, a[1]], [e[0], y, e[1]], [f[0], y, f[1]]], slabC);
-  tri3(g, [[a[0], y - .14, a[1]], [e[0], y - .14, e[1]], [b[0], y - .14, b[1]]], slabC, [0, -1, 0]); tri3(g, [[a[0], y - .14, a[1]], [f[0], y - .14, f[1]], [e[0], y - .14, e[1]]], slabC, [0, -1, 0]);
+  tri3(g, [[a[0], y - .14, a[1]], [e[0], y - .14, e[1]], [b[0], y - .14, b[1]]], slabC, null, [0, -1, 0]); tri3(g, [[a[0], y - .14, a[1]], [f[0], y - .14, f[1]], [e[0], y - .14, e[1]]], slabC, null, [0, -1, 0]);
   wall(g, e[0], e[1], f[0], f[1], y - .14, y + 1.02, parC, 0, 1); const g0 = [f[0] - nx * .1, f[1] - nz * .1], g1 = [e[0] - nx * .1, e[1] - nz * .1]; wall(g, g0[0], g0[1], g1[0], g1[1], y, y + 1.02, parC, 0, 1);
   tri3(g, [[g0[0], y + 1.02, g0[1]], [g1[0], y + 1.02, g1[1]], [e[0], y + 1.02, e[1]]], parC); tri3(g, [[g0[0], y + 1.02, g0[1]], [e[0], y + 1.02, e[1]], [f[0], y + 1.02, f[1]]], parC) }
 // ---- Versione 28: funzioni di supporto (rotatorie, edifici speciali, frecce, distributori)
@@ -118,7 +120,9 @@ function buildCell(L, opt) {
   // Versione 29: ogni strada si campiona anche per MGN metri oltre il bordo della cella, così le quote al bordo vengono uguali nelle due celle vicine;
   // le gallerie poco profonde diventano strade in superficie; i ponti si alzano sopra le strade che scavalcano; le quote si raccordano agli incroci;
   // il terreno si spiana lungo le strade e si abbassa dove sporgerebbe sopra l'asfalto; infine si tiene solo il tratto dentro la cella.
-  const roads = [], bridges = [], mini = [], texts = [], objs = [], signQ = [], walls = [];
+  const roads = [], bridges = [], mini = [], texts = [], objs = [], signQ = [], walls = [], wallsY = [], wY = (yb, yt) => wallsY.push(yb, yt), GRD = opt.dbg ? [] : null, rails = [];
+  // v31: barriera bassa per le collisioni fra (au,av) e (bu,bv): centro, direzione, mezza lunghezza, quota della base e della cima
+  const RLD = opt.dbg ? [] : null, rail = (au, av, ya, bu, bv, yb2, top, src) => { const L = Math.hypot(bu - au, bv - av); if (L < .3) return; if (RLD) RLD.push(src || ''); rails.push((au + bu) / 2, (av + bv) / 2, (bu - au) / L, (bv - av) / L, L / 2, Math.min(ya, yb2) - .1, Math.max(ya, yb2) + top) };   // wallsY: quota assoluta (base, cima) di ogni muro di collisione, stesso ordine di walls
   const MGN = A ? 160 : 40, lvl = r => r.bridge ? 1 + Math.max(0, r.lay || 0) : r.tun ? -1 : 0;
   // galleria poco profonda (sottopasso, galleria artificiale): il tetto (strada + 5,2 m) supera il terreno quasi dappertutto e non passa sotto gli edifici.
   // Si decide sulla geometria intera della tile z14 (BLO..BHI), così tutte le celle della tile decidono allo stesso modo.
@@ -364,6 +368,17 @@ function buildCell(L, opt) {
   // fondo del bordo verticale sotto il punto (u,v) alla quota y: fino al terreno, ma mai dentro un'altra strada (lì resta corto)
   const deep = (u, v, y, R) => { let other = false; if (ROW) { const i0 = Math.floor(u / rpx), j0 = Math.floor(v / rpx), R2 = Math.max(1, Math.round(3.5 / rpx)); for (let j = j0 - R2; j <= j0 + R2 && !other; j++) for (let i = i0 - R2; i <= i0 + R2; i++) { if (i < 0 || j < 0 || i >= RHN || j >= RHN) continue; const o = ROW[j * RHN + i]; if (o >= 0 && o !== R.idx) { other = true; break } } } else segNear(u, v, 6, (P, pi, q, dd) => { if (!other && P.r !== R.r && !P.r.tun && dd < P.r.w / 2 + .3) other = true });
     return other ? y - 1.2 : Math.max(y - 40, Math.min(y - 1.2, ghT(u, v) - .4)) };
+  // v31: un punto di barriera (guardrail, parapetto) della strada r è libero se non sta dentro la carreggiata di un'altra strada alla stessa quota
+  // (mg: margine oltre il bordo dell'altra carreggiata; negativo = deve entrarci di almeno -mg metri)
+  // (sx, sy): punto dell'asse da cui nasce la barriera; la strada stessa conta solo lontano da lì (l'altro ramo di un tornante)
+  const barFree = (u, v, y, r, mg, sx, sy) => { let ok = true; segNear(u, v, 9, (P, pi, q2, dd, t2) => { if (!ok) return; if (P.r === r) { if (sx === undefined) return; let bs = 0, bd = 1e18; for (let k = 0; k < P.m - 1; k++) { const ax = P.S2[k * 2], ay = P.S2[k * 2 + 1], dx = P.S2[k * 2 + 2] - ax, dy = P.S2[k * 2 + 3] - ay, l2 = dx * dx + dy * dy || 1e-9, tt = Math.max(0, Math.min(1, ((sx - ax) * dx + (sy - ay) * dy) / l2)), d2 = (ax + dx * tt - sx) ** 2 + (ay + dy * tt - sy) ** 2; if (d2 < bd) { bd = d2; bs = P.s[k] + (P.s[k + 1] - P.s[k]) * tt } } if (Math.abs(P.s[q2] + (P.s[q2 + 1] - P.s[q2]) * t2 - bs) < r.w * 1.5 + 6) return /* stesso tratto (distanza lungo la strada): non conta */ } const c2 = P.r.c; if (c2 === 'path' || c2 === 'rail' || c2 === 'transit' || c2 === 'ferry') return; if (dd < P.r.w / 2 + mg && Math.abs(hAtQ(P, q2, t2) + liftOf(P.r) - y) < 2.5) ok = false }); return ok };
+  // v31: un oggetto a terra (fermata, cartello, semaforo) non sta dentro una carreggiata: si sposta sul bordo della strada più vicina, o si scarta
+  // se anche lì c'è una strada (null); libero(u,v): il punto non è dentro nessuna carreggiata
+  const nonConta = P => P.r.tun || P.r.bridge || P.r.c === 'path' || P.r.c === 'rail' || P.r.c === 'transit' || P.r.c === 'ferry' || P.r.c === 'track';
+  const fuoriStrada = (u, v) => { let best = null; segNear(u, v, 9, (P, pi, q2, dd, t2) => { if (nonConta(P)) return; if (dd < P.r.w / 2 + .4 && (!best || dd < best[0])) best = [dd, P, q2, t2] }); if (!best) return [u, v];
+    const P = best[1], q2 = best[2], t2 = best[3], ax = P.S2[q2 * 2], ay = P.S2[q2 * 2 + 1], dx = P.S2[q2 * 2 + 2] - ax, dy = P.S2[q2 * 2 + 3] - ay, l = Math.hypot(dx, dy) || 1, px = ax + dx * t2, py = ay + dy * t2; let nx = -dy / l, ny = dx / l; if ((u - px) * nx + (v - py) * ny < 0) { nx = -nx; ny = -ny }
+    const nu = px + nx * (P.r.w / 2 + .8), nv = py + ny * (P.r.w / 2 + .8); let ok = true; segNear(nu, nv, 9, (P2, pi2, q3, d3) => { if (!nonConta(P2) && d3 < P2.r.w / 2 + .4) ok = false }); return ok ? [nu, nv] : null };
+  const libero = (u, v) => { const f = fuoriStrada(u, v); return !!f && f[0] === u && f[1] === v };
   const liftOf = r => .06 + r.rank * .004 + (r.bridge ? .2 : 0), RH = RHN ? new Float32Array(RHN * RHN).fill(NaN) : null, ROW = RHN ? new Int32Array(RHN * RHN).fill(-1) : null, RH2 = RHN ? new Float32Array(RHN * RHN).fill(NaN) : null, RDD = RHN ? new Float32Array(RHN * RHN).fill(1e9) : null, RDP = RHN ? new Uint8Array(RHN * RHN) : null, rpx = RHN ? S / RHN : 1;
   // pixel del raster a distanza [w0,w1] dal segmento (lato: 0 entrambi, +1 sinistra, −1 destra); free = solo pixel fuori dalle carreggiate.
   // La quota segue la pendenza del segmento anche oltre le sue estremità (niente "tappi" piatti: su una discesa facevano una scala);
@@ -386,64 +401,86 @@ function buildCell(L, opt) {
     for (let q = 0; q < m; q++) { const qa = Math.max(0, q - 1), qb = Math.min(m - 1, q + 1); let tx = S2[qb * 2] - S2[qa * 2], tz = S2[qb * 2 + 1] - S2[qa * 2 + 1]; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl;
       const nx = -tz, nz = tx, y = R.h[q] + lift, u = S2[q * 2], v = S2[q * 2 + 1];
       sideL.push(u + nx * hw, v + nz * hw, y); sideR.push(u - nx * hw, v - nz * hw, y) }
+    // v31: nelle curve strette il bordo interno tornava indietro e il nastro si ripiegava (triangoli capovolti: buchi nell'asfalto);
+    // il bordo interno si ferma dove smetterebbe di avanzare
+    const noFold = sd => { for (let q = 1; q < m; q++) { const fx = S2[q * 2] - S2[q * 2 - 2], fz = S2[q * 2 + 1] - S2[q * 2 - 1]; if ((sd[q * 3] - sd[q * 3 - 3]) * fx + (sd[q * 3 + 1] - sd[q * 3 - 2]) * fz <= 0) { sd[q * 3] = sd[q * 3 - 3]; sd[q * 3 + 1] = sd[q * 3 - 2] } } };
+    noFold(sideL); noFold(sideR);
     const G2 = rgOf(r.sty), base = G2.n; for (let q = 0; q < m; q++) { const vv = R.s[q] / 10; G2.v(-sideL[q * 3], sideL[q * 3 + 2], -sideL[q * 3 + 1], 0, 1, 0, [1, 1, 1], u0, vv); G2.v(-sideR[q * 3], sideR[q * 3 + 2], -sideR[q * 3 + 1], 0, 1, 0, [1, 1, 1], u1, vv) }
     for (let q = 0; q < m - 1; q++) { const a = base + q * 2; G2.I.push(a, a + 2, a + 1, a + 1, a + 2, a + 3) }
     // bordi verticali (nascondono i dislivelli fra nastro e terreno)
     const skirt = (side, sgn) => { const SG = r.bridge ? MC : MG, c = r.bridge ? conc : dirt; for (let q = 0; q < m - 1; q++) { const ax = side[q * 3], az = side[q * 3 + 1], ay = side[q * 3 + 2], bx = side[q * 3 + 3], bz = side[q * 3 + 4], by = side[q * 3 + 5];
       let ba, bb; if (r.bridge) { ba = ay - 1.1; bb = by - 1.1 } else { ba = deep(ax, az, ay, R); bb = deep(bx, bz, by, R) }
       const tall = !r.bridge && (ay - ba > 1.8 || by - bb > 1.8), G3 = tall ? MS : SG, c3 = tall ? stoneW : c;
-      if (sgn > 0) wallS(G3, ax, az, bx, bz, ba, ay, bb, by, c3); else wallS(G3, bx, bz, ax, az, bb, by, ba, ay, c3) } };
+      if (sgn > 0) wallS(G3, bx, bz, ax, az, bb, by, ba, ay, c3); else wallS(G3, ax, az, bx, bz, ba, ay, bb, by, c3) } };   /* v31: n = (−tz, tx) è la normale DESTRA in (u est, v sud): le pareti dei lati avevano il verso opposto a quello voluto */
     if (r.sty !== 9 && !r.tun) { skirt(sideL, 1); skirt(sideR, -1) }
     if (r.tun && A) { // galleria: pareti e volta (facce verso l'interno) solo dove il tetto sta sotto il terreno; portali dove la scatola comincia; muri per le collisioni
       const tc = lin([.30, .30, .31]), tcl = lin([.36, .35, .33]), TH = 5.2, ww = hw + .9, cov = q => ghT(S2[q * 2], S2[q * 2 + 1]) - (R.h[q] + lift + TH), on = [];
       for (let q = 0; q < m - 1; q++) on.push(Math.min(cov(q), cov(q + 1)) > -.3);
+      // v31: dove due rami di galleria si uniscono o si separano, la parete di un ramo passava in mezzo alla carreggiata dell'altro (muro
+      // visibile e ostacolo che fermava l'auto): la parete si toglie dove sta dentro un'altra carreggiata alla stessa quota (come i guardrail)
+      const pLib = (q, sg) => { const qb2 = Math.min(m - 1, q + 1), qa2 = Math.max(0, q - 1); let tx3 = S2[qb2 * 2] - S2[qa2 * 2], tz3 = S2[qb2 * 2 + 1] - S2[qa2 * 2 + 1]; const tl3 = Math.hypot(tx3, tz3) || 1; tx3 /= tl3; tz3 /= tl3;
+        const u = S2[q * 2], v = S2[q * 2 + 1], u2 = S2[q * 2 + 2], v2 = S2[q * 2 + 3], ya = R.h[q] + lift, yb3 = R.h[q + 1] + lift, ox = -tz3 * ww * sg, oz = tx3 * ww * sg;
+        return barFree(u + ox, v + oz, ya, r, -.3, u, v) && barFree(u2 + ox, v2 + oz, yb3, r, -.3, u2, v2) && barFree((u + u2) / 2 + ox, (v + v2) / 2 + oz, (ya + yb3) / 2, r, -.3, (u + u2) / 2, (v + v2) / 2) };
+      const libL = [], libR = []; for (let q = 0; q < m - 1; q++) { libL.push(!on[q] || pLib(q, 1)); libR.push(!on[q] || pLib(q, -1)); if (on[q]) for (const ok of [libL[q], libR[q]]) if (!ok) stat.galleriaPareteTolta = (stat.galleriaPareteTolta || 0) + Math.hypot(S2[q * 2 + 2] - S2[q * 2], S2[q * 2 + 3] - S2[q * 2 + 1]) }
       for (let q = 0; q < m - 1; q++) { if (!on[q]) continue; const qa = Math.max(0, q - 1), qb = Math.min(m - 1, q + 1), qc = Math.min(m - 1, q + 2); let tx = S2[qb * 2] - S2[qa * 2], tz = S2[qb * 2 + 1] - S2[qa * 2 + 1]; let tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl; let tx2 = S2[qc * 2] - S2[q * 2], tz2 = S2[qc * 2 + 1] - S2[q * 2 + 1]; tl = Math.hypot(tx2, tz2) || 1; tx2 /= tl; tz2 /= tl;
         const u = S2[q * 2], v = S2[q * 2 + 1], u2 = S2[q * 2 + 2], v2 = S2[q * 2 + 3], y0 = R.h[q] + lift, y1 = R.h[q + 1] + lift, nx = -tz, nz = tx, nx2 = -tz2, nz2 = tx2;
         const L0 = [u + nx * ww, v + nz * ww], L1 = [u2 + nx2 * ww, v2 + nz2 * ww], R0 = [u - nx * ww, v - nz * ww], R1 = [u2 - nx2 * ww, v2 - nz2 * ww];
-        wallS(MC, L1[0], L1[1], L0[0], L0[1], y1 - .6, y1 + TH, y0 - .6, y0 + TH, tc); wallS(MC, R0[0], R0[1], R1[0], R1[1], y0 - .6, y0 + TH, y1 - .6, y1 + TH, tc);
-        tri3(MC, [[L0[0], y0 + TH, L0[1]], [R0[0], y0 + TH, R0[1]], [R1[0], y1 + TH, R1[1]]], tcl, [0, -1, 0]); tri3(MC, [[L0[0], y0 + TH, L0[1]], [R1[0], y1 + TH, R1[1]], [L1[0], y1 + TH, L1[1]]], tcl, [0, -1, 0]);
-        if (q % 2 === 0) { const Lm = Math.hypot(u2 - u, v2 - v); walls.push((u + u2) / 2 + (nx + nx2) / 2 * (ww - .1), (v + v2) / 2 + (nz + nz2) / 2 * (ww - .1), (u2 - u) / (Lm || 1), (v2 - v) / (Lm || 1), Lm, TH); walls.push((u + u2) / 2 - (nx + nx2) / 2 * (ww - .1), (v + v2) / 2 - (nz + nz2) / 2 * (ww - .1), (u2 - u) / (Lm || 1), (v2 - v) / (Lm || 1), Lm, TH) } }
+        if (libL[q]) wallS(MC, L0[0], L0[1], L1[0], L1[1], y0 - .6, y0 + TH, y1 - .6, y1 + TH, tc); if (libR[q]) wallS(MC, R1[0], R1[1], R0[0], R0[1], y1 - .6, y1 + TH, y0 - .6, y0 + TH, tc);   /* v31: n = (−tz, tx) è la normale DESTRA in (u est, v sud): le pareti dei lati avevano il verso opposto a quello voluto */
+        tri3(MC, [[L0[0], y0 + TH, L0[1]], [R0[0], y0 + TH, R0[1]], [R1[0], y1 + TH, R1[1]]], tcl, null, [0, -1, 0]); tri3(MC, [[L0[0], y0 + TH, L0[1]], [R1[0], y1 + TH, R1[1]], [L1[0], y1 + TH, L1[1]]], tcl, null, [0, -1, 0]);
+        if (q % 2 === 0) { const Lm = Math.hypot(u2 - u, v2 - v), cL = libL[q] && libL[Math.min(m - 2, q + 1)], cR = libR[q] && libR[Math.min(m - 2, q + 1)]; if (cL) { walls.push((u + u2) / 2 + (nx + nx2) / 2 * (ww - .1), (v + v2) / 2 + (nz + nz2) / 2 * (ww - .1), (u2 - u) / (Lm || 1), (v2 - v) / (Lm || 1), Lm, TH); wY(Math.min(y0, y1) - .6, Math.max(y0, y1) + TH - 1.5) } if (cR) { walls.push((u + u2) / 2 - (nx + nx2) / 2 * (ww - .1), (v + v2) / 2 - (nz + nz2) / 2 * (ww - .1), (u2 - u) / (Lm || 1), (v2 - v) / (Lm || 1), Lm, TH); wY(Math.min(y0, y1) - .6, Math.max(y0, y1) + TH - 1.5) } } }   // cima 1,5 m sotto il soffitto: chi passa sopra una galleria poco profonda non tocca le pareti
       // portali: dove la scatola comincia o finisce dentro la cella (non sul bordo), un fronte in cemento sopra l'imbocco, verso il lato aperto
       for (let qe = 0; qe < m; qe++) { const before = qe > 0 && on[qe - 1], after = qe < m - 1 && on[qe]; if (before === after) continue; const sg = after ? 1 : -1, u = S2[qe * 2], v = S2[qe * 2 + 1]; if (u < 1 || v < 1 || u > S - 1 || v > S - 1) continue; const qb = qe + sg; let tx = (S2[qb * 2] - u) * sg, tz = (S2[qb * 2 + 1] - v) * sg; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl; const nx = -tz, nz = tx, y = R.h[qe] + lift, pw = ww + 1.2;
         const a = [u - nx * pw - tx * .3, v - nz * pw - tz * .3], b = [u + nx * pw - tx * .3, v + nz * pw - tz * .3]; wall(MC, b[0], b[1], a[0], a[1], y + TH - .2, y + TH + 3, tcl, 0, 1); wall(MC, a[0], a[1], b[0], b[1], y + TH - .2, y + TH + 3, tcl, 0, 1);
         wall(MC, a[0], a[1], u - nx * ww - tx * .3, v - nz * ww - tz * .3, y - .6, y + TH + 3, tcl, 0, 1); wall(MC, u + nx * ww - tx * .3, v + nz * ww - tz * .3, b[0], b[1], y - .6, y + TH + 3, tcl, 0, 1); wall(MC, u - nx * ww - tx * .3, v - nz * ww - tz * .3, a[0], a[1], y - .6, y + TH + 3, tcl, 0, 1); wall(MC, b[0], b[1], u + nx * ww - tx * .3, v + nz * ww - tz * .3, y - .6, y + TH + 3, tcl, 0, 1) } }
     if (r.tun) bridges.push({ pts: Array.from(S2), h: Array.from(R.h).map(x => x + lift), hw: hw + .9, tun: 1 });
-    if (r.bridge) { // parapetti e piloni
+    if (r.bridge) { // parapetti, intradosso e piloni
+      // v31: l'impalcato ha la faccia di sotto (prima, visto da sotto o di lato, era trasparente e restavano parapetti e fasce sospesi);
+      // i parapetti sono anche ostacoli con la loro quota (prima si attraversavano e si cadeva dal viadotto); i piloni sono orientati
+      // secondo la strada, non stanno mai sopra un'altra strada o un binario e sono ostacoli per chi passa sotto
       for (const [side, sgn] of [[sideL, 1], [sideR, -1]]) for (let q = 0; q < m - 1; q++) { const ax = side[q * 3], az = side[q * 3 + 1], ay = side[q * 3 + 2], bx = side[q * 3 + 3], bz = side[q * 3 + 4];
-        const by = side[q * 3 + 5]; wallS(MC, ax, az, bx, bz, ay - .05, ay + .9, by - .05, by + .9, conc); wallS(MC, bx, bz, ax, az, by - .05, by + .9, ay - .05, ay + .9, conc) }
-      for (let q = 0; q < m; q++) { if (q % 6 !== 3) continue; const u = S2[q * 2], v = S2[q * 2 + 1], top = R.h[q] - .9, bot = gh(u, v) - 1; if (top - bot < 3) continue; const pw = Math.min(hw, 2);
-        wall(MC, u - pw, v - .8, u + pw, v - .8, bot, top, conc, 0, 1); wall(MC, u + pw, v + .8, u - pw, v + .8, bot, top, conc, 0, 1); wall(MC, u + pw, v - .8, u + pw, v + .8, bot, top, conc, 0, 1); wall(MC, u - pw, v + .8, u - pw, v - .8, bot, top, conc, 0, 1) }
+        const by = side[q * 3 + 5]; if (!barFree(ax, az, ay, r, -.3, S2[q * 2], S2[q * 2 + 1]) || !barFree(bx, bz, by, r, -.3, S2[q * 2 + 2], S2[q * 2 + 3]) || !barFree((ax + bx) / 2, (az + bz) / 2, (ay + by) / 2, r, -.3, (S2[q * 2] + S2[q * 2 + 2]) / 2, (S2[q * 2 + 1] + S2[q * 2 + 3]) / 2)) { stat.parapettoTolto = (stat.parapettoTolto || 0) + Math.hypot(bx - ax, bz - az); continue }   // v31: niente parapetto attraverso un'altra carreggiata (incroci sui viadotti, ponti che finiscono dentro un incrocio)
+        wallS(MC, ax, az, bx, bz, ay - .05, ay + .9, by - .05, by + .9, conc); wallS(MC, bx, bz, ax, az, by - .05, by + .9, ay - .05, ay + .9, conc); if (r.w >= 3) rail(ax, az, ay, bx, bz, by, .9, 'parapetto ' + r.c + ' ' + R.idx) }
+      for (let q = 0; q < m - 1; q++) { const a = [sideL[q * 3], sideL[q * 3 + 2] - 1.1, sideL[q * 3 + 1]], b = [sideR[q * 3], sideR[q * 3 + 2] - 1.1, sideR[q * 3 + 1]], c2 = [sideR[q * 3 + 3], sideR[q * 3 + 5] - 1.1, sideR[q * 3 + 4]], d2 = [sideL[q * 3 + 3], sideL[q * 3 + 5] - 1.1, sideL[q * 3 + 4]];
+        tri3(MC, [a, b, c2], conc, null, [0, -1, 0]); tri3(MC, [a, c2, d2], conc, null, [0, -1, 0]); stat.intradosso = (stat.intradosso || 0) + Math.hypot(S2[q * 2 + 2] - S2[q * 2], S2[q * 2 + 3] - S2[q * 2 + 1]) }
+      for (let q = 0; q < m; q++) { if (q % 6 !== 3) continue; const u = S2[q * 2], v = S2[q * 2 + 1], top = R.h[q] + lift - 1.1, bot = gh(u, v) - 1; if (top - bot < 3) continue;
+        const qa = Math.max(0, q - 1), qb = Math.min(m - 1, q + 1); let tx = S2[qb * 2] - S2[qa * 2], tz = S2[qb * 2 + 1] - S2[qa * 2 + 1]; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl;
+        const pn = [-tz, tx], Lp = Math.max(2.4, Math.min(hw * 1.2, 6)); let sopra = false;
+        segNear(u, v, Lp / 2 + 8, (P, pi, q2, dd, t2) => { if (sopra || P.r === r || P.r.c === 'path') return; if (dd < P.r.w / 2 + Lp / 2 + .8 && hAtQ(P, q2, t2) < top - 1.5) sopra = true });
+        if (sopra) continue;
+        obox(MC, u, v, pn[0], pn[1], Lp, 1.6, bot, top, conc); walls.push(u, v, pn[0], pn[1], Lp / 2, top - bot); wY(bot, top - 1) }   // cima registrata 1 m sotto l'intradosso: chi passa sull'impalcato in pendenza non tocca il pilone
       bridges.push({ pts: Array.from(S2), h: Array.from(R.h).map(x => x + lift), hw: hw + .5 }) }
     // marciapiedi: strade cittadine fuori dalle zone pedonali
     if (A && !r.bridge && !r.tun && Math.max(urban, dens0 * 1.5) > .25 && (r.c === 'minor' || r.c === 'tertiary' || r.c === 'secondary' || r.c === 'primary') && r.sty !== 4) {
       const sw = 2.2, us0 = 6 / COLS + .004, us1 = 7 / COLS - .004; R.sw = 1;
       const cuts = []; for (const [side, sgn] of [[sideL, 1], [sideR, -1]]) { const b0 = RWg.n, cut = new Uint8Array(m); cuts.push(cut);
+        const outS = []; for (let q = 0; q < m; q++) { const qa = Math.max(0, q - 1), qb = Math.min(m - 1, q + 1); let tx = S2[qb * 2] - S2[qa * 2], tz = S2[qb * 2 + 1] - S2[qa * 2 + 1]; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl; outS.push(side[q * 3] - tz * sgn * sw, side[q * 3 + 1] + tx * sgn * sw, 0) }
+        noFold(outS);   // v31: anche il bordo esterno del marciapiede (interno alla curva) non si ripiega
         for (let q = 0; q < m; q++) { const qa = Math.max(0, q - 1), qb = Math.min(m - 1, q + 1); let tx = S2[qb * 2] - S2[qa * 2], tz = S2[qb * 2 + 1] - S2[qa * 2 + 1]; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl;
           const nx = -tz * sgn, nz = tx * sgn, ex = side[q * 3], ez = side[q * 3 + 1], y = side[q * 3 + 2] + .14, vv = R.s[q] / 3;
           if (ROW) { const mu = ex + nx * sw * .5, mv = ez + nz * sw * .5, pi = Math.floor(mu / rpx), pj = Math.floor(mv / rpx); if (pi >= 0 && pj >= 0 && pi < RHN && pj < RHN) { const o = ROW[pj * RHN + pi]; if (o >= 0 && o !== R.idx) cut[q] = 1 } }
-          RWg.v(-ex, y, -ez, 0, 1, 0, [1, 1, 1], sgn > 0 ? us1 : us0, vv); RWg.v(-(ex + nx * sw), y, -(ez + nz * sw), 0, 1, 0, [1, 1, 1], sgn > 0 ? us0 : us1, vv) }
+          RWg.v(-ex, y, -ez, 0, 1, 0, [1, 1, 1], sgn > 0 ? us1 : us0, vv); RWg.v(-outS[q * 3], y, -outS[q * 3 + 1], 0, 1, 0, [1, 1, 1], sgn > 0 ? us0 : us1, vv) }
         for (let q = 0; q < m - 1; q++) { if (cut[q] || cut[q + 1]) continue; const a = b0 + q * 2; if (sgn > 0) RWg.I.push(a + 1, a + 3, a, a, a + 3, a + 2); else RWg.I.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
           if (RHN) rasterSeg(S2[q * 2], S2[q * 2 + 1], S2[q * 2 + 2], S2[q * 2 + 3], R.h[q] + lift, R.h[q + 1] + lift, hw, hw + sw, .14, R.idx, sgn, true, q > 0 || S2[0] < .05 || S2[1] < .05 || S2[0] > S - .05 || S2[1] > S - .05, q < m - 2 || S2[m * 2 - 2] < .05 || S2[m * 2 - 1] < .05 || S2[m * 2 - 2] > S - .05 || S2[m * 2 - 1] > S - .05, 1) }
         for (let q = 0; q < m - 1; q++) { if (cut[q] || cut[q + 1]) continue; const ax = side[q * 3], az = side[q * 3 + 1], ay = side[q * 3 + 2], bx = side[q * 3 + 3], bz = side[q * 3 + 4];
-          const by = side[q * 3 + 5]; if (sgn > 0) wallS(MC, bx, bz, ax, az, by - .02, by + .14, ay - .02, ay + .14, curb); else wallS(MC, ax, az, bx, bz, ay - .02, ay + .14, by - .02, by + .14, curb);
+          const by = side[q * 3 + 5]; if (sgn > 0) wallS(MC, ax, az, bx, bz, ay - .02, ay + .14, by - .02, by + .14, curb); else wallS(MC, bx, bz, ax, az, by - .02, by + .14, ay - .02, ay + .14, curb);   /* v31: n = (−tz, tx) è la normale DESTRA in (u est, v sud): le pareti dei lati avevano il verso opposto a quello voluto */
           // bordo esterno del marciapiede fino al terreno (muro di pietra se il dislivello è alto)
           const P0 = RWg.P, i0 = (b0 + q * 2 + 1) * 3, i1 = (b0 + q * 2 + 3) * 3, ou = -P0[i0], ov = -P0[i0 + 2], oy = P0[i0 + 1], pu = -P0[i1], pv = -P0[i1 + 2], py = P0[i1 + 1], ba = deep(ou, ov, oy, R), bb = deep(pu, pv, py, R), tall = oy - ba > 1.8 || py - bb > 1.8;
-          if (sgn > 0) wallS(tall ? MS : MG, ou, ov, pu, pv, ba, oy, bb, py, tall ? stoneW : dirt); else wallS(tall ? MS : MG, pu, pv, ou, ov, bb, py, ba, oy, tall ? stoneW : dirt) } }
+          if (sgn > 0) wallS(tall ? MS : MG, pu, pv, ou, ov, bb, py, ba, oy, tall ? stoneW : dirt); else wallS(tall ? MS : MG, ou, ov, pu, pv, ba, oy, bb, py, tall ? stoneW : dirt) } }   /* v31: n = (−tz, tx) è la normale DESTRA in (u est, v sud): le pareti dei lati avevano il verso opposto a quello voluto */
       // incroci: strisce pedonali e linee di arresto prima dell'incrocio, semafori sulle strade importanti, segnali di senso unico
       { const cut = cuts[0], cut2 = cuts[1], at = q => { const qa = Math.max(0, q - 1), qb = Math.min(m - 1, q + 1); let tx = S2[qb * 2] - S2[qa * 2], tz = S2[qb * 2 + 1] - S2[qa * 2 + 1]; const tl = Math.hypot(tx, tz) || 1; return [tx / tl, tz / tl] };
         const atS = sv => { let q = 0; while (q < m - 1 && R.s[q + 1] < sv) q++; const l = R.s[q + 1] - R.s[q] || 1e-9, t = Math.max(0, Math.min(1, (sv - R.s[q]) / l)); return [S2[q * 2] + (S2[q * 2 + 2] - S2[q * 2]) * t, S2[q * 2 + 1] + (S2[q * 2 + 3] - S2[q * 2 + 1]) * t, R.h[q] + (R.h[q + 1] - R.h[q]) * t + lift, q] };
         const mark = (sv, cu, cv, uw, dirS) => { // rettangolo di segnaletica centrato in (cu,cv) all'ascissa sv: colonna uw dell'atlante, lunghezza 2.6 m (zebre) o .5 m (arresto)
           const [tx, tz] = at(atS(sv)[3]), nx = -tz, nz = tx, L = uw === 8 ? 2.6 : .5, ww = uw === 8 ? hw * 2 : hw, c0 = uw === 8 ? [cu, cv] : [cu + nx * (hw / 2) * dirS, cv + nz * (hw / 2) * dirS], yA = atS(sv - L / 2)[2] + .015, yB = atS(sv + L / 2)[2] + .015, b0 = RG.n, ua = uw / COLS + .003, ub = (uw + 1) / COLS - .003;
           const pts = [[c0[0] - tx * L / 2 - nx * ww / 2, c0[1] - tz * L / 2 - nz * ww / 2], [c0[0] - tx * L / 2 + nx * ww / 2, c0[1] - tz * L / 2 + nz * ww / 2], [c0[0] + tx * L / 2 + nx * ww / 2, c0[1] + tz * L / 2 + nz * ww / 2], [c0[0] + tx * L / 2 - nx * ww / 2, c0[1] + tz * L / 2 - nz * ww / 2]];
-          const uv = [[ua, 0], [ub, 0], [ub, L / 2.6], [ua, L / 2.6]]; for (let q = 0; q < 4; q++) RG.v(-pts[q][0], q < 2 ? yA : yB, -pts[q][1], 0, 1, 0, [1, 1, 1], uv[q][0], uv[q][1]); RG.I.push(b0, b0 + 2, b0 + 1, b0, b0 + 3, b0 + 2) };
+          const uv = [[ua, 0], [ub, 0], [ub, L / 2.6], [ua, L / 2.6]]; for (let q = 0; q < 4; q++) RG.v(-pts[q][0], q < 2 ? yA : yB, -pts[q][1], 0, 1, 0, [1, 1, 1], uv[q][0], uv[q][1]); RG.I.push(b0, b0 + 1, b0 + 2, b0, b0 + 2, b0 + 3) };   // v31: faccia verso l'alto (prima verso il basso: strisce e linee di arresto invisibili)
         const edge = sv => { const p = atS(sv); return p[0] > 1.5 && p[1] > 1.5 && p[0] < S - 1.5 && p[1] < S - 1.5 };
         for (let q = 1; q < m; q++) { const was = cut[q - 1] || cut2[q - 1], now = cut[q] || cut2[q];
           if (!was && now) { // incrocio davanti (per chi viaggia nel verso +): strisce 2,2 m prima, arresto 1,2 m prima delle strisce
             const sz = R.s[q] - 2.2; if (sz > 2 && edge(sz)) { const p = atS(sz); mark(sz, p[0], p[1], 8, 1); if (sz - 2.1 > 1) { const p2 = atS(sz - 2.1); mark(sz - 2.1, p2[0], p2[1], 10, 1) }
-              if (r.rank >= 5) { const [tx, tz] = at(p[3]), nx = -tz, nz = tx; objs.push(6, p[0] + nx * (hw + .5) - tx * .4, p[2] - lift, p[1] + nz * (hw + .5) - tz * .4, Math.atan2(tx, tz), 1) } } }
+              if (r.rank >= 5) { const [tx, tz] = at(p[3]), nx = -tz, nz = tx, su = p[0] + nx * (hw + .5) - tx * .4, sv = p[1] + nz * (hw + .5) - tz * .4; if (libero(su, sv)) objs.push(6, su, p[2] - lift, sv, Math.atan2(tx, tz), 1) } } }
           if (was && !now) { // incrocio alle spalle: vale per chi viaggia nel verso −
             const sz = R.s[q] + 2.2; if (sz < R.s[m - 1] - 2 && edge(sz)) { const p = atS(sz); mark(sz, p[0], p[1], 8, -1); if (sz + 2.1 < R.s[m - 1] - 1 && !r.one) { const p2 = atS(sz + 2.1); mark(sz + 2.1, p2[0], p2[1], 10, -1) }
-              if (r.rank >= 5 && !r.one) { const [tx, tz] = at(p[3]), nx = tz, nz = -tx; objs.push(6, p[0] + nx * (hw + .5) + tx * .4, p[2] - lift, p[1] + nz * (hw + .5) + tz * .4, Math.atan2(-tx, -tz), 1) } } } }
+              if (r.rank >= 5 && !r.one) { const [tx, tz] = at(p[3]), nx = tz, nz = -tx, su = p[0] + nx * (hw + .5) + tx * .4, sv = p[1] + nz * (hw + .5) + tz * .4; if (libero(su, sv)) objs.push(6, su, p[2] - lift, sv, Math.atan2(-tx, -tz), 1) } } } }
         if (r.one && R.s[m - 1] > 14) { // senso unico: segnale all'inizio (verso chi entra), divieto di accesso alla fine
           const s0 = 2.5, s1 = R.s[m - 1] - 2.5; if (edge(s0) && S2[0] > 1.5 && S2[1] > 1.5 && S2[0] < S - 1.5 && S2[1] < S - 1.5) { const p = atS(s0), [tx, tz] = at(p[3]), nx = -tz, nz = tx, pu = p[0] + nx * (hw + .7), pv = p[1] + nz * (hw + .7); signQ.push([pu, pv, p[2] - lift, 'oneway', -tx, -tz]) }
           const e0 = S2[m * 2 - 2], e1 = S2[m * 2 - 1]; if (edge(s1) && e0 > 1.5 && e1 > 1.5 && e0 < S - 1.5 && e1 < S - 1.5) { const p = atS(s1), [tx, tz] = at(p[3]), nx = tz, nz = -tx, pu = p[0] + nx * (hw + .7), pv = p[1] + nz * (hw + .7); signQ.push([pu, pv, p[2] - lift, 'noentry', tx, tz]) } } } }
@@ -454,20 +491,33 @@ function buildCell(L, opt) {
         for (let q = 0; q < m; q++) { if (R.s[q] < s0 || R.s[q] > s1) continue; const qa = Math.max(0, q - 1), qb = Math.min(m - 1, q + 1); let tx = S2[qb * 2] - S2[qa * 2], tz = S2[qb * 2 + 1] - S2[qa * 2 + 1]; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl;
           const nx = -tz, nz = tx, y = R.h[q] + lift + .01, w2 = 3.2 * Math.max(0, Math.min(1, bw(R.s[q]))), u = S2[q * 2], v = S2[q * 2 + 1];
           RG.v(-(u + nx * (hw - .3)), y, -(v + nz * (hw - .3)), 0, 1, 0, [1, 1, 1], u00, R.s[q] / 10); RG.v(-(u + nx * (hw + w2)), y, -(v + nz * (hw + w2)), 0, 1, 0, [1, 1, 1], u01, R.s[q] / 10); outer.push(u + nx * (hw + w2), v + nz * (hw + w2), y); nq++ }
-        for (let q = 0; q < nq - 1; q++) { const a = b0 + q * 2; RG.I.push(a, a + 2, a + 1, a + 1, a + 2, a + 3) }
+        for (let q = 0; q < nq - 1; q++) { const a = b0 + q * 2; RG.I.push(a, a + 1, a + 2, a + 1, a + 3, a + 2) }   // v31: faccia verso l'alto (prima la piazzola era invisibile dall'alto)
         // bordo esterno della piazzola fino al terreno (niente asfalto sospeso)
-        for (let q = 0; q + 1 < outer.length / 3; q++) { const ax = outer[q * 3], az = outer[q * 3 + 1], ay = outer[q * 3 + 2], bx = outer[q * 3 + 3], bz = outer[q * 3 + 4], by = outer[q * 3 + 5]; wallS(MG, ax, az, bx, bz, Math.max(ay - 30, Math.min(ay - 1, ghT(ax, az) - .4)), ay, Math.max(by - 30, Math.min(by - 1, ghT(bx, bz) - .4)), by, dirt) }
+        for (let q = 0; q + 1 < outer.length / 3; q++) { const ax = outer[q * 3], az = outer[q * 3 + 1], ay = outer[q * 3 + 2], bx = outer[q * 3 + 3], bz = outer[q * 3 + 4], by = outer[q * 3 + 5]; wallS(MG, bx, bz, ax, az, Math.max(by - 30, Math.min(by - 1, ghT(bx, bz) - .4)), by, Math.max(ay - 30, Math.min(ay - 1, ghT(ax, az) - .4)), ay, dirt) }   /* v31: n = (−tz, tx) è la normale DESTRA in (u est, v sud): le pareti dei lati avevano il verso opposto a quello voluto */
         { let q = 0; while (q < m - 1 && R.s[q + 1] < sv) q++; const qa = Math.max(0, q - 1), qb = Math.min(m - 1, q + 1); let tx = S2[qb * 2] - S2[qa * 2], tz = S2[qb * 2 + 1] - S2[qa * 2 + 1]; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl;
           const pu = S2[q * 2] - tz * (hw + 3.9), pv = S2[q * 2 + 1] + tx * (hw + 3.9); if (pu > 2 && pv > 2 && pu < S - 2 && pv < S - 2) { objs.push(7, pu, R.h[q] + lift, pv, 0, 1); texts.push({ k: 'ins', txt: 'SOS', sub: 'PIAZZOLA', bg: '#1f5fb4', fg: '#ffffff', u: pu, v: pv, nx: -tx, nz: -tz, y: R.h[q] + lift + 2.3, w: .9, h: .62, free: 1 }) } } } }
     const bayW = sv => { for (const b of R.bays) if (sv >= b[0] && sv <= b[1]) return 3.2 * Math.max(0, Math.min(1, sv < b[0] + 9 ? (sv - b[0]) / 9 : sv > b[1] - 9 ? (b[1] - sv) / 9 : 1)); return 0 };
     // guardrail (autostrade e superstrade sempre, strade extraurbane dove il terreno scende); sigla della strada ogni 400 m
+    // v31: la barriera si interrompe dove entrerebbe nella carreggiata di un'altra strada alla stessa quota (rampe che si staccano o si
+    // immettono, incroci, strade sovrapposte: prima finiva in mezzo alle corsie); i pezzi più corti di 4 m non si disegnano; i paletti
+    // entrano nel terreno; ogni pezzo è anche un ostacolo basso con la sua quota (rails): ferma chi viaggia lì, non chi passa sopra o sotto
     if (A && !r.bridge && !r.tun && r.sty !== 9 && r.sty !== 3 && r.sty !== 4 && r.rank >= 4 && m > 2) { const gr = lin([.78, .78, .76]), gp = lin([.45, .46, .48]), always = r.rank >= 8;
-      for (const [side, sgn] of [[sideL, 1], [sideR, -1]]) { for (let q = 0; q < m - 1; q++) { let on = always; if (!on && !cityish) { const qa = Math.max(0, q - 1), qb = Math.min(m - 1, q + 1); let tx = S2[qb * 2] - S2[qa * 2], tz = S2[qb * 2 + 1] - S2[qa * 2 + 1]; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl; const nx = -tz * sgn, nz = tx * sgn, ou = S2[q * 2] + nx * (hw + 4.5), ov = S2[q * 2 + 1] + nz * (hw + 4.5); if (ou >= 0 && ov >= 0 && ou <= S && ov <= S && gh(ou, ov) < R.h[q] - 2.4) on = true } if (!on) continue;
+      const grFree = (u, v, y, sx, sy) => barFree(u, v, y, r, .25, sx, sy);
+      for (const [side, sgn] of [[sideL, 1], [sideR, -1]]) { const run = [];
+        const flush = () => { let len = 0; for (const g of run) len += g[9];
+          if (len >= 4) for (let k = 0; k < run.length; k++) { const [A0u, A0v, ay, B0u, B0v, by, ux, uz, q] = run[k];
+            // nastro a doppia faccia che segue la pendenza (e il raccordo delle piazzole) e paletto ogni due campioni
+            wallS(MG, A0u, A0v, B0u, B0v, ay + .52, ay + .82, by + .52, by + .82, gr); wallS(MG, B0u, B0v, A0u, A0v, by + .52, by + .82, ay + .52, ay + .82, gr); if (GRD) GRD.push(A0u, A0v, ay, B0u, B0v, by, R.idx);
+            const post = (pu, pv, py) => { wall(MG, pu - ux * .05, pv - uz * .05, pu + ux * .05, pv + uz * .05, py - .5, py + .78, gp, 0, 1); wall(MG, pu + ux * .05, pv + uz * .05, pu - ux * .05, pv - uz * .05, py - .5, py + .78, gp, 0, 1) };
+            if (k === 0 || q % 2 === 0) post(A0u, A0v, ay); if (k === run.length - 1) post(B0u, B0v, by);
+            rail(A0u, A0v, ay, B0u, B0v, by, .82, 'guardrail ' + r.c + ' ' + R.idx); stat.guardrail = (stat.guardrail || 0) + run[k][9] }
+          run.length = 0 };
+        for (let q = 0; q < m - 1; q++) { let on = always; if (!on && !cityish) { const qa = Math.max(0, q - 1), qb = Math.min(m - 1, q + 1); let tx = S2[qb * 2] - S2[qa * 2], tz = S2[qb * 2 + 1] - S2[qa * 2 + 1]; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl; const nx = -tz * sgn, nz = tx * sgn, ou = S2[q * 2] + nx * (hw + 4.5), ov = S2[q * 2 + 1] + nz * (hw + 4.5); if (ou >= 0 && ov >= 0 && ou <= S && ov <= S && gh(ou, ov) < R.h[q] - 2.4) on = true } if (!on) { flush(); continue }
           const ax = side[q * 3], az = side[q * 3 + 1], ay = side[q * 3 + 2], bx = side[q * 3 + 3], bz = side[q * 3 + 4], by = side[q * 3 + 5], dx = bx - ax, dz = bz - az, l = Math.hypot(dx, dz) || 1, nxs = -dz / l * sgn, nzs = dx / l * sgn;
           const goA = .45 + (sgn > 0 ? bayW(R.s[q]) : 0), goB = .45 + (sgn > 0 ? bayW(R.s[q + 1]) : 0), A0u = ax + nxs * goA, A0v = az + nzs * goA, B0u = bx + nxs * goB, B0v = bz + nzs * goB;
-          // nastro a doppia faccia che segue la pendenza (e il raccordo delle piazzole) e paletto ogni due campioni
-          wallS(MG, A0u, A0v, B0u, B0v, ay + .52, ay + .82, by + .52, by + .82, gr); wallS(MG, B0u, B0v, A0u, A0v, by + .52, by + .82, ay + .52, ay + .82, gr);
-          if (q % 2 === 0) { wall(MG, A0u - dx / l * .05, A0v - dz / l * .05, A0u + dx / l * .05, A0v + dz / l * .05, ay, ay + .78, gp, 0, 1); wall(MG, A0u + dx / l * .05, A0v + dz / l * .05, A0u - dx / l * .05, A0v - dz / l * .05, ay, ay + .78, gp, 0, 1) } } } }
+          if (!grFree(A0u, A0v, ay, S2[q * 2], S2[q * 2 + 1]) || !grFree(B0u, B0v, by, S2[q * 2 + 2], S2[q * 2 + 3]) || !grFree((A0u + B0u) / 2, (A0v + B0v) / 2, (ay + by) / 2, (S2[q * 2] + S2[q * 2 + 2]) / 2, (S2[q * 2 + 1] + S2[q * 2 + 3]) / 2)) { flush(); stat.guardrailTolto = (stat.guardrailTolto || 0) + Math.hypot(B0u - A0u, B0v - A0v); continue }
+          run.push([A0u, A0v, ay, B0u, B0v, by, dx / l, dz / l, q, Math.hypot(B0u - A0u, B0v - A0v)]) }
+        flush() } }
     if (A && r.ref && r.rank >= 7 && !r.tun && m > 2) { const refs = String(r.ref).split(';')[0].trim(); if (refs.length <= 7) { const mw = r.c === 'motorway', bg = mw ? '#0b6b33' : '#1b4fa3';
       for (let sv = 120 + hsh(Math.round(S2[0]), 7) * 200; sv < R.s[m - 1] - 20; sv += 420) { let q = 0; while (q < m - 1 && R.s[q + 1] < sv) q++; const qa = Math.max(0, q - 1), qb = Math.min(m - 1, q + 1); let tx = S2[qb * 2] - S2[qa * 2], tz = S2[qb * 2 + 1] - S2[qa * 2 + 1]; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl; const nx = -tz, nz = tx, pu = S2[q * 2] + nx * (hw + 1.6), pv = S2[q * 2 + 1] + nz * (hw + 1.6); if (pu < 2 || pv < 2 || pu > S - 2 || pv > S - 2) continue;
         objs.push(7, pu, R.h[q] + lift, pv, 0, 1); texts.push({ k: 'ins', txt: refs, sub: '', bg, fg: '#ffffff', u: pu, v: pv, nx: -tx, nz: -tz, y: R.h[q] + lift + 2.3, w: 1.25, h: .62, free: 1 }) } } }
@@ -477,7 +527,8 @@ function buildCell(L, opt) {
   for (const r of roads) { if (!r.area) continue; const flat = [], holes = []; let nv = 0; for (const ring of r.rings) { if (nv) holes.push(nv); for (let i = 0; i < ring.length; i += 2) { flat.push(ring[i] * r.k, ring[i + 1] * r.k); nv++ } }
     const tri = earcut(flat, holes); if (!tri.length) continue; const b0 = RSg.n, us = 3 / COLS + .02;
     for (let q = 0; q < nv; q++) { const u = flat[q * 2], v = flat[q * 2 + 1]; RSg.v(-u, gh(u, v) + .1, -v, 0, 1, 0, [1, 1, 1], us + (u % 3) / 3 * (1 / COLS - .04), v / 6) }
-    for (let q = 0; q < tri.length; q += 3) RSg.I.push(b0 + tri[q], b0 + tri[q + 2], b0 + tri[q + 1]) }
+    // v31: ogni triangolo con la faccia verso l'alto (l'ordine di earcut segue il verso dell'anello OpenStreetMap: alcune piazze erano capovolte)
+    for (let q = 0; q < tri.length; q += 3) { const a = tri[q], b = tri[q + 1], c = tri[q + 2], cr = (flat[b * 2] - flat[a * 2]) * (flat[c * 2 + 1] - flat[a * 2 + 1]) - (flat[b * 2 + 1] - flat[a * 2 + 1]) * (flat[c * 2] - flat[a * 2]); if (cr < 0) RSg.I.push(b0 + a, b0 + b, b0 + c); else RSg.I.push(b0 + a, b0 + c, b0 + b) } }
   // --- acque: superfici piane (mare a quota 0, laghi e fiumi alla quota delle rive), corsi d'acqua lineari
   const WG = new GB(false), wc = lin([.16, .33, .40]);
   waters.forEach((W, wi) => { const flat = [], holes = []; let nv = 0; for (const ring of W.rings) { if (nv) holes.push(nv); for (let i = 0; i < ring.length; i += 2) { flat.push(ring[i] / W.ext * S, ring[i + 1] / W.ext * S); nv++ } }
@@ -528,7 +579,7 @@ function buildCell(L, opt) {
     const yBel = yb0 + Ht - 5.6, yTop = yb0 + Ht;
     { let s0 = 0; for (let q = 0; q < 4; q++) { const [u0, v0] = cor[q], [u1, v1] = cor[(q + 1) % 4], Lq = Math.hypot(u1 - u0, v1 - v0); let y = yb0 - .3; while (y < yBel - .05) { const yn = Math.min(yBel, y + 3.6); wallB(GW, u0, v0, u1, v1, y, yn, stoneC, s0, 13, (yn - y) / 3.6); y = yn }
         wallB(GW, u0, v0, u1, v1, yBel, yTop - .9, stoneC, s0, 17, 1); wallB(GW, u0, v0, u1, v1, yTop - .9, yTop, stoneC, s0, 13, .25);
-        walls.push((u0 + u1) / 2, (v0 + v1) / 2, (u1 - u0) / Lq, (v1 - v0) / Lq, Lq / 2, Ht); s0 += Lq } }
+        walls.push((u0 + u1) / 2, (v0 + v1) / 2, (u1 - u0) / Lq, (v1 - v0) / Lq, Lq / 2, Ht); wY(yb0 - .3, yTop); s0 += Lq } }
     // cuspide (piramide) e croce
     { const ap = [tc0[0], yTop + side * 1.1, tc0[2]]; for (let q = 0; q < 4; q++) { const a = [cor[q][0], yTop, cor[q][1]], b = [cor[(q + 1) % 4][0], yTop, cor[(q + 1) % 4][1]], sl2 = Math.hypot(side / 2, side * 1.1); tri3(GR, [a, b, ap], tc, [[0, 0], [side / 2, 0], [side / 4, sl2 / 2]]) }
       box(MG, ap[0], ap[2], .14, .14, ap[1] - .2, ap[1] + 1.8, ironC); const bx = Math.abs(ex) > Math.abs(ez); box(MG, ap[0], ap[2], bx ? .8 : .14, bx ? .14 : .8, ap[1] + 1.05, ap[1] + 1.2, ironC) }
@@ -544,6 +595,41 @@ function buildCell(L, opt) {
       { let s0 = 0; for (let q = 0; q < 8; q++) { const [u0, v0] = lo[q], [u1, v1] = lo[(q + 1) % 8]; wallB(GW, u0, v0, u1, v1, top - .3, top + lr * 2.2, stoneC, s0, 17, .6); s0 += Math.hypot(u1 - u0, v1 - v0) } }
       for (let q = 0; q < 8; q++) { const a = [lo[q][0], top + lr * 2.2, lo[q][1]], b = [lo[(q + 1) % 8][0], top + lr * 2.2, lo[(q + 1) % 8][1]]; tri3(GR, [a, b, [cen[0], top + lr * 3.6, cen[2]]], dc, [[0, 0], [lr / 2, 0], [lr / 4, lr]]) } stat.cupole = (stat.cupole || 0) + 1 } };
 
+  // v31: passaggi sotto gli edifici (sottopassi, voltoni, gallerie che attraversano un edificio): una strada che taglia un lato a una quota
+  // dentro l'altezza dell'edificio apre un vano nella facciata (la facciata resta solo sopra la volta, il muro di collisione si toglie nel vano);
+  // dentro la sagoma si disegnano le pareti e il soffitto del passaggio (anche ostacoli). Restituisce i vani per lato: Map anello → [lato] → [[t0, t1, volta]]
+  const passCol = lin([.70, .67, .60]), passCeil = lin([.62, .60, .55]);
+  const passaggi = (rings, k, y0, y1) => { const vani = new Map(), tagli = new Map();
+    for (const r of rings) { const n = r.length / 2, per = []; vani.set(r, per);
+      for (let q = 0; q < n; q++) { const u0 = r[q * 2] * k, v0 = r[q * 2 + 1] * k, u1 = r[((q + 1) % n) * 2] * k, v1 = r[((q + 1) % n) * 2 + 1] * k, L2 = Math.hypot(u1 - u0, v1 - v0), g = []; per.push(g); if (L2 < .5) continue;
+        const seen = new Set(); segNear((u0 + u1) / 2, (v0 + v1) / 2, L2 / 2 + 10, (P, pi, q2) => { const c2 = P.r.c; if (c2 === 'rail' || c2 === 'transit' || c2 === 'ferry' || seen.has(pi * 100003 + q2)) return; seen.add(pi * 100003 + q2);
+          // galleria sotto l'edificio: la base della facciata (quota più bassa del terreno sotto la sagoma: vicino all'imbocco anche meno di 2 m
+          // sopra la strada) entrava nella canna della galleria e la chiudeva (muro visibile e ostacolo dentro la galleria). Vano fino alla volta
+          // (5,2 m + spessore) dove il lato sta dentro la larghezza della canna, anche vicino a uno spigolo dove l'asse non taglia il lato;
+          // pareti e soffitto del passaggio no: li ha già la galleria
+          if (P.r.tun) {
+            const ax = P.S2[q2 * 2], ay = P.S2[q2 * 2 + 1], bx = P.S2[q2 * 2 + 2], by = P.S2[q2 * 2 + 3], sx = bx - ax, sy = by - ay, l2 = sx * sx + sy * sy || 1e-9, D = P.r.w / 2 + 1.2, du = (u1 - u0) / L2, dv = (v1 - v0) / L2; let ta = -1, tb = -1, vt = -1e9;
+            const chiudi = () => { if (ta >= 0) { g.push([Math.max(0, ta - .3), Math.min(L2, tb + .3), Math.min(y1 - .5, vt)]); stat.galleriaSottoEdificio = (stat.galleriaSottoEdificio || 0) + 1 } ta = tb = -1; vt = -1e9 };
+            for (let s = 0; s <= L2 + 1e-6; s += .5) { const su = u0 + du * Math.min(s, L2), sv = v0 + dv * Math.min(s, L2), tt = Math.max(0, Math.min(1, ((su - ax) * sx + (sv - ay) * sy) / l2)), d = Math.hypot(ax + sx * tt - su, ay + sy * tt - sv), hr = hAtQ(P, q2, tt) + liftOf(P.r);
+              if (d < D && hr + 5.5 > y0 + .05 && hr + 3.6 <= y1) { if (ta < 0) ta = Math.min(s, L2); tb = Math.min(s, L2); vt = Math.max(vt, hr + 5.5) } else chiudi() } chiudi(); return }
+          const X = segX(u0, v0, u1, v1, P.S2[q2 * 2], P.S2[q2 * 2 + 1], P.S2[q2 * 2 + 2], P.S2[q2 * 2 + 3]); if (!X) return; const hr = hAtQ(P, q2, X[1]) + liftOf(P.r);
+          if (hr < y0 - 1.5 || hr + 3.6 > y1) return;
+          const ex = (u1 - u0) / L2, ez = (v1 - v0) / L2, sx = P.S2[q2 * 2 + 2] - P.S2[q2 * 2], sz = P.S2[q2 * 2 + 3] - P.S2[q2 * 2 + 1], sl = Math.hypot(sx, sz) || 1, sn = Math.abs(ex * sz / sl - ez * sx / sl), hg = Math.min(8, (P.r.w / 2 + .45) / Math.max(.35, sn)), tc = X[0] * L2;
+          g.push([Math.max(0, tc - hg), Math.min(L2, tc + hg), Math.min(y1 - .5, hr + 4.6)]); if (r === rings[0]) { let a = tagli.get(P); if (!a) tagli.set(P, a = []); a.push(sAt(P, q2, X[1])) } });
+        g.sort((a, b) => a[0] - b[0]); for (let i = 1; i < g.length; i++) if (g[i][0] <= g[i - 1][1]) { g[i - 1][1] = Math.max(g[i - 1][1], g[i][1]); g[i - 1][2] = Math.max(g[i - 1][2], g[i][2]); g.splice(i--, 1) } } }
+    // interno dei passaggi: fra due tagli consecutivi (o un taglio e un'estremità della strada dentro l'edificio) col punto medio dentro la sagoma
+    const r0 = rings[0], dentro = (u, v) => pipRing(r0, k, u, v) && !rings.slice(1).some(h => pipRing(h, k, u, v)), at = (P, sv) => { let q = 0; while (q < P.m - 2 && P.s[q + 1] < sv) q++; const l = P.s[q + 1] - P.s[q] || 1e-9, tt = Math.max(0, Math.min(1, (sv - P.s[q]) / l)); return [P.S2[q * 2] + (P.S2[q * 2 + 2] - P.S2[q * 2]) * tt, P.S2[q * 2 + 1] + (P.S2[q * 2 + 3] - P.S2[q * 2 + 1]) * tt, hAtQ(P, q, tt) + liftOf(P.r), q] };
+    for (const [P, ss] of tagli) { const b = ss.slice(); if (dentro(P.S2[0], P.S2[1])) b.push(0); if (dentro(P.S2[P.m * 2 - 2], P.S2[P.m * 2 - 1])) b.push(P.s[P.m - 1]); b.sort((x, y) => x - y);
+      for (let i = 0; i + 1 < b.length; i++) { const sa = b[i], sb = b[i + 1]; if (sb - sa < .5) continue; const mid = at(P, (sa + sb) / 2); if (!dentro(mid[0], mid[1])) continue;
+        const pts = [at(P, sa)]; for (let q = 0; q < P.m; q++) if (P.s[q] > sa + .2 && P.s[q] < sb - .2) pts.push([P.S2[q * 2], P.S2[q * 2 + 1], P.h[q] + liftOf(P.r), q]); pts.push(at(P, sb)); const hw = P.r.w / 2 + .35;
+        for (let j = 0; j + 1 < pts.length; j++) { const A0 = pts[j], B0 = pts[j + 1], dx = B0[0] - A0[0], dz = B0[1] - A0[1], l = Math.hypot(dx, dz); if (l < .05) continue; const nx = -dz / l, nz = dx / l, va = Math.min(y1 - .5, A0[2] + 4.6), vb = Math.min(y1 - .5, B0[2] + 4.6);
+          const Ra = [A0[0] + nx * hw, A0[1] + nz * hw], Rb = [B0[0] + nx * hw, B0[1] + nz * hw], La = [A0[0] - nx * hw, A0[1] - nz * hw], Lb = [B0[0] - nx * hw, B0[1] - nz * hw];
+          const lib = (p0, p1) => barFree(p0[0], p0[1], A0[2], P.r, -.3, A0[0], A0[1]) && barFree(p1[0], p1[1], B0[2], P.r, -.3, B0[0], B0[1]) && barFree((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2, (A0[2] + B0[2]) / 2, P.r, -.3, (A0[0] + B0[0]) / 2, (A0[1] + B0[1]) / 2), libR = lib(Ra, Rb), libL = lib(La, Lb);   // niente parete attraverso un'altra strada (incroci dentro l'edificio)
+          if (libR) wallS(MC, Ra[0], Ra[1], Rb[0], Rb[1], A0[2] - .3, va, B0[2] - .3, vb, passCol); if (libL) wallS(MC, Lb[0], Lb[1], La[0], La[1], B0[2] - .3, vb, A0[2] - .3, va, passCol);   // pareti verso la strada (n è la normale destra)
+          tri3(MC, [[Ra[0], va, Ra[1]], [La[0], va, La[1]], [Lb[0], vb, Lb[1]]], passCeil, null, [0, -1, 0]); tri3(MC, [[Ra[0], va, Ra[1]], [Lb[0], vb, Lb[1]], [Rb[0], vb, Rb[1]]], passCeil, null, [0, -1, 0]);
+          for (const [p0, p1, ok] of [[Ra, Rb, libR], [La, Lb, libL]]) if (ok) { walls.push((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2, dx / l, dz / l, l / 2, 4.6); wY(Math.min(A0[2], B0[2]) - .3, Math.max(va, vb)) }
+          stat.passaggi = (stat.passaggi || 0) + l } } }
+    return vani };
   let nb = 0; stat.falde = 0; { const ly = L.building; if (ly) { const ext = ext0(ly), k = S / ext, cku = q => Math.min(BHIu * k, Math.max(BLOu * k, q * k)), ckv = q => Math.min(BHIv * k, Math.max(BLOv * k, q * k)); stat.edifici_dati = 0;
     for (let i = 0; i < ly.n; i++) { const f = ly.feat(i), p = f.props; if (f.type !== 3 || p.hide_3d) continue;
       for (const pg of polygons(f.parts)) { const rings = pg.map(r => clipRing(r, 0, ext)).filter(r => r.length >= 6); if (!rings.length) continue;
@@ -581,15 +667,23 @@ function buildCell(L, opt) {
         else { floors.push([y0, yb0 + gfl, shop ? SHOPB : bands[0], 1]); let y = yb0 + gfl; while (y < y1 - .05) { const yn = Math.min(y1, y + fh); floors.push([y, yn, yn >= y1 - .05 ? bands[2] : bands[1], (yn - y) / fh]); y = yn } }
         const isCh = !!(spc && spc.k === 'chiesa' && whole && rings.length === 1 && low < 2); if (isCh) { floors.length = 0; floors.push([y0, y1, 16, 1]) }
         let balcE = null; if (A && st === ST.CONDO && !spc) { const r0 = rings[0], n0 = r0.length / 2, ls = []; for (let q = 0; q < n0; q++) { const b = (q + 1) % n0; ls.push([Math.hypot(r0[b * 2] - r0[q * 2], r0[b * 2 + 1] - r0[q * 2 + 1]) * k, q]) } ls.sort((p, q) => q[0] - p[0]); balcE = new Set(ls.slice(0, 2).filter(p => p[0] >= 3.4).map(p => p[1])) }
+        const vani = A && !isCh ? passaggi(rings, k, y0, y1) : null;
         for (const r of rings) { const n = r.length / 2; let s0 = hr2 * 3;
           for (let q = 0; q < n; q++) { const a = q, b = (q + 1) % n, ax = r[a * 2], ay = r[a * 2 + 1], bx = r[b * 2], by = r[b * 2 + 1];
             if ((ax === bx && (ax === 0 || ax === ext)) || (ay === by && (ay === 0 || ay === ext))) { s0 += Math.hypot(bx - ax, by - ay) * k; continue }   // bordo artificiale della cella: niente muro
             const u0 = ax * k, v0 = ay * k, u1 = bx * k, v1 = by * k, L2 = Math.hypot(u1 - u0, v1 - v0);
+            const gaps = vani && vani.get(r) ? vani.get(r)[q] : null;
+            if (A && gaps && gaps.length) { let ta = 0; const du = (u1 - u0) / L2, dv = (v1 - v0) / L2;
+              const piece = (t0, t1, hb) => { if (t1 - t0 < .05) return; const pu0 = u0 + du * t0, pv0 = v0 + dv * t0, pu1 = u0 + du * t1, pv1 = v0 + dv * t1;
+                for (const F of floors) { if (F[1] <= hb + .02) continue; const fb = Math.max(F[0], hb); wallB(GW, pu0, pv0, pu1, pv1, fb, F[1], col, s0 + t0, F[2], F[3] * (F[1] - fb) / (F[1] - F[0])) }
+                if (hb > y0 + .01) { tri3(MC, [[pu0, hb, pv0], [pu1, hb, pv1], [pu1 - dv * .4, hb, pv1 + du * .4]], passCeil, null, [0, -1, 0]); tri3(MC, [[pu0, hb, pv0], [pu1 - dv * .4, hb, pv1 + du * .4], [pu0 - dv * .4, hb, pv0 + du * .4]], passCeil, null, [0, -1, 0]) }
+                else if (t1 - t0 > .3) { walls.push((pu0 + pu1) / 2, (pv0 + pv1) / 2, du, dv, (t1 - t0) / 2, y1 - hraw); wY(y0, y1) } };
+              for (const g of gaps) { piece(ta, g[0], y0); piece(g[0], g[1], g[2]); ta = g[1] } piece(ta, L2, y0); s0 += L2; continue }   /* v31: lato con passaggi */
             if (A) { for (const F of floors) wallB(GW, u0, v0, u1, v1, F[0], F[1], col, s0, F[2], F[3]);
               if (balcE && r === rings[0] && balcE.has(q)) { const du = (u1 - u0) / L2, dv = (v1 - v0) / L2, nx = dv, nz = -du, nb2 = Math.floor(L2 / 3), slabC = col.map(x => x * .9), parC = hr2 < .5 ? col.map(x => x * .96) : lin([.42, .43, .45]);
                 for (let bq = 0; bq < nb2; bq++) { if (hsh(Math.round(u0 * 3) + bq * 31, Math.round(v0 * 3) + q * 7) > .42) continue; const sc = (bq + .5) * (L2 / nb2), cu2 = u0 + du * sc, cv2 = v0 + dv * sc;
                   for (let fi = 1; fi < floors.length; fi++) { const F = floors[fi]; if (F[1] - F[0] < 2.4) continue; const bw = Math.min(2.5, L2 / nb2 - .4); balc(MG, cu2 + nx * .02, cv2 + nz * .02, du, dv, nx, nz, bw, 1.15, F[0], slabC, parC) } } }
-              if (L2 > .3) walls.push((u0 + u1) / 2, (v0 + v1) / 2, (u1 - u0) / L2, (v1 - v0) / L2, L2 / 2, y1 - hraw);
+              if (L2 > .3) { walls.push((u0 + u1) / 2, (v0 + v1) / 2, (u1 - u0) / L2, (v1 - v0) / L2, L2 / 2, y1 - hraw); wY(y0, y1) }
               if (r === rings[0] && L2 > 1.2 && low < 2) { const e = { u0, v0, u1, v1, nx: (v1 - v0) / L2, nz: -(u1 - u0) / L2, L: L2, yb: yb0, gfl, shop, used: 0 }; edges.push(e); const kk = eKey((u0 + u1) / 2, (v0 + v1) / 2); let a = EH.get(kk); if (!a) EH.set(kk, a = []); a.push(e) } }
             else wall(MG, u0, v0, u1, v1, y0, y1, col, 0, 1);
             s0 += L2 } }
@@ -609,7 +703,7 @@ function buildCell(L, opt) {
           if (hr > .35) { const cx2 = ob.cu + ex * (R * (hr2 - .5)) + px * (ob.W * .12), cz2 = ob.cv + ez * (R * (hr2 - .5)) + pz * (ob.W * .12), hc = yr - rh * .12 + .9; box(MG, cx2, cz2, .5, .5, y1 + rh * .3, hc, chimC) } }
         else if (!(isCh && ob && ob.W > 4 && fa / ob.area > .55)) { const flat = [], holes = []; let nv = 0; for (const r of rings) { if (nv) holes.push(nv); for (let q = 0; q < r.length; q += 2) { flat.push(r[q] * k, r[q + 1] * k); nv++ } }
           const tri = earcut(flat, holes), b0 = MG.n, rc = st === ST.IND ? grav : top > 26 ? memb : hr2 < .5 ? grav : memb; for (let q = 0; q < nv; q++) MG.v(-flat[q * 2], y1, -flat[q * 2 + 1], 0, 1, 0, rc);
-          for (let q = 0; q < tri.length; q += 3) MG.I.push(b0 + tri[q], b0 + tri[q + 2], b0 + tri[q + 1]);
+          for (let q = 0; q < tri.length; q += 3) { const a = tri[q], b = tri[q + 1], c = tri[q + 2], cr = (flat[b * 2] - flat[a * 2]) * (flat[c * 2 + 1] - flat[a * 2 + 1]) - (flat[b * 2 + 1] - flat[a * 2 + 1]) * (flat[c * 2] - flat[a * 2]); if (cr < 0) MG.I.push(b0 + a, b0 + b, b0 + c); else MG.I.push(b0 + a, b0 + c, b0 + b) }   // v31: tetto piano sempre verso l'alto
           if (A) { // parapetto e volumi tecnici
             const pc = col.map(x => x * .92); for (const r of rings) { const n = r.length / 2; for (let q = 0; q < n; q++) { const a = q, b = (q + 1) % n, ax = r[a * 2], ay = r[a * 2 + 1], bx = r[b * 2], by = r[b * 2 + 1]; if ((ax === bx && (ax === 0 || ax === ext)) || (ay === by && (ay === 0 || ay === ext))) continue; wall(MG, ax * k, ay * k, bx * k, by * k, y1 - .02, y1 + .5, pc, 0, 1) } }
             if (fa > 260 && whole && st !== ST.IND) { const o2 = obb(rings[0].map(v => v * k)); if (o2 && o2.W > 9) { const tx = o2.cu + o2.ex * (o2.L * .15 * (hr - .5)), tz = o2.cv + o2.ez * (o2.L * .15 * (hr - .5)); box(MG, tx, tz, 3.2, 2.8, y1, y1 + 2.7, techC); if (hr2 > .5) box(MG, tx + o2.ex * 4.5, tz + o2.ez * 4.5, 1.2, 1, y1, y1 + .9, techC) } } } }
@@ -702,7 +796,7 @@ function buildCell(L, opt) {
         stat.caselli = (stat.caselli || 0) + 1; const W = R.r.w + 9, D = 9, nx = -tz, nz = tx, b = brandOf('');
         obox(MG, ru, rv, nx, nz, W, D, y + 5.6, y + 6.4, white); obox(MG, ru - tx * (D / 2 - .1), rv - tz * (D / 2 - .1), nx, nz, W, .25, y + 5.3, y + 6.6, lin([.05, .42, .2]));
         for (const sd of [-1, 1]) { const cu2 = ru + nx * sd * (hw + 1.6), cv2 = rv + nz * sd * (hw + 1.6); obox(MC, cu2, cv2, tx, tz, 7, 1.6, y - .1, y + .2, lin([.7, .7, .68])); obox(MG, cu2, cv2, tx, tz, 2.2, 1.4, y + .2, y + 2.6, white); obox(MG, cu2, cv2, tx, tz, 2.3, 1.5, y + 2.6, y + 2.8, grey);
-          for (const e of [-1, 1]) obox(MG, cu2 + tx * e * 3, cv2 + tz * e * 3, tx, tz, .4, .4, y, y + 5.6, grey); walls.push(cu2, cv2, tx, tz, 3.6, 2.8) }
+          for (const e of [-1, 1]) obox(MG, cu2 + tx * e * 3, cv2 + tz * e * 3, tx, tz, .4, .4, y, y + 5.6, grey); walls.push(cu2, cv2, tx, tz, 3.6, 2.8); wY(y, y + 2.8) }
         texts.push({ k: 'ins', txt: nm ? nm.toUpperCase() : 'STAZIONE AUTOSTRADALE', sub: 'ALT · PEDAGGIO', bg: '#0b6b33', fg: '#ffffff', u: ru - tx * (D / 2 + .05), v: rv - tz * (D / 2 + .05), nx: -tx, nz: -tz, y: y + 5.95, w: Math.min(W - 1, 9), h: .9 }); continue }
       // distributore: si sposta la pensilina fuori dalla carreggiata, dalla parte del punto
       const sd = ((u - ru) * -tz + (v - rv) * tx) >= 0 ? 1 : -1, nx = -tz * sd, nz = tx * sd, serv = R.r.c === 'motorway' || R.r.c === 'trunk', W = serv ? 22 : 13, D = serv ? 10 : 8.5;
@@ -718,13 +812,13 @@ function buildCell(L, opt) {
       // pensilina, pilastri, isole con le colonnine
       obox(MG, cu, cv, tx, tz, W, D, yb + 4.9, yb + 5.5, white); obox(MG, cu - nx * (D / 2), cv - nz * (D / 2), tx, tz, W + .1, .14, yb + 4.8, yb + 5.6, lin(fasc)); obox(MG, cu + nx * (D / 2), cv + nz * (D / 2), tx, tz, W + .1, .14, yb + 4.8, yb + 5.6, lin(fasc));
       const isl = serv ? [-6.5, 0, 6.5] : [-3, 3]; for (const a of isl) { const iu = cu + tx * a, iv = cv + tz * a; obox(MC, iu, iv, nx, nz, 5, 1.1, yb - .1, yb + .16, lin([.72, .72, .70])); obox(MG, iu, iv, nx, nz, .38, .38, yb + .16, yb + 4.9, grey);
-        for (const e of [-1.5, 1.5]) { obox(MG, iu + nx * e, iv + nz * e, nx, nz, .55, .4, yb + .16, yb + 1.85, lin([.85, .85, .83])); obox(MG, iu + nx * e, iv + nz * e, nx, nz, .56, .41, yb + 1.85, yb + 2.1, lin(fasc)) } walls.push(iu, iv, nx, nz, 2.6, 2) }
+        for (const e of [-1.5, 1.5]) { obox(MG, iu + nx * e, iv + nz * e, nx, nz, .55, .4, yb + .16, yb + 1.85, lin([.85, .85, .83])); obox(MG, iu + nx * e, iv + nz * e, nx, nz, .56, .41, yb + 1.85, yb + 2.1, lin(fasc)) } walls.push(iu, iv, nx, nz, 2.6, 2); wY(yb, yb + 2.1) }
       // totem del marchio a bordo strada (solo nome e colori, niente loghi)
       { const tu = ru + nx * (hw + 2.2) + tx * (W / 2 + 3), tv = rv + nz * (hw + 2.2) + tz * (W / 2 + 3); obox(MG, tu, tv, tx, tz, 1.6, .5, gh(tu, tv) - .2, gh(tu, tv) + 6, lin(hexRGB(br[2]) || [1, 1, 1]));
-        texts.push({ k: 'ins', txt: nm ? nm.toUpperCase() : 'CARBURANTE', sub: serv ? 'AREA DI SERVIZIO' : 'CARBURANTE', bg: br[1], fg: br[2], u: tu, v: tv, nx: -nx, nz: -nz, y: gh(tu, tv) + 4.8, w: 1.55, h: 1.6, free: 1 }); walls.push(tu, tv, tx, tz, .8, 6) }
+        texts.push({ k: 'ins', txt: nm ? nm.toUpperCase() : 'CARBURANTE', sub: serv ? 'AREA DI SERVIZIO' : 'CARBURANTE', bg: br[1], fg: br[2], u: tu, v: tv, nx: -nx, nz: -nz, y: gh(tu, tv) + 4.8, w: 1.55, h: 1.6, free: 1 }); walls.push(tu, tv, tx, tz, .8, 6); wY(gh(tu, tv), gh(tu, tv) + 6) }
       if (serv) { // area di servizio: edificio del ristoro con vetrine e insegna
         const bu = cu + nx * (D / 2 + 9), bv = cv + nz * (D / 2 + 9); if (!inB(bu, bv)) { const by = gh(bu, bv), Wb = 18, Db = 11, c0 = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([a, b]) => [bu + tx * a * Wb / 2 + nx * b * Db / 2, bv + tz * a * Wb / 2 + nz * b * Db / 2]), cr = ringOut(c0), GWs = gbs(BWs, sbOf(bu, bv), true);
-          let s0 = 0; for (let q = 0; q < 4; q++) { const [u0, v0] = cr[q], [u1, v1] = cr[(q + 1) % 4], Lq = Math.hypot(u1 - u0, v1 - v0); wallB(GWs, u0, v0, u1, v1, by - .3, by + 4.6, lin([.92, .91, .88]), s0, 15, 1.2); walls.push((u0 + u1) / 2, (v0 + v1) / 2, (u1 - u0) / Lq, (v1 - v0) / Lq, Lq / 2, 5); s0 += Lq }
+          let s0 = 0; for (let q = 0; q < 4; q++) { const [u0, v0] = cr[q], [u1, v1] = cr[(q + 1) % 4], Lq = Math.hypot(u1 - u0, v1 - v0); wallB(GWs, u0, v0, u1, v1, by - .3, by + 4.6, lin([.92, .91, .88]), s0, 15, 1.2); walls.push((u0 + u1) / 2, (v0 + v1) / 2, (u1 - u0) / Lq, (v1 - v0) / Lq, Lq / 2, 5); wY(by - .3, by + 4.6); s0 += Lq }
           tri3(MG, [[cr[0][0], by + 4.6, cr[0][1]], [cr[1][0], by + 4.6, cr[1][1]], [cr[2][0], by + 4.6, cr[2][1]]], lin([.5, .5, .5])); tri3(MG, [[cr[0][0], by + 4.6, cr[0][1]], [cr[2][0], by + 4.6, cr[2][1]], [cr[3][0], by + 4.6, cr[3][1]]], lin([.5, .5, .5]));
           texts.push({ k: 'ins', txt: 'AREA DI SERVIZIO', sub: 'BAR · RISTORO', bg: '#1a3c6e', fg: '#ffffff', u: bu - nx * (Db / 2 + .08), v: bv - nz * (Db / 2 + .08), nx: -nx, nz: -nz, y: by + 3.9, w: 6, h: .9 }) } } } } }
   // ---- muretti a secco, muri di sostegno e siepi lungo le strade fuori città (non nei centri abitati, non su ponti e gallerie)
@@ -749,12 +843,12 @@ function buildCell(L, opt) {
               wallS(MS, sgn > 0 ? au : bu, sgn > 0 ? av : bv, sgn > 0 ? bu : au, sgn > 0 ? bv : av, (sgn > 0 ? yA : yB) - .25, (sgn > 0 ? yA : yB) + ht, (sgn > 0 ? yB : yA) - .25, (sgn > 0 ? yB : yA) + ht, stoneC);
               wallS(MS, sgn > 0 ? bu + ou : au + ou, sgn > 0 ? bv + ov : av + ov, sgn > 0 ? au + ou : bu + ou, sgn > 0 ? av + ov : bv + ov, (sgn > 0 ? yB : yA) - .25, (sgn > 0 ? yB : yA) + ht, (sgn > 0 ? yA : yB) - .25, (sgn > 0 ? yA : yB) + ht, stoneC);
               tri3(MS, [[au, yA + ht, av], [bu, yB + ht, bv], [bu + ou, yB + ht, bv + ov]], stoneC); tri3(MS, [[au, yA + ht, av], [bu + ou, yB + ht, bv + ov], [au + ou, yA + ht, av + ov]], stoneC);
-              walls.push((au + bu) / 2 + ou / 2, (av + bv) / 2 + ov / 2, (bu - au) / L2, (bv - av) / L2, L2 / 2 + .05, ht + .3); stat.muretti = (stat.muretti || 0) + L2 }
+              walls.push((au + bu) / 2 + ou / 2, (av + bv) / 2 + ov / 2, (bu - au) / L2, (bv - av) / L2, L2 / 2 + .05, ht + .3); wY(Math.min(yA, yB) - .25, Math.max(yA, yB) + ht); stat.muretti = (stat.muretti || 0) + L2 }
             else { const ht = 1.3 + hsh(e, 5) * .5, ou = nx * .9, ov = nz * .9, hc = hedgeC.map(x => x * (.85 + hsh(e, 7) * .3));
               wallS(HG, sgn > 0 ? au : bu, sgn > 0 ? av : bv, sgn > 0 ? bu : au, sgn > 0 ? bv : av, (sgn > 0 ? yA : yB) - .2, (sgn > 0 ? yA : yB) + ht, (sgn > 0 ? yB : yA) - .2, (sgn > 0 ? yB : yA) + ht, hc);
               wallS(HG, sgn > 0 ? bu + ou : au + ou, sgn > 0 ? bv + ov : av + ov, sgn > 0 ? au + ou : bu + ou, sgn > 0 ? av + ov : bv + ov, (sgn > 0 ? yB : yA) - .2, (sgn > 0 ? yB : yA) + ht, (sgn > 0 ? yA : yB) - .2, (sgn > 0 ? yA : yB) + ht, hc);
               tri3(HG, [[au, yA + ht, av], [bu, yB + ht, bv], [bu + ou, yB + ht, bv + ov]], hc); tri3(HG, [[au, yA + ht, av], [bu + ou, yB + ht, bv + ov], [au + ou, yA + ht, av + ov]], hc);
-              walls.push((au + bu) / 2 + ou / 2, (av + bv) / 2 + ov / 2, (bu - au) / L2, (bv - av) / L2, L2 / 2 + .05, ht); stat.siepi = (stat.siepi || 0) + L2 } }
+              walls.push((au + bu) / 2 + ou / 2, (av + bv) / 2 + ov / 2, (bu - au) / L2, (bv - av) / L2, L2 / 2 + .05, ht); wY(Math.min(yA, yB) - .2, Math.max(yA, yB) + ht); stat.siepi = (stat.siepi || 0) + L2 } }
           q = q1 } } } }
   // ---- segni degli edifici speciali: croce rossa sugli ospedali, bandiere su scuole e municipi, orologio sulle stazioni
   for (const d of spDeco) { const ne = nearEdge2(d.cu, d.cv, 60); if (!ne) continue; const e = ne.e, t = .5, pu = e.u0 + (e.u1 - e.u0) * t, pv = e.v0 + (e.v1 - e.v0) * t;
@@ -777,7 +871,7 @@ function buildCell(L, opt) {
   for (let i = 0; i < extraTrees.length; i++) trees.push(extraTrees[i]);
   // --- arredo urbano lungo le strade: lampioni, auto parcheggiate, alberi dei viali; rete per il traffico
   const lamps = [], parked = [], nav = [];
-  for (const [pu, pv, py, ico, fx, fz] of signQ) { if (inB(pu, pv)) continue; objs.push(7, pu, py, pv, 0, 1); texts.push({ k: 'ico', ico, u: pu, v: pv, nx: fx, nz: fz, y: py + 2.35, w: .55, h: .55, free: 1 }) }
+  for (const [pu, pv, py, ico, fx, fz] of signQ) { if (inB(pu, pv) || !libero(pu, pv)) continue; /* v31: niente cartelli dentro la strada che incrocia */ objs.push(7, pu, py, pv, 0, 1); texts.push({ k: 'ico', ico, u: pu, v: pv, nx: fx, nz: fz, y: py + 2.35, w: .55, h: .55, free: 1 }) }
   const rowAt = (u, v) => { if (!ROW) return -1; const i = Math.floor(u / rpx), j = Math.floor(v / rpx); return i < 0 || j < 0 || i >= RHN || j >= RHN ? -2 : ROW[j * RHN + i] };
   const wetAt = (u, v) => wmask ? !!wmask[Math.min(WM - 1, Math.max(0, Math.floor(v / S * WM))) * WM + Math.min(WM - 1, Math.max(0, Math.floor(u / S * WM)))] : false;
   const DRV = { motorway: 1, trunk: 1, primary: 1, secondary: 1, tertiary: 1, minor: 1, service: 1, busway: 1 };
@@ -830,7 +924,8 @@ function buildCell(L, opt) {
     { const ly = L.poi; if (ly) { const k = S / ext0(ly);
       for (let i = 0; i < ly.n; i++) { const f = ly.feat(i), p = f.props; if (f.type !== 1) continue; const pt = f.parts[0]; if (!pt) continue; const u = pt[0] * k, v = pt[1] * k; if (u < 1 || v < 1 || u > S - 1 || v > S - 1) continue; const nm = p['name:it'] || p.name || '';
         if (p.class === 'bus' && p.subclass === 'bus_stop') { let bt = 1e9, tx = 1, tz = 0; for (const R of RD) { const S2 = R.S2; for (let q = 0; q < R.m; q += 3) { const d = (S2[q * 2] - u) ** 2 + (S2[q * 2 + 1] - v) ** 2; if (d < bt) { bt = d; const qa = Math.max(0, q - 1), qb = Math.min(R.m - 1, q + 1), l = Math.hypot(S2[qb * 2] - S2[qa * 2], S2[qb * 2 + 1] - S2[qa * 2 + 1]) || 1; tx = (S2[qb * 2] - S2[qa * 2]) / l; tz = (S2[qb * 2 + 1] - S2[qa * 2 + 1]) / l } } }
-          objs.push(1, u, gh(u, v), v, 0, 1); if (nm) texts.push({ k: 'bus', txt: nm, u, v, nx: -tz, nz: tx, y: gh(u, v) + 2.55, w: .5, h: .5, free: 1 }); continue }
+          const fs2 = fuoriStrada(u, v); if (!fs2) continue; const bu = fs2[0], bv = fs2[1];   // v31: il palo della fermata sul bordo, non in mezzo alla strada (in OpenStreetMap la fermata è spesso un nodo della carreggiata)
+          objs.push(1, bu, gh(bu, bv), bv, 0, 1); if (nm) texts.push({ k: 'bus', txt: nm, u: bu, v: bv, nx: -tz, nz: tx, y: gh(bu, bv) + 2.55, w: .5, h: .5, free: 1 }); continue }
         // cestini, cassette, telefoni: mai dentro una carreggiata (la posizione OpenStreetMap è spesso imprecisa di qualche metro); i dissuasori sì, sono barriere vere
         const onRoad = (() => { const o = rowAt2(u, v); return o >= 0 && RD[o] && RD[o].r.rank >= 2 })();
         if (p.class === 'waste_basket' || p.class === 'recycling') { if (!inB(u, v) && !onRoad) objs.push(2, u, gh(u, v), v, 0, 1); continue }
@@ -856,11 +951,11 @@ function buildCell(L, opt) {
     for (const PP of aprons) { for (let q = 0; q < 4; q++) mk(PP[q][0], PP[q][1], PP[(q + 1) % 4][0], PP[(q + 1) % 4][1], 2); fillPoly([PP.flat().concat(PP[0])].map(r => r.map(x => x)), S, GMN, q => { GM[q] = 1 }) } }
   stat.edifici = nb; stat.strade = RD.length; stat.alberi = trees.length / 5; stat.ms = Date.now() - t0;
   stat.testi = texts.length; stat.oggetti = objs.length / 6;
-  if (opt.dbg) stat._dbg = { RD: RD.map(R => ({ S2: R.S2, h: R.h, m: R.m, w: R.r.w, c: R.r.c, bridge: !!R.r.bridge, tun: !!R.r.tun, rank: R.r.rank, one: !!R.r.one, ramp: !!R.r.ramp, lift: liftOf(R.r), cov: R.r.tun ? Array.from({ length: R.m }, (_, q) => ghT(R.S2[q * 2], R.S2[q * 2 + 1]) - (R.h[q] + liftOf(R.r) + 5.2)) : null })), d, MSo: MS.n, HGo: HG.n };
+  if (opt.dbg) stat._dbg = { RD: RD.map(R => ({ idx: R.idx, S2: R.S2, h: R.h, m: R.m, w: R.r.w, c: R.r.c, bridge: !!R.r.bridge, tun: !!R.r.tun, rank: R.r.rank, one: !!R.r.one, ramp: !!R.r.ramp, lift: liftOf(R.r), cov: R.r.tun ? Array.from({ length: R.m }, (_, q) => ghT(R.S2[q * 2], R.S2[q * 2 + 1]) - (R.h[q] + liftOf(R.r) + 5.2)) : null })), d, MSo: MS.n, HGo: HG.n, GR: GRD, RLD };
   // raster delle quote stradali: due strati a 16 bit (0 = niente strada, altrimenti 1 + (quota − base) / 0,04 m): un quarto della memoria dei float
   let RHQ = null, RH2Q = null, RHB = 0; if (RHN) { let mn = 1e9; for (let p = 0; p < RHN * RHN; p++) { const h = RH[p]; if (h === h && h < mn) mn = h } RHB = mn < 1e9 ? mn - 1 : 0; RHQ = new Uint16Array(RHN * RHN); RH2Q = new Uint16Array(RHN * RHN);
     for (let p = 0; p < RHN * RHN; p++) { const h = RH[p], h2 = RH2[p]; if (h === h) RHQ[p] = Math.min(65535, 1 + Math.round((h - RHB) * 25)); if (h2 === h2) RH2Q[p] = Math.min(65535, 1 + Math.round((h2 - RHB) * 25)) } }
-  return { S, NG, H, cls, CR, wmask, WM, RH: RHQ, RH2: RH2Q, RHB, RHN, NR, names, GM, GMN, T: TG.out(), R: RG.out(), Rst: RSg.out(), Rdi: RDg.out(), Rba: RBg.out(), Rsw: RWg.out(), Mc: MC.out(), MS: MS.out(), HG: HG.out(), chiese: chList, rotatorie: rbList, dens: dens0, M: MG.out(), W: WG.out(), BW: outs(BWs), BR: outs(BRs), walls: new Float32Array(walls), trees: new Float32Array(trees), lamps: new Float32Array(lamps), parked: new Float32Array(parked), objs: new Float32Array(objs), texts, nav, bridges, mini, places, pois, stat } }
+  return { S, NG, H, cls, CR, wmask, WM, RH: RHQ, RH2: RH2Q, RHB, RHN, NR, names, GM, GMN, T: TG.out(), R: RG.out(), Rst: RSg.out(), Rdi: RDg.out(), Rba: RBg.out(), Rsw: RWg.out(), Mc: MC.out(), MS: MS.out(), HG: HG.out(), chiese: chList, rotatorie: rbList, dens: dens0, M: MG.out(), W: WG.out(), BW: outs(BWs), BR: outs(BRs), walls: new Float32Array(walls), wallsY: new Float32Array(wallsY), rails: new Float32Array(rails), trees: new Float32Array(trees), lamps: new Float32Array(lamps), parked: new Float32Array(parked), objs: new Float32Array(objs), texts, nav, bridges, mini, places, pois, stat } }
 // cella lontana: solo terreno (colori per quota e pendenza; il mare è un gruppo di triangoli a parte, a 1 m sotto lo zero).
 // Il terreno lontano sta un po' sotto la quota vera (di più sui pendii ripidi) così non sporge dalle celle vicine più dettagliate.
 // Le pendenze usano anche un campione oltre il bordo: due celle lontane vicine hanno vertici identici sul bordo comune.

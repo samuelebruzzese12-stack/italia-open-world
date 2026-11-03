@@ -103,7 +103,7 @@ async function mapTile(m) { const L = await vtTile(m.z, m.x, m.y), Sm = ME / (1 
 function transfers(r) { const t = []; const add = a => { if (a && a.buffer && !t.includes(a.buffer)) t.push(a.buffer) };
   const geo = o => { if (o) { add(o.P); add(o.N); add(o.C); add(o.I); add(o.U) } };
   for (const k of ['T', 'R', 'Rst', 'Rdi', 'Rba', 'Rsw', 'Mc', 'MS', 'HG', 'M', 'W']) geo(r[k]); if (r.T && r.T.W) add(r.T.W); for (const k of ['BW', 'BR']) if (Array.isArray(r[k])) r[k].forEach(geo);
-  add(r.H); add(r.cls); add(r.wmask); add(r.RH); add(r.RH2); add(r.NR); add(r.GM); add(r.walls); add(r.trees); add(r.lamps); add(r.parked); add(r.objs); if (r.img) t.push(r.img); return t }
+  add(r.H); add(r.cls); add(r.wmask); add(r.RH); add(r.RH2); add(r.NR); add(r.GM); add(r.walls); add(r.wallsY); add(r.rails); add(r.trees); add(r.lamps); add(r.parked); add(r.objs); if (r.img) t.push(r.img); return t }
 onmessage = async e => { const m = e.data;
   if (m.t === 'cfg') { CFG = m.cfg; return }
   const job = m.t === 'cella' ? cell : m.t === 'lontano' ? far : m.t === 'mappa' ? mapTile : null; if (!job) return;
