@@ -119,6 +119,17 @@ Il terminale di scarico non ha una mesh separata nel modello 3D: il suo stato è
 ## 8. Grafica e audio
 Nessun nuovo sistema grafico: mesh deformate e normali (`sbSkin`/`dmgNormals`), ammaccature (`dmgDeform`), vetri (`dmgCut`/`dmgShards`), fumo, vapore, perdite, scintille, detriti e suoni d'urto restano quelli del gioco e rappresentano la rete reale. Il solver aggiunge solo ciò che mancava: vibrazione della scocca nella posa del modello (ampiezza dalla ruota danneggiata, frequenza dalla velocità), rollio/beccheggio «molli», rumore di ferraglia (`crLoop('rattle')`) e scarico rotto (`crLoop('scarico')`). La fisica resta separata dalla rappresentazione: il solver non tocca mai le mesh.
 
+## 8bis. Pannello 🚗 → «Danni e officina»
+La scheda mostra ora anche il risolutore: ultimo urto (contro cosa, faccia, km/h, massa effettiva, impulso, restituzione, energia all'auto e all'ostacolo), eventi e ripetizioni scartate, energia dissipata dalla carrozzeria, zone deformate con travi rotte, ruote (braccio, ammortizzatore, molla, mozzo, cerchio), effetti (aderenza per ruota, vibrazione, stabilità, tiro), pezzi indeboliti o staccati, profilo in uso (con «non certificato»). Frizione, differenziale e centraline compaiono nella tabella dei componenti e nel preventivo.
+
+Verifica visiva in Chromium (`test/browser_solver_foto.js`, senza GPU e senza mappa):
+
+| prima | frontale a 50 km/h | frontale, vista di fronte | palo sulla ruota a 40 km/h | pannello |
+|---|---|---|---|---|
+| ![](img/v30_d2_prima.jpg) | ![](img/v30_d4_dopo_frontale.jpg) | ![](img/v30_d5_dopo_frontale_fronte.jpg) | ![](img/v30_d7_dopo_palo.jpg) | ![](img/v30_d9_pannello.jpg) |
+
+Dopo il frontale (muso 0,54 m, u 13,8 dal solver): muso e cofano accartocciati, fari rotti, parabrezza incrinato, abitacolo intatto; dopo il palo sulla ruota: campanatura e convergenza visibili sulla ruota anteriore sinistra (mozzo −3 cm, braccio 72 %, mozzo 65 %, aderenza 88 % su quella ruota, l'auto «tira a sinistra»).
+
 ## 9. Prestazioni (misurate)
 - Node (`test/run.js`, questa macchina): `passo` 0,005 ms, `stato` per zona 0,03 ms, `evento` 0,002 ms; una simulazione della rete a 50 km/h 6,6 ms (156 passi) — la rete era e resta il costo dominante, invariato.
 - Chromium senza GPU: `VDS.step` 0,007-0,013 ms/fotogramma; `carHit` frontale a 50 km/h 104-137 ms compreso il primo legame del modello ad alto dettaglio (costo che c'era già: la rete gira nella coda con budget di 6 ms e la pelle in 60 000 vertici per fotogramma).
