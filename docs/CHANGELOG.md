@@ -1,5 +1,11 @@
 # Cronologia delle versioni
 
+## Versione 31.2 — 2026-11-04 — scarpate al bordo delle strade
+Sotto il bordo delle strade (e dei marciapiedi) costruite su un pendio c'era una parete verticale fra l'asfalto e il terreno: fascia
+marrone sospesa fino a 1,8 m, muro di pietra oltre (foto di Pont Canavese). Ora dal bordo scende una scarpata 1:1,5 fino al terreno; si
+ferma prima di un'altra strada o di un edificio e il dislivello che resta è un muro di sostegno in pietra, mai una fascia di terra.
+Pareti verticali in vista lungo le strade: terra −33 % a Monaco e −67 % ad Andorra. Test: 69 superati, 0 falliti.
+
 ## Versione 31.1 — 2026-11-03 — difetti delle foto dal telefono (Pont Canavese, Frassinetto, SP460, Genova)
 Correzioni del generatore delle celle, valide per tutta l'Italia: sagome di OpenStreetMap che entrano nella carreggiata (vie strette dei
 centri storici: l'auto entrava nelle facciate) spostate sul bordo della strada; siepi e muretti solo dove il terreno è alla quota della

@@ -399,6 +399,25 @@ function buildCell(L, opt) {
   if (RHN) RD.forEach((R, idx) => { R.idx = idx; if (R.r.bridge || R.r.tun) return; const hw = Math.max(R.r.w / 2, rpx * .8), lf = liftOf(R.r); const onB = (u, v) => u < .05 || v < .05 || u > S - .05 || v > S - .05, cA = onB(R.S2[0], R.S2[1]), cB = onB(R.S2[R.m * 2 - 2], R.S2[R.m * 2 - 1]);   // pezzo tagliato sul bordo della cella: la strada continua, il tappo resta
     for (let q = 0; q < R.m - 1; q++) rasterSeg(R.S2[q * 2], R.S2[q * 2 + 1], R.S2[q * 2 + 2], R.S2[q * 2 + 3], R.h[q] + lf, R.h[q + 1] + lf, 0, hw, 0, idx, 0, false, q > 0 || cA, q < R.m - 2 || cB, 2 + R.r.rank) });
   RD.sort((a, b) => a.r.rank - b.r.rank);
+  // v31.2: scarpata al posto della parete verticale sotto il bordo della strada. Prima il vuoto fra il bordo dell'asfalto e il terreno più
+  // basso (griglia del terreno di qualche metro) era chiuso da una parete verticale: fascia marrone sospesa fino a 1,8 m, muro di pietra
+  // oltre. Ora dal bordo scende una scarpata 1:1,5 fino al terreno; si ferma prima di un'altra strada o di un edificio e solo il dislivello
+  // che resta è parete. Maschera degli edifici calcolata prima delle strade (la maschera bmask si riempie dopo)
+  const bpre = A && WM && L.building ? (() => { const mk = new Uint8Array(WM * WM), ly = L.building, ex2 = ext0(ly); for (let i = 0; i < ly.n; i++) { const f = ly.feat(i); if (f.type !== 3) continue; for (const pg of polygons(f.parts)) { const rg = pg.map(r2 => clipRing(r2, 0, ex2)).filter(r2 => r2.length >= 6); if (rg.length) fillPoly(rg, ex2, WM, q => { mk[q] = 1 }) } } return mk })() : null;
+  const occupato = (u, v, R, t) => { if (bpre) { const i = Math.floor(u / S * WM), j = Math.floor(v / S * WM); if (i >= 0 && j >= 0 && i < WM && j < WM && bpre[j * WM + i]) return true }
+    if (ROW) { const i = Math.floor(u / rpx), j = Math.floor(v / rpx); if (i >= 0 && j >= 0 && i < RHN && j < RHN) { const o = ROW[j * RHN + i]; if (o >= 0 && (o !== R.idx || t > 2.6)) return true } return false }
+    let oc = false; segNear(u, v, 6, (P, pi, q, dd) => { if (!oc && !P.r.tun && dd < P.r.w / 2 + .3 && (P.r !== R.r || t > 2.6)) oc = true }); return oc };
+  const piede = (x, z, y, ox, oz, R) => { if (y - ghT(x, z) <= .25) return null; let tP = 0, yP = y;
+    for (let t = .5; t <= 9.01; t += .5) { const u = x + ox * t, v = z + oz * t; if (u < 0 || v < 0 || u > S || v > S || occupato(u, v, R, t)) break; const ys = y - t / 1.5, T = ghT(u, v); tP = t; yP = ys; if (ys <= T + .05) { yP = Math.max(ys, T); break } }
+    return tP > 0 ? [x + ox * tP, z + oz * tP, yP] : null };
+  const scarpC = cityish ? lin([.41, .39, .31]) : lin([.37, .38, .26]);
+  // tratto di bordo a→b (punti del bordo, quote ay/by) con direzione verso l'esterno (ox, oz); sgn: verso della parete come prima
+  const bordo = (G0, c0, ax, az, ay, bx, bz, by, ox, oz, sgn, R) => { const fa = piede(ax, az, ay, ox, oz, R), fb = piede(bx, bz, by, ox, oz, R);
+    let pax = ax, paz = az, pay = ay, pbx = bx, pbz = bz, pby = by;
+    if (fa || fb) { const A2 = fa || [ax, az, ay], B2 = fb || [bx, bz, by]; tri3(MG, [[ax, ay, az], [bx, by, bz], [B2[0], B2[2], B2[1]]], scarpC, null, [ox, 1.5, oz]); tri3(MG, [[ax, ay, az], [B2[0], B2[2], B2[1]], [A2[0], A2[2], A2[1]]], scarpC, null, [ox, 1.5, oz]);
+      stat.scarpata = (stat.scarpata || 0) + Math.hypot(bx - ax, bz - az); [pax, paz, pay] = A2; [pbx, pbz, pby] = B2 }
+    const ba = deep(pax, paz, pay, R), bb = deep(pbx, pbz, pby, R), tall = pay - ghT(pax, paz) > .35 || pby - ghT(pbx, pbz) > .35, G3 = tall ? MS : G0, c3 = tall ? stoneW : c0;   // una parete che resta in vista è un muro di sostegno, non terra
+    if (sgn > 0) wallS(G3, pbx, pbz, pax, paz, bb, pby, ba, pay, c3); else wallS(G3, pax, paz, pbx, pbz, ba, pay, bb, pby, c3) };
   for (const R of RD) { const r = R.r, hw = r.w / 2, m = R.m, S2 = R.S2, lift = liftOf(r), u0 = r.sty / COLS + .004, u1 = (r.sty + 1) / COLS - .004;
     const sideL = [], sideR = [];
     for (let q = 0; q < m; q++) { const qa = Math.max(0, q - 1), qb = Math.min(m - 1, q + 1); let tx = S2[qb * 2] - S2[qa * 2], tz = S2[qb * 2 + 1] - S2[qa * 2 + 1]; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl;
@@ -419,9 +438,11 @@ function buildCell(L, opt) {
       const a = base + q * 2; G2.I.push(a, a + 2, a + 1, a + 1, a + 2, a + 3) }
     // bordi verticali (nascondono i dislivelli fra nastro e terreno)
     const skirt = (side, sgn) => { const SG = r.bridge ? MC : MG, c = r.bridge ? conc : dirt; for (let q = 0; q < m - 1; q++) { const ax = side[q * 3], az = side[q * 3 + 1], ay = side[q * 3 + 2], bx = side[q * 3 + 3], bz = side[q * 3 + 4], by = side[q * 3 + 5];
+      if (!r.bridge && !conMarc) { const mx = (S2[q * 2] + S2[q * 2 + 2]) / 2, mz = (S2[q * 2 + 1] + S2[q * 2 + 3]) / 2, ox = (ax + bx) / 2 - mx, oz = (az + bz) / 2 - mz, ol = Math.hypot(ox, oz) || 1; bordo(SG, c, ax, az, ay, bx, bz, by, ox / ol, oz / ol, sgn, R); continue }
       let ba, bb; if (r.bridge) { ba = ay - 1.1; bb = by - 1.1 } else { ba = deep(ax, az, ay, R); bb = deep(bx, bz, by, R) }
-      const tall = !r.bridge && (ay - ba > 1.8 || by - bb > 1.8), G3 = tall ? MS : SG, c3 = tall ? stoneW : c;
+      const tall = !r.bridge && (ay - ghT(ax, az) > .35 || by - ghT(bx, bz) > .35), G3 = tall ? MS : SG, c3 = tall ? stoneW : c;   // v31.2: parete in vista = muro di sostegno
       if (sgn > 0) wallS(G3, bx, bz, ax, az, bb, by, ba, ay, c3); else wallS(G3, ax, az, bx, bz, ba, ay, bb, by, c3) } };   /* v31: n = (−tz, tx) è la normale DESTRA in (u est, v sud): le pareti dei lati avevano il verso opposto a quello voluto */
+    const conMarc = A && !r.bridge && !r.tun && Math.max(urban, dens0 * 1.5) > .25 && (r.c === 'minor' || r.c === 'tertiary' || r.c === 'secondary' || r.c === 'primary') && r.sty !== 4;   // ha i marciapiedi: la scarpata parte dal loro bordo esterno
     if (r.sty !== 9 && !r.tun) { skirt(sideL, 1); skirt(sideR, -1) }
     if (r.tun && A) { // galleria: pareti e volta (facce verso l'interno) solo dove il tetto sta sotto il terreno; portali dove la scatola comincia; muri per le collisioni
       const tc = lin([.30, .30, .31]), tcl = lin([.36, .35, .33]), TH = 5.2, ww = hw + .9, cov = q => ghT(S2[q * 2], S2[q * 2 + 1]) - (R.h[q] + lift + TH), on = [];
@@ -474,8 +495,8 @@ function buildCell(L, opt) {
         for (let q = 0; q < m - 1; q++) { if (cut[q] || cut[q + 1]) continue; const ax = side[q * 3], az = side[q * 3 + 1], ay = side[q * 3 + 2], bx = side[q * 3 + 3], bz = side[q * 3 + 4];
           const by = side[q * 3 + 5]; if (sgn > 0) wallS(MC, ax, az, bx, bz, ay - .02, ay + .14, by - .02, by + .14, curb); else wallS(MC, bx, bz, ax, az, by - .02, by + .14, ay - .02, ay + .14, curb);   /* v31: n = (−tz, tx) è la normale DESTRA in (u est, v sud): le pareti dei lati avevano il verso opposto a quello voluto */
           // bordo esterno del marciapiede fino al terreno (muro di pietra se il dislivello è alto)
-          const P0 = RWg.P, i0 = (b0 + q * 2 + 1) * 3, i1 = (b0 + q * 2 + 3) * 3, ou = -P0[i0], ov = -P0[i0 + 2], oy = P0[i0 + 1], pu = -P0[i1], pv = -P0[i1 + 2], py = P0[i1 + 1], ba = deep(ou, ov, oy, R), bb = deep(pu, pv, py, R), tall = oy - ba > 1.8 || py - bb > 1.8;
-          if (sgn > 0) wallS(tall ? MS : MG, pu, pv, ou, ov, bb, py, ba, oy, tall ? stoneW : dirt); else wallS(tall ? MS : MG, ou, ov, pu, pv, ba, oy, bb, py, tall ? stoneW : dirt) } }   /* v31: n = (−tz, tx) è la normale DESTRA in (u est, v sud): le pareti dei lati avevano il verso opposto a quello voluto */
+          const P0 = RWg.P, i0 = (b0 + q * 2 + 1) * 3, i1 = (b0 + q * 2 + 3) * 3, ou = -P0[i0], ov = -P0[i0 + 2], oy = P0[i0 + 1], pu = -P0[i1], pv = -P0[i1 + 2], py = P0[i1 + 1], mx = (S2[q * 2] + S2[q * 2 + 2]) / 2, mz = (S2[q * 2 + 1] + S2[q * 2 + 3]) / 2, ox = (ou + pu) / 2 - mx, oz = (ov + pv) / 2 - mz, ol = Math.hypot(ox, oz) || 1;
+          bordo(MG, dirt, ou, ov, oy, pu, pv, py, ox / ol, oz / ol, sgn, R) } }   /* v31: n = (−tz, tx) è la normale DESTRA in (u est, v sud): le pareti dei lati avevano il verso opposto a quello voluto */
       // incroci: strisce pedonali e linee di arresto prima dell'incrocio, semafori sulle strade importanti, segnali di senso unico
       { const cut = cuts[0], cut2 = cuts[1], at = q => { const qa = Math.max(0, q - 1), qb = Math.min(m - 1, q + 1); let tx = S2[qb * 2] - S2[qa * 2], tz = S2[qb * 2 + 1] - S2[qa * 2 + 1]; const tl = Math.hypot(tx, tz) || 1; return [tx / tl, tz / tl] };
         const atS = sv => { let q = 0; while (q < m - 1 && R.s[q + 1] < sv) q++; const l = R.s[q + 1] - R.s[q] || 1e-9, t = Math.max(0, Math.min(1, (sv - R.s[q]) / l)); return [S2[q * 2] + (S2[q * 2 + 2] - S2[q * 2]) * t, S2[q * 2 + 1] + (S2[q * 2 + 3] - S2[q * 2 + 1]) * t, R.h[q] + (R.h[q + 1] - R.h[q]) * t + lift, q] };

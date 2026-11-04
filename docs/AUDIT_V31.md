@@ -87,7 +87,10 @@ carreggiata di un'altra di pari o maggiore importanza (3,7 km a Monaco, 4,3 km a
 precedente. Immagine: [`img/v31_1_sagome.jpg`](img/v31_1_sagome.jpg) (Monaco dall'alto e di lato: nessuna sagoma rotta).
 Resta aperta la **fascia marrone** sotto il bordo delle strade costruite a sbalzo su un pendio ripido (foto di Pont Canavese delle 14:18 e
 ultima riga dell'immagine): è la parete verticale di terra che chiude il vuoto fra il bordo della strada e il terreno più in basso.
-Serve una scarpata inclinata al posto della parete, non ancora fatta.
+**Fatto nella 31.2:** scarpata 1:1,5 dal bordo della strada (o del marciapiede) fino al terreno, che si ferma prima di un'altra strada o
+di un edificio; il dislivello che resta è un muro di sostegno in pietra. Pareti verticali di terra in vista lungo le strade: Monaco
+173 090 → 116 639 m², Andorra 98 943 → 32 463 m²; scarpate nuove 217 499 e 559 466 m². Immagine:
+[`img/v31_2_scarpate.jpg`](img/v31_2_scarpate.jpg) (prima, dopo, vista dalla strada).
 
 I «punti dove un'auto resta ferma» contano anche gli ostacoli nuovi (guardrail, parapetti, piloni, pareti dei passaggi). Dei 236 rimasti
 a Monaco, 199 sono edifici di OpenStreetMap che coprono la carreggiata **per il lungo** (portici, sagome sovrapposte alla strada: vedi
