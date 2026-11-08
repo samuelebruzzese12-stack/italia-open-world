@@ -1,0 +1,34 @@
+[GIOCATORE] ehi ci sei?
+[INFORMATORE] (saluto, fiducia 1.5) Sono io. Fai presto, qui in Questura non posso parlare a lungo.
+[GIOCATORE] cosa hanno scoperto quelli della scientifica?
+[INFORMATORE] (indagini, fiducia 2.8) La scientifica ha: impronte digitali sul volante dell'auto abbandonata; targa letta da una telecamera del Tutor.
+[GIOCATORE] di cosa sono accusato
+[INFORMATORE] (accuse, fiducia 1.8) Ti contestano: Art. 7-bis Codice di Gioco — danneggiamento aggravato con veicolo (fisica dei corpi morbidi); Art. 12 Codice di Gioco — resistenza pluriaggravata a pubblico ufficiale; Art. 15 Codice di Gioco — fuga a un posto di controllo. Se ti prendono, sono circa 7 anni.
+[GIOCATORE] qual è il loro piamo per il mio rifugio
+[INFORMATORE] (piani, fiducia 1.8) Hanno un'operazione sul tuo rifugio: fase di sorveglianza, sono al 0 % della preparazione.
+[GIOCATORE] asdf qwerty
+[INFORMATORE] (incomprensibile, fiducia 0.0) Non ho capito, ripeti.
+[GIOCATORE] dove mi cercano?
+[INFORMATORE] (posizione, fiducia 2.0) L'ultima posizione che hanno è Pont Canavese, Via Quattro Maggio. Lì ci sono posti di blocco con 4 stelle di allerta.
+[GIOCATORE] quando arrivano al covo?
+[INFORMATORE] (piani, fiducia 3.0) Hanno un'operazione sul tuo rifugio: fase di sorveglianza, sono al 20 % della preparazione.
+[INFORMATORE] Attento: l'operazione sul tuo rifugio è passata alla fase di contenimento.
+[GIOCATORE] quando arrivano al covo?
+[INFORMATORE] (piani, fiducia 3.0) Hanno un'operazione sul tuo rifugio: fase di contenimento, sono al 40 % della preparazione.
+[GIOCATORE] quando arrivano al covo?
+[INFORMATORE] (piani, fiducia 3.0) Hanno un'operazione sul tuo rifugio: fase di contenimento, sono al 60 % della preparazione.
+[INFORMATORE] Attento: l'operazione sul tuo rifugio è passata alla fase di accerchiamento.
+[GIOCATORE] quando arrivano al covo?
+[INFORMATORE] (piani, fiducia 3.0) Hanno un'operazione sul tuo rifugio: fase di accerchiamento, sono al 80 % della preparazione. Sta per succedere: se sei lì, vattene subito.
+[INFORMATORE] Attento: l'operazione sul tuo rifugio è passata alla fase di irruzione.
+[INFORMATORE] È finita la preparazione: stanno entrando.
+[CENTRALE] Fase 1 — contenimento: isolata un'area di 2 km attorno al rifugio (Pont Canavese, Via Quattro Maggio). 20 auto in borghese sulle uscite.
+[CENTRALE] Fase 2 — accerchiamento: 4 auto civetta a fari spenti; 2 squadre tattiche coprono porte e finestre.
+[RADIO] Siamo in posizione, andiamo
+[CENTRALE] Fase 3 — irruzione: porta abbattuta con l'ariete, flashbang e fumogeni nella stanza.
+[ESITO] irruzione con il giocatore nel rifugio: inizia la fuga a piedi (secondi contati)
+[GIOCATORE] quando arrivano al covo?
+[INFORMATORE] (piani, fiducia 3.0) Nessuna operazione sul tuo covo, per ora. Ti cercano con le pattuglie.
+
+Notifiche in coda per il telefono: ['Attenzione: Movimenti sospetti attorno al covo. Rientra subito!']
+Stato salvato: {"stelle": 4, "accuse": ["danneggiamento", "resistenza", "fuga"], "prove": ["impronte", "targa"], "ultima_posizione": ["Pont Canavese, Via Quattro Maggio", 45.4207, 7.6006], "rifugio_individuato": true, "piano": 0.0}

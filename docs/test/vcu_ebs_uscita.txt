@@ -1,0 +1,64 @@
+
+=== VEICOLO SANO ===
+[t=1.01 s] [CENTRALINA OK] Centralina_Avantreno: urto di 6.0 g sotto la soglia di 15.0 g
+t=0.00 s v=180.0 km/h λf=+0.00 λr=+0.00 r=+0.000 r_des=+0.000 β=  +0.0° ψ=   +0.0° gomme  40/ 40 °C OPERATIONAL
+t=0.26 s v=180.0 km/h λf=+0.01 λr=+0.00 r=+0.000 r_des=+0.000 β=  +0.0° ψ=   +0.0° gomme  40/ 40 °C OPERATIONAL
+t=0.51 s v=180.0 km/h λf=+0.01 λr=+0.00 r=+0.000 r_des=+0.000 β=  +0.0° ψ=   +0.0° gomme  40/ 40 °C OPERATIONAL
+t=0.77 s v=180.0 km/h λf=+0.01 λr=+0.00 r=+0.000 r_des=+0.000 β=  +0.0° ψ=   +0.0° gomme  40/ 40 °C OPERATIONAL
+t=1.02 s v=179.9 km/h λf=+0.00 λr=+0.00 r=-0.080 r_des=+0.000 β=  +0.1° ψ=   -0.1° gomme  40/ 40 °C OPERATIONAL
+t=1.28 s v=179.2 km/h λf=+0.00 λr=+0.00 r=-0.279 r_des=+0.000 β=  +2.9° ψ=   -3.4° gomme  40/ 40 °C ESP OPERATIONAL
+t=1.54 s v=178.0 km/h λf=+0.00 λr=+0.00 r=-0.412 r_des=+0.000 β=  +6.1° ψ=   -8.7° gomme  40/ 40 °C ESP OPERATIONAL
+t=1.79 s v=176.3 km/h λf=+0.00 λr=+0.00 r=-0.229 r_des=+0.000 β=  +7.8° ψ=  -13.3° gomme  41/ 41 °C ESP OPERATIONAL
+t=2.05 s v=174.5 km/h λf=+0.00 λr=+0.00 r=-0.145 r_des=+0.000 β=  +7.5° ψ=  -15.9° gomme  41/ 41 °C ESP OPERATIONAL
+t=2.30 s v=172.8 km/h λf=+0.00 λr=+0.00 r=-0.106 r_des=+0.000 β=  +6.4° ψ=  -17.7° gomme  42/ 42 °C ESP OPERATIONAL
+t=2.56 s v=171.3 km/h λf=+0.00 λr=+0.00 r=-0.088 r_des=+0.000 β=  +4.8° ψ=  -19.1° gomme  42/ 42 °C ESP OPERATIONAL
+t=2.82 s v=170.1 km/h λf=+0.00 λr=+0.00 r=+0.050 r_des=+0.000 β=  +2.7° ψ=  -19.7° gomme  43/ 42 °C OPERATIONAL
+t=3.07 s v=167.4 km/h λf=-0.05 λr=-0.02 r=+0.076 r_des=+0.000 β=  +0.4° ψ=  -18.6° gomme  43/ 42 °C OPERATIONAL
+t=3.33 s v=160.1 km/h λf=-0.05 λr=-0.02 r=+0.026 r_des=+0.000 β=  -0.3° ψ=  -17.8° gomme  43/ 42 °C OPERATIONAL
+t=3.58 s v=152.8 km/h λf=-0.05 λr=-0.02 r=-0.005 r_des=+0.000 β=  -0.2° ψ=  -17.7° gomme  43/ 42 °C OPERATIONAL
+t=3.84 s v=145.5 km/h λf=-0.05 λr=-0.02 r=-0.006 r_des=+0.000 β=  -0.0° ψ=  -17.8° gomme  43/ 42 °C OPERATIONAL
+t=4.10 s v=138.3 km/h λf=-0.05 λr=-0.02 r=-0.001 r_des=+0.000 β=  +0.0° ψ=  -17.8° gomme  43/ 42 °C OPERATIONAL
+t=4.35 s v=131.1 km/h λf=-0.05 λr=-0.02 r=+0.000 r_des=+0.000 β=  +0.0° ψ=  -17.8° gomme  43/ 42 °C OPERATIONAL
+t=4.61 s v=123.9 km/h λf=-0.05 λr=-0.02 r=+0.000 r_des=+0.000 β=  -0.0° ψ=  -17.8° gomme  44/ 42 °C OPERATIONAL
+t=4.86 s v=116.8 km/h λf=-0.05 λr=-0.02 r=+0.000 r_des=+0.000 β=  -0.0° ψ=  -17.8° gomme  44/ 42 °C OPERATIONAL
+t=5.12 s v=109.7 km/h λf=-0.05 λr=-0.02 r=-0.000 r_des=+0.000 β=  -0.0° ψ=  -17.8° gomme  44/ 42 °C OPERATIONAL
+t=5.38 s v=102.6 km/h λf=-0.05 λr=-0.02 r=-0.000 r_des=+0.000 β=  +0.0° ψ=  -17.8° gomme  44/ 42 °C OPERATIONAL
+t=5.63 s v= 95.5 km/h λf=-0.05 λr=-0.02 r=+0.000 r_des=+0.000 β=  +0.0° ψ=  -17.8° gomme  44/ 42 °C OPERATIONAL
+t=5.89 s v= 88.5 km/h λf=-0.05 λr=-0.02 r=+0.000 r_des=+0.000 β=  +0.0° ψ=  -17.8° gomme  44/ 42 °C OPERATIONAL
+t=6.14 s v= 81.4 km/h λf=-0.05 λr=-0.02 r=+0.000 r_des=+0.000 β=  -0.0° ψ=  -17.8° gomme  44/ 42 °C OPERATIONAL
+t=6.40 s v= 74.4 km/h λf=-0.05 λr=-0.02 r=-0.000 r_des=+0.000 β=  -0.0° ψ=  -17.8° gomme  44/ 42 °C OPERATIONAL
+t=6.66 s v= 67.4 km/h λf=-0.05 λr=-0.02 r=-0.000 r_des=+0.000 β=  -0.0° ψ=  -17.8° gomme  44/ 42 °C OPERATIONAL
+t=6.91 s v= 60.4 km/h λf=-0.05 λr=-0.02 r=-0.000 r_des=+0.000 β=  +0.0° ψ=  -17.8° gomme  45/ 42 °C OPERATIONAL
+{'caso': 'VEICOLO SANO', 'stato': 'OPERATIONAL', 'beta_max_gradi': 7.8, 'rotazione_gradi': -17.8, 'gomme_scoppiate': 0, 'temperatura_max_gomme': 45, 'velocita_finale_kmh': 58.2}
+
+=== CENTRALINA DISTRUTTA ===
+[t=1.01 s] [CENTRALINA KO] Centralina_Avantreno: urto di 16.0 g — ABS/ESP Disattivati - Controllo puramente meccanico
+t=0.00 s v=180.0 km/h λf=+0.00 λr=+0.00 r=+0.000 r_des=+0.000 β=  +0.0° ψ=   +0.0° gomme  40/ 40 °C OPERATIONAL
+t=0.26 s v=180.0 km/h λf=+0.01 λr=+0.00 r=+0.000 r_des=+0.000 β=  +0.0° ψ=   +0.0° gomme  40/ 40 °C OPERATIONAL
+t=0.51 s v=180.0 km/h λf=+0.01 λr=+0.00 r=+0.000 r_des=+0.000 β=  +0.0° ψ=   +0.0° gomme  40/ 40 °C OPERATIONAL
+t=0.77 s v=180.0 km/h λf=+0.01 λr=+0.00 r=+0.000 r_des=+0.000 β=  +0.0° ψ=   +0.0° gomme  40/ 40 °C OPERATIONAL
+t=1.02 s v=179.9 km/h λf=+0.00 λr=+0.00 r=-0.080 r_des=+0.000 β=  +0.1° ψ=   -0.1° gomme  40/ 40 °C HARDWARE_FAILURE
+t=1.28 s v=179.2 km/h λf=+0.00 λr=+0.00 r=-0.421 r_des=+0.000 β=  +3.6° ψ=   -4.2° gomme  40/ 40 °C HARDWARE_FAILURE
+t=1.54 s v=177.7 km/h λf=+0.00 λr=+0.00 r=-0.950 r_des=+0.000 β= +11.7° ψ=  -14.7° gomme  40/ 41 °C HARDWARE_FAILURE
+t=1.79 s v=174.7 km/h λf=+0.01 λr=+0.02 r=-0.970 r_des=+0.000 β= +23.1° ψ=  -28.8° gomme  42/ 42 °C HARDWARE_FAILURE
+t=2.05 s v=170.4 km/h λf=+0.03 λr=+0.04 r=-0.964 r_des=+0.000 β= +34.6° ψ=  -43.0° gomme  44/ 43 °C HARDWARE_FAILURE
+t=2.30 s v=164.8 km/h λf=+0.04 λr=+0.06 r=-0.933 r_des=+0.000 β= +46.2° ψ=  -57.0° gomme  46/ 46 °C HARDWARE_FAILURE
+t=2.56 s v=158.1 km/h λf=+0.06 λr=+0.08 r=-0.883 r_des=+0.000 β= +57.4° ψ=  -70.3° gomme  49/ 48 °C HARDWARE_FAILURE
+t=2.82 s v=150.4 km/h λf=+0.07 λr=+0.10 r=-0.822 r_des=+0.000 β= +68.1° ψ=  -82.8° gomme  52/ 51 °C HARDWARE_FAILURE
+t=3.07 s v=142.1 km/h λf=-0.91 λr=-0.60 r=-0.835 r_des=+0.000 β= +79.2° ψ=  -94.5° gomme  55/ 54 °C HARDWARE_FAILURE RUOTE BLOCCATE
+t=3.33 s v=134.7 km/h λf=+1.00 λr=+0.72 r=-0.921 r_des=-0.000 β= +85.7° ψ= -108.8° gomme  58/ 56 °C HARDWARE_FAILURE RUOTE BLOCCATE
+t=3.58 s v=126.8 km/h λf=+1.00 λr=+0.63 r=-0.374 r_des=-0.000 β= +78.1° ψ= -118.3° gomme  60/ 59 °C HARDWARE_FAILURE RUOTE BLOCCATE
+t=3.84 s v=118.7 km/h λf=+1.00 λr=+0.59 r=+0.199 r_des=-0.000 β= +78.6° ψ= -119.6° gomme  62/ 61 °C HARDWARE_FAILURE RUOTE BLOCCATE
+t=4.10 s v=110.8 km/h λf=+1.00 λr=+0.63 r=+0.757 r_des=-0.000 β= +87.8° ψ= -112.5° gomme  63/ 64 °C HARDWARE_FAILURE RUOTE BLOCCATE
+t=4.35 s v=103.6 km/h λf=-1.00 λr=-1.00 r=+0.527 r_des=+0.000 β= +84.0° ψ= -102.2° gomme  66/ 65 °C HARDWARE_FAILURE RUOTE BLOCCATE
+t=4.61 s v= 96.3 km/h λf=-1.00 λr=-1.00 r=+0.151 r_des=+0.000 β= +82.2° ψ=  -97.2° gomme  68/ 66 °C HARDWARE_FAILURE RUOTE BLOCCATE
+t=4.86 s v= 89.1 km/h λf=-1.00 λr=-1.00 r=-0.226 r_des=+0.000 β= +86.3° ψ=  -97.8° gomme  70/ 67 °C HARDWARE_FAILURE RUOTE BLOCCATE
+t=5.12 s v= 81.4 km/h λf=+0.79 λr=+0.79 r=-0.213 r_des=-0.000 β= +89.0° ψ= -102.4° gomme  72/ 68 °C HARDWARE_FAILURE RUOTE BLOCCATE
+t=5.38 s v= 72.9 km/h λf=+0.03 λr=+0.03 r=+0.016 r_des=-0.000 β= +89.7° ψ= -103.3° gomme  73/ 70 °C HARDWARE_FAILURE RUOTE BLOCCATE
+t=5.63 s v= 63.8 km/h λf=-0.00 λr=-0.00 r=+0.002 r_des=+0.000 β= +89.7° ψ= -103.2° gomme  75/ 71 °C HARDWARE_FAILURE RUOTE BLOCCATE
+t=5.89 s v= 54.8 km/h λf=-0.00 λr=-0.00 r=+0.000 r_des=+0.000 β= +89.6° ψ= -103.2° gomme  76/ 72 °C HARDWARE_FAILURE RUOTE BLOCCATE
+t=6.14 s v= 45.8 km/h λf=+0.00 λr=+0.00 r=+0.000 r_des=-0.000 β= +89.5° ψ= -103.2° gomme  77/ 73 °C HARDWARE_FAILURE RUOTE BLOCCATE
+t=6.40 s v= 36.7 km/h λf=+0.00 λr=+0.00 r=+0.000 r_des=-0.000 β= +89.4° ψ= -103.2° gomme  78/ 73 °C HARDWARE_FAILURE RUOTE BLOCCATE
+t=6.66 s v= 27.7 km/h λf=-0.00 λr=-0.00 r=-0.001 r_des=+0.000 β= +89.3° ψ= -103.2° gomme  78/ 74 °C HARDWARE_FAILURE RUOTE BLOCCATE
+t=6.91 s v= 18.6 km/h λf=-0.00 λr=-0.00 r=-0.001 r_des=+0.000 β= +88.9° ψ= -103.2° gomme  79/ 74 °C HARDWARE_FAILURE RUOTE BLOCCATE
+{'caso': 'CENTRALINA DISTRUTTA', 'stato': 'HARDWARE_FAILURE', 'beta_max_gradi': 89.8, 'rotazione_gradi': -103.2, 'gomme_scoppiate': 0, 'temperatura_max_gomme': 79, 'velocita_finale_kmh': 15.8}

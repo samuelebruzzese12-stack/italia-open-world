@@ -1,5 +1,10 @@
 # Cronologia delle versioni
 
+## Moduli Python di studio — 2026-11-08
+`tools/dinamica/` (7-DoF con Magic Formula combinata, ESP/ABS/TCS/EBD a 200 Hz e blackout; centralina VCU-EBS su modello bicicletta a 60 Hz)
+e `tools/companion/` (chat con l'informatore e assalto al rifugio). Autonomi, non collegati al gioco; risultati e limiti nei rispettivi README.
+Test: `python3 tools/test_moduli_python.py` (9 superati).
+
 ## Versione 31.3 e 31.4 — 2026-11-08 — polizia sulle strade, auto che non affonda, profili e fondamenta
 - Polizia (`vita.js`, prova `test/browser_polizia.js`): nascita sistematica sulle strade nell'anello 70–200 m (Andorra: prima pattuglia in
   inseguimento 61,6 → 7,6 s, nate in 90 s 1 → 4); quota presa dalla strada (Monaco: errore 46 → 0 m); senso unico rispettato; inseguimento
