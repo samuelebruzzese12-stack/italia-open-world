@@ -11,7 +11,7 @@ const HB=50,hk=(x,z)=>Math.floor(x/HB)+','+Math.floor(z/HB);
 function rebuild(){const keys=[];for(const [k,c] of REAL.CELLS)keys.push(k+c.lod);const ver=keys.sort().join('|')+'#'+REAL.GEN;if(ver===G.ver)return;G.ver=ver;
  const ways=[],hash=new Map();let id=0;
  for(const c of REAL.CELLS.values()){for(const n of c.nav||[]){const p=n.p,m=p.length/2;if(m<2)continue;const pts=new Float64Array(m*2),s=new Float64Array(m);for(let i=0;i<m;i++){pts[i*2]=c.X-p[i*2];pts[i*2+1]=c.Z-p[i*2+1];if(i)s[i]=s[i-1]+Math.hypot(pts[i*2]-pts[i*2-2],pts[i*2+1]-pts[i*2-1])}
-   const w={id:id++,c:n.c,w:n.w,one:n.one,b:n.b,sw:n.sw&&c.lod==='A',pk:n.pk||0,pts,s,len:s[m-1],m,spd:SPD[n.c]||8,cell:c};ways.push(w);
+   const w={id:id++,c:n.c,w:n.w,one:n.one,b:n.b,tun:!!n.tun,sw:n.sw&&c.lod==='A',pk:n.pk||0,pts,s,len:s[m-1],m,spd:SPD[n.c]||8,cell:c};ways.push(w);
    for(let i=0;i<m;i++){const k=hk(pts[i*2],pts[i*2+1]);let a=hash.get(k);if(!a)hash.set(k,a=[]);a.push(w,i)}}}
  G.ways=ways;G.hash=hash;
  // agenti su strade sparite: via
@@ -89,11 +89,20 @@ function plog2(msg){PL.log.push('['+PL.t.toFixed(0)+' s] '+msg);if(PL.log.length
 function say(text,prio){if(PD.cfg.subtitles){pdSubShow(text,6);clearTimeout(PL.subT);PL.subT=setTimeout(()=>pdSubShow(''),6000)}
  if(PD.cfg.voice&&typeof speechSynthesis!=='undefined'){try{if(prio>=3||!speechSynthesis.speaking){if(prio>=3)speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='it-IT';u.rate=1.05;u.pitch=.9;speechSynthesis.speak(u)}}catch(e){}}
  try{pdAudio.chirp('start')}catch(e){}plog2('radio: '+text)}
-function mkUnit(x,z,h,force){const mdl=pdMakeModel(force||(Math.random()<.5?'PS':'CC'));mdl.g.visible=true;sc.add(mdl.g);const u={id:PL.nextId++,name:(force==='CC'?'Alfa ':'Volante ')+(PL.nextId-1),x,z,h,v:0,y:0,mdl,state:'patrol',way:null,s:0,dir:1,off:2.2,see:false,lastSee:-99,sol:{x,z,c:Math.sin(h),s:Math.cos(h),hx:2.3,hz:.95,on:1,nc:1,amb:1,police:1},stuck:0,stT:0,force};solids.push(u.sol);PL.units.push(u);return u}
+function mkUnit(x,z,h,force,y0){const mdl=pdMakeModel(force||(Math.random()<.5?'PS':'CC'));mdl.g.visible=true;sc.add(mdl.g);const u={id:PL.nextId++,name:(force==='CC'?'Alfa ':'Volante ')+(PL.nextId-1),x,z,h,v:0,y:y0===undefined?REAL.ground(x,z):y0,mdl,state:'patrol',way:null,s:0,dir:1,off:2.2,see:false,lastSee:-99,sol:{x,z,c:Math.sin(h),s:Math.cos(h),hx:2.3,hz:.95,on:1,nc:1,amb:1,police:1},stuck:0,stT:0,force};solids.push(u.sol);PL.units.push(u);return u}
 function dropUnit(u){sc.remove(u.mdl.g);const i=solids.indexOf(u.sol);if(i>=0)solids.splice(i,1);PL.units=PL.units.filter(q=>q!==u)}
-function spawnPatrol(px,pz,behind,force){if(!G.ways.length)return null;const dr=G.ways.filter(w=>SPD[w.c]&&w.c!=='service'&&w.len>25);if(!dr.length)return null;
- for(let k=0;k<16;k++){const w=dr[Math.floor(Math.random()*dr.length)],s=Math.random()*w.len,p={x:0,z:0,dx:0,dz:0};at(w,s,1,p);const d=Math.hypot(p.x-px,p.z-pz);if(behind?(d<70||d>200):(d<120||d>320))continue;if(!behind&&inView(p.x,p.z))continue;
-  const dir=(w.one||Math.random()<.5)?1:-1;at(w,s,dir,p);const rx=-p.dz,rz=p.dx,off=REAL.laneOff(w.w,w.one,w.pk,dir),u=mkUnit(p.x+rx*off,p.z+rz*off,Math.atan2(p.dx,p.dz),force);u.way=w;u.s=s;u.dir=dir;u.off=off;u.v=w.spd*.9;return u}return null}
+// v31.3: quota di un punto della via w (in galleria: l'impalcato sotto il terreno; altrimenti la superficie o l'impalcato più alto)
+function quotaVia(w,x,z){if(w&&w.tun){const b=REAL.bridgeH(x,z,REAL.terrainH(x,z)-8);if(b!==null)return b}return REAL.ground(x,z)}
+// v31.3: nascita delle pattuglie. Prima: 16 punti di strada a caso, tenuti solo se a 70–200 m (o 120–320 m) dal giocatore: fuori città quasi mai,
+// e la ricerca restava a «0 pattuglie». Ora si raccolgono tutti i punti di strada (ogni 15 m) nell'anello e se ne sceglie uno; se l'anello è vuoto
+// si allarga a 40–420 m. Mai in galleria; quota presa dalla via (prima partiva da quota 0 e nelle città con gallerie finiva sottoterra)
+function spawnPatrol(px,pz,behind,force){if(!G.ways.length)return null;const dr=G.ways.filter(w=>SPD[w.c]&&w.c!=='service'&&w.len>25&&!w.tun);if(!dr.length)return null;
+ const p={x:0,z:0,dx:0,dz:0},cand=[];for(const [r0,r1] of [behind?[70,200]:[120,320],[40,420]]){for(const w of dr){if(Math.hypot(w.pts[0]-px,w.pts[1]-pz)-w.len>r1)continue;for(let s=4;s<w.len-4;s+=15){at(w,s,1,p);const d=Math.hypot(p.x-px,p.z-pz);if(d<r0||d>r1)continue;if(!behind&&inView(p.x,p.z))continue;cand.push(w,s)}}if(cand.length)break}
+ if(!cand.length)return null;const k=Math.floor(Math.random()*cand.length/2)*2,w=cand[k],s=cand[k+1];
+ const dir=(w.one||Math.random()<.5)?1:-1;at(w,s,dir,p);const rx=-p.dz,rz=p.dx,off=REAL.laneOff(w.w,w.one,w.pk,dir),x=p.x+rx*off,z=p.z+rz*off,u=mkUnit(x,z,Math.atan2(p.dx,p.dz),force,quotaVia(w,x,z));u.way=w;u.s=s;u.dir=dir;u.off=off;u.v=w.spd*.9;return u}
+// v31.3: il tratto dritto fra (x0,z0) e (x1,z1) sta tutto su una carreggiata (campioni ogni 4 m)?
+function suStrada(x,z){const a=near(x,z,24);for(let q=0;q<a.length;q+=2){const w=a[q];if(w.tun||!SPD[w.c])continue;if(nearestOn(w,x,z).d<w.w/2+1.2)return true}return false}
+function lineaSuStrada(x0,z0,x1,z1){const d=Math.hypot(x1-x0,z1-z0),n=Math.max(1,Math.ceil(d/4));for(let k=1;k<n;k++)if(!suStrada(x0+(x1-x0)*k/n,z0+(z1-z0)*k/n))return false;return true}
 function losTo(u,x,z){const dx=x-u.x,dz=z-u.z,d=Math.hypot(dx,dz);if(d<4)return true;if(d>170)return false;return pdLosDist(u.x,u.z,dx/d,dz/d,d)>=d-1}
 PL.offence=function(kind,sev,prio){if(!PD.cfg.enabled)return;const now=PL.t;if(PL.lastOff[kind]&&now-PL.lastOff[kind]<4)return;PL.lastOff[kind]=now;
  // una pattuglia che vede o un passante che chiama il 112
@@ -110,7 +119,7 @@ function unitDrive(u,dt,target,vmax){// guida cinematica: sterza verso il bersag
  const turn=Math.min(1,.5+u.v/6)*2.4;u.h+=Math.max(-turn*dt,Math.min(turn*dt,da));
  let tv=vmax*(1-Math.min(.6,Math.abs(da)*.8));const fx=Math.sin(u.h),fz=Math.cos(u.h),dd=clipDist(u.x,u.z,fx,fz,14,1,u.y);if(dd<13)tv=Math.min(tv,dd<4?0:u.v*(dd/13));
  for(const a of G.cars){const ex=a.x-u.x,ez=a.z-u.z,e=Math.hypot(ex,ez);if(e<14&&(ex*fx+ez*fz)/e>.8)tv=Math.min(tv,e<5?0:a.v+1)}
- u.v+=(tv-u.v)*Math.min(1,dt*(tv<u.v?3.5:1.3));
+ tv=Math.min(tv,58.3);u.v+=Math.max(-9*dt,Math.min(4.5*dt,(tv-u.v)*Math.min(1,dt*(tv<u.v?3.5:1.3))));   /* v31.3: al massimo 210 km/h, accelerazione 4,5 m/s², frenata 9 m/s² (come un'auto vera) */
  const nx=u.x+fx*u.v*dt,nz=u.z+fz*u.v*dt;u.sol.on=0;const q=push(nx,nz,1.1,u.y);u.sol.on=1;
  if(q[2]){const ux=q[0]-nx,uz=q[1]-nz,l=Math.hypot(ux,uz);if(l>1e-4){u.v*=.4;u.stuck+=dt}u.x=q[0];u.z=q[1]}else{u.x=nx;u.z=nz;u.stuck=Math.max(0,u.stuck-dt*.5)}
  if(REAL.wet(u.x,u.z)){u.x-=fx*u.v*dt;u.z-=fz*u.v*dt;u.v=0}
@@ -122,12 +131,12 @@ function unitStep(u,dt,px,pz){const T=inCar?C:P;u.see=losTo(u,T.x,T.z)&&Math.hyp
   const q=nearestOn(w,u.x,u.z);u.s=q.s+u.dir*Math.max(1.5,u.v*dt*2);if(u.s<0||u.s>w.len){const n=nextWay(w,P2.x,P2.z,P2.dx,P2.dz,false);if(n){u.way=n.w;u.dir=n.dir;u.s=n.s+n.dir;u.off=REAL.laneOff(n.w.w,n.w.one,n.w.pk,n.dir)}else{u.dir=-u.dir;u.s=Math.max(0,Math.min(w.len,u.s))}}
   if(PL.heat>0&&u.see){u.state='chase';say(u.name+': contatto visivo con il veicolo ricercato in '+(REAL.placeName(u.x,u.z)||'zona'),2)}}
  else if(u.state==='chase'){const d=Math.hypot(T.x-u.x,T.z-u.z);
-  if(u.see&&d<70){unitDrive(u,dt,{x:T.x+(inCar?V.vx*.6:0),z:T.z+(inCar?V.vz*.6:0)},inCar?38:14);u.way=null}
+  if(u.see&&d<70&&(d<18||((u.lsT||0)>PL.t?u.ls:(u.lsT=PL.t+.3,u.ls=lineaSuStrada(u.x,u.z,T.x,T.z))))){unitDrive(u,dt,{x:T.x+(inCar?V.vx*.6:0),z:T.z+(inCar?V.vz*.6:0)},inCar?38:14);u.way=null}   /* v31.3: dritto verso il bersaglio solo se la linea sta sulla strada (prima tagliava campi e isolati) */
   else{// per strada verso il giocatore, scegliendo agli incroci la via che avvicina
-   if(!u.way){u.way=findWayNear(u.x,u.z,60,null);if(u.way){const q=nearestOn(u.way,u.x,u.z);u.s=q.s;at(u.way,u.s,1,P2);const fw={x:P2.x+P2.dx*20,z:P2.z+P2.dz*20},bw={x:P2.x-P2.dx*20,z:P2.z-P2.dz*20};u.dir=Math.hypot(fw.x-T.x,fw.z-T.z)<=Math.hypot(bw.x-T.x,bw.z-T.z)?1:-1}}
+   if(!u.way){u.way=findWayNear(u.x,u.z,60,null);if(u.way){const q=nearestOn(u.way,u.x,u.z);u.s=q.s;at(u.way,u.s,1,P2);const fw={x:P2.x+P2.dx*20,z:P2.z+P2.dz*20},bw={x:P2.x-P2.dx*20,z:P2.z-P2.dz*20};u.dir=u.way.one?1:(Math.hypot(fw.x-T.x,fw.z-T.z)<=Math.hypot(bw.x-T.x,bw.z-T.z)?1:-1)}}   /* v31.3: sulle vie a senso unico (carreggiate delle autostrade) solo nel verso di marcia */
    if(u.way){const w=u.way;at(w,u.s,u.dir,P2);const rx=-P2.dz,rz=P2.dx;unitDrive(u,dt,{x:P2.x+rx*u.off+P2.dx*8,z:P2.z+rz*u.off+P2.dz*8},Math.min(w.spd*1.6+6,34));const q=nearestOn(w,u.x,u.z);u.s=q.s+u.dir*Math.max(2,u.v*dt*2);
     if(u.s<0||u.s>w.len||(u.v>1&&Math.random()<dt*.5)){const n=nextWay(w,P2.x,P2.z,P2.dx,P2.dz,false,[T.x,T.z]);if(n&&(u.s<0||u.s>w.len||Math.random()<.6)){u.way=n.w;u.dir=n.dir;u.s=n.s+n.dir;u.off=REAL.laneOff(n.w.w,n.w.one,n.w.pk,n.dir)}else if(u.s<0||u.s>w.len){u.dir=-u.dir;u.s=Math.max(0,Math.min(w.len,u.s))}}}
-   else unitDrive(u,dt,{x:T.x,z:T.z},16)}
+   else{const w2=findWayNear(u.x,u.z,250,null);if(w2){const q=nearestOn(w2,u.x,u.z);at(w2,q.s,1,P2);unitDrive(u,dt,{x:P2.x,z:P2.z},8);if(q.d<4){u.way=w2;u.s=q.s;u.dir=1}}else u.v=Math.max(0,u.v-9*dt)}}   /* v31.3: senza strada vicina torna alla strada più vicina; prima puntava dritto al giocatore attraverso la mappa */
   if(u.stuck>2.5){u.v=-4;u.h+=dt*1.5;if(u.stuck>4)u.stuck=0}
   // speronamento: contatto con l'auto del giocatore
   if(inCar&&d<5.2&&u.v>6&&!(Math.abs(u.y-V.y)>2.5)){const sp=Math.hypot(V.vx,V.vz),ux=Math.sin(u.h),uz=Math.cos(u.h);if(PL.t-(u.ramT||-9)>1.5){u.ramT=PL.t;const imp=Math.max(3.5,u.v-sp*.5);try{carHit(carA,{x:C.x,z:C.z,h:C.h,y:V.y,vx:V.vx,vz:V.vz,player:true},u.x+ux*2.3,u.z+uz*2.3,ux,uz,imp,'car')}catch(e){}V.vx+=ux*imp*.25;V.vz+=uz*imp*.25;V.ywW=cl(V.ywW+(Math.random()-.5)*1.2,-2.4,2.4);u.v*=.5}}
