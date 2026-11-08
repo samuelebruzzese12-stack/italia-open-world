@@ -57,6 +57,10 @@ def applica(h):
     h = rep("bs.push({p:1,x:C.x,z:C.z,h:C.h,", "bs.push({p:1,x:C.x,z:C.z,y:V.y,h:C.h,")
     h = rep("bs.push({p:0,u,x:u.x,z:u.z,h:u.h,", "bs.push({p:0,u,x:u.x,z:u.z,y:u.y,h:u.h,")
     h = rep("if(Math.hypot(A.x-B.x,A.z-B.z)>7.5)continue;", "if(Math.hypot(A.x-B.x,A.z-B.z)>7.5||Math.abs(A.y-B.y)>2.5)continue;")
+    # 7. (31.4) auto che affonda nell'asfalto: la quota dell'auto si avvicinava al suolo con un ritardo (k = 12/s), in salita restava sotto la
+    #    superficie (Monaco, via al 49 %: sotto oltre 5 cm per il 44-57 % del percorso, fino a 1,1 m). Ora può scendere con calma (sospensione)
+    #    ma non stare sotto la superficie fra le ruote, né sotto il suolo al centro oltre l'altezza da terra (12 cm)
+    h = rep("V.y+=((yf+yb)/2-V.y)*k;", "V.y+=((yf+yb)/2-V.y)*k;V.y=Math.max(V.y,(yf+yb)/2-.03,GY(C.x,C.z,yh)-.12);")
     return h, n[0]
 
 if __name__ == '__main__':

@@ -1,5 +1,15 @@
 # Cronologia delle versioni
 
+## Versione 31.3 e 31.4 — 2026-11-08 — polizia sulle strade, auto che non affonda, profili e fondamenta
+- Polizia (`vita.js`, prova `test/browser_polizia.js`): nascita sistematica sulle strade nell'anello 70–200 m (Andorra: prima pattuglia in
+  inseguimento 61,6 → 7,6 s, nate in 90 s 1 → 4); quota presa dalla strada (Monaco: errore 46 → 0 m); senso unico rispettato; inseguimento
+  diretto solo se la linea sta sulla strada; senza strada torna alla strada; 210 km/h, 4,5 m/s² e 9 m/s² al massimo.
+- Auto che affonda (prova `test/browser_affondamento.js`, via al 49 % di Monaco a 25 m/s): sotto l'asfalto oltre 5 cm per il 44,5 → 4,2 %
+  del percorso, al massimo 1,1 → 0,12 m.
+- Profilo delle strade lisciato fuori dagli incroci (cambi di pendenza >10 % ai vertici: Monaco 8,7 → 8,2 %, Andorra 6,0 → 4,3 %).
+- Fondamenta degli edifici campionate lungo i lati, non solo agli spigoli (facciate sospese 15 cm–1 m a Monaco: 34 → 16 colonne).
+- Pareti sotto un'altra carreggiata di nuovo di terra e scarpate che si fermano un pixel prima delle altre strade (correzione della 31.2).
+
 ## Versione 31.2 — 2026-11-04 — scarpate al bordo delle strade
 Sotto il bordo delle strade (e dei marciapiedi) costruite su un pendio c'era una parete verticale fra l'asfalto e il terreno: fascia
 marrone sospesa fino a 1,8 m, muro di pietra oltre (foto di Pont Canavese). Ora dal bordo scende una scarpata 1:1,5 fino al terreno; si
