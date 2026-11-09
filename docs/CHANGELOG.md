@@ -1,5 +1,20 @@
 # Cronologia delle versioni
 
+## Versione 31.7b — 2026-11-09 — confini fra celle, sentieri sotto le strade, report calcolato
+Report: `docs/test/v31_7_misure_finali.txt`, scritto da `tools/collaudo/report_finale.js` (esegue le prove, ricalcola il «prima» dal commit
+dba1fbe con lo stesso codice di misura, confronta con soglie scritte nello script; PASSED solo se tutti i criteri sono rispettati).
+- Gradini sui confini fra celle (presenti dalla versione 30): Monaco 2 oltre 30 cm → 0 (massimo 55,6 → 2,4 cm). Causa: i marciapiedi si
+  decidono per cella intera («città» o no), quindi la stessa strada aveva fasce diverse nelle due celle (7,2 e 5 m) e i sentieri accanto
+  prendevano quote diverse nelle confluenze. Ora per le QUOTE la fascia non dipende dalla cella (`bandH`); il blocco della lisciatura usa la
+  sola carreggiata. Pieghe dei profili > 10 %: Monaco 6,77 → 6,13 %, Andorra 3,43 → 3,07 %.
+- Sentieri e marciapiedi che passano sotto il bordo di una strada più alta: l'asfalto si ferma prima della carreggiata più alta (le quote
+  non cambiano). Muri di pietra dentro l'asfalto disegnato di un'altra via: Monaco 391 → 307, Andorra 362 → 354 (sulla larghezza nominale
+  354 e 359). Il resto sta su strade per auto, che non sono state ristrette.
+- Confluenze: a parità di peso decide il rango, poi la distanza (prima la prima trovata, che dipende dall'ordine di visita).
+- Test: 73 (nuovo: due celle sintetiche vicine, una «città» e una no; con la 31.7 gradino di 43 cm sul confine).
+- Esito del report: NOT PASSED, 8 criteri su 10 — restano 1 facciata (parte con min_height nei dati, Monaco) e 1 gradino fra due ponti
+  (Andorra, 34 cm).
+
 ## Versione 31.7 — 2026-11-09 — protezione del pianale
 Misure in `docs/test/v31_7_misure_finali.txt`.
 - `groundCar` (sorgenti/patch_mappa_v31.py, passo 8): 4 sonde sotto il fondo (altezza 0,23 m misurata sul modello del gioco, con beccheggio

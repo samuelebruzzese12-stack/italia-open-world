@@ -396,6 +396,17 @@ test('mappa: l\'estremità di una via tocca la strada su cui finisce alla stessa
         if (d < Math.max(1, R2.w / 2) && (!best || d < best[0])) best = [d, R2.h[q] + (R2.h[q + 1] - R2.h[q]) * t + R2.lift] } }
       if (!best) continue; n++; const dh = Math.abs(he - best[1]); if (dh > peggiore) { peggiore = dh; es = ' (' + R.c + ' in ' + u.toFixed(0) + ', ' + v.toFixed(0) + ')' } } }
     ok(n > 0, nome + ': nessuna estremità che tocca un\'altra strada'); ok(peggiore < .1, nome + ': gradino di ' + peggiore.toFixed(2) + ' m fra un\'estremità e la strada su cui finisce' + es) } });
+test('mappa: sul confine fra una cella «città» e una no la stessa strada e il marciapiede accanto hanno la stessa quota nelle due celle (prima gradino fino a 43 cm)', () => {
+  const M = MAPPA.M, K = Math.cos(43.73 * Math.PI / 180), Sm = M.ME / 32768, S = Sm * K, k = S / 4096, cy = 11946, h = (U, V) => 30 + .02 * U + .12 * V;
+  // una strada principale attraversa il confine fra due celle e un marciapiede le corre accanto a 6 m, su un terreno inclinato di traverso al 12 %.
+  // La prima cella è «città» (marciapiedi disegnati: fascia della strada 7,2 m), la seconda no (fascia 5 m)
+  const cella = (cx, dU, dens) => { const E = 4096, T = m => m / k, L = [], line = (pts, props) => L.push({ type: 2, props, parts: [pts.flatMap(([U, V]) => [T(U - dU), T(V)])] });
+    line([[-400, 450], [400, 450], [884, 450], [1300, 450], [2200, 450]], { class: 'primary' }); line([[-400, 456], [500, 456], [884, 456], [1250, 456], [2200, 456]], { class: 'path', subclass: 'footway' });
+    const mxL = -M.MH + cx * Sm, myT = M.MH - cy * Sm, dem = (mx, my) => h((mx - mxL) * K + dU, (myT - my) * K);
+    return M.buildCell({ transportation: { ext: E, n: L.length, feat: i => L[i] } }, { S, mxL, myT, K, dem, lod: 'A', earcut: M.earcut, cx, cy, blo: -4096, bhi: 8192, dens, dbg: 1, RHN: 512 }) };
+  const A = cella(17063, 0, .3), B = cella(17064, S, .02), fine = (r, u) => { const out = []; for (const R of r.stat._dbg.RD) for (const e of [0, R.m - 1]) if (Math.abs(R.S2[e * 2] - u) < .05) out.push([R.c, R.S2[e * 2 + 1], R.h[e] + R.lift]); return out };
+  const a = fine(A, S), b = fine(B, 0); let n = 0, mx = 0; for (const x of a) for (const y of b) if (x[0] === y[0] && Math.abs(x[1] - y[1]) < 1) { n++; mx = Math.max(mx, Math.abs(x[2] - y[2])) }
+  ok(n === 2, 'estremità sul confine accoppiate: ' + n); ok(mx < .05, 'gradino sul confine ' + mx.toFixed(2) + ' m') });
 test('mappa: sotto il bordo delle strade su un pendio c\'è una scarpata che scende al terreno, rivolta verso l\'alto (prima una parete verticale: fascia marrone sospesa)', () => {
   const r = MAPPA.sv; ok((r.stat.scarpata || 0) > 200, 'metri di scarpata nello svincolo: ' + Math.round(r.stat.scarpata || 0)); const P = r.M.P, I = r.M.I; let su = 0, giu = 0;
   for (let q = 0; q < I.length; q += 3) { const a = I[q] * 3, b = I[q + 1] * 3, e = I[q + 2] * 3, ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], vx = P[e] - P[a], vy = P[e + 1] - P[a + 1], vz = P[e + 2] - P[a + 2], nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, l = Math.hypot(nx, ny, nz); if (l < .02 || Math.abs(ny / l) < .3 || Math.abs(ny / l) > .95) continue; ny > 0 ? su++ : giu++ }

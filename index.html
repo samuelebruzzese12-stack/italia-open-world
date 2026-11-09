@@ -1495,6 +1495,10 @@ function buildCell(L, opt) {
   const cityE = Math.max((L.building && L.building.n) ? (() => { let n = 0; for (let i = 0; i < CR * CR; i++) if (cls[i] === CL.URBAN) n++; return n / (CR * CR) })() : 0, (opt.dens === undefined ? 0 : opt.dens) * 1.5) > .25;
   const swOf = r => A && cityE && !r.bridge && !r.tun && (r.c === 'minor' || r.c === 'tertiary' || r.c === 'secondary' || r.c === 'primary') && r.sty !== 4 ? 2.2 : 0;
   const bandOf = r => r.w / 2 + .5 + shoulder(r) + swOf(r);   // fascia della carreggiata: banchina sulle autostrade, marciapiedi in città
+  // v31.7b: fascia per il calcolo delle QUOTE, uguale in tutte le celle. swOf dipende da cityE, che si decide per cella intera: sul confine
+  // fra una cella «città» e una no la stessa strada aveva fasce diverse (Monaco 17059/17060: 7,2 e 5 m) e i sentieri accanto prendevano
+  // quote diverse (gradini di 42 e 56 cm sul bordo). Qui i marciapiedi possibili contano sempre; il disegno dei marciapiedi resta com'era
+  const bandH = r => r.w / 2 + .5 + shoulder(r) + (A && !r.bridge && !r.tun && (r.c === 'minor' || r.c === 'tertiary' || r.c === 'secondary' || r.c === 'primary') && r.sty !== 4 ? 2.2 : 0);
   for (const P of PR) P.h0f = Float32Array.from(P.h);
   { const hump = (P, s0, amt, flat, grade, sg) => { if (!P.adj) P.adj = new Float32Array(P.m); for (let q = 0; q < P.m; q++) { const dd = Math.abs(P.s[q] - s0), val = dd <= flat ? amt : amt - (dd - flat) * grade; if (val <= 0) continue; if (sg > 0) { if (val > P.adj[q]) P.adj[q] = val } else if (-val < P.adj[q]) P.adj[q] = -val } };
     PR.forEach((B, bi) => { if (!B.r.bridge) return; const lb = lvl(B.r);
@@ -1559,12 +1563,12 @@ function buildCell(L, opt) {
     stat.nodi = NOD.filter(N => N.P.size > 1).length }
   // zone di confluenza: dove una strada corre dentro la carreggiata di una strada più importante (rampe che si staccano, corsie di immissione,
   // vie che costeggiano), prende la sua quota, sfumando sui 2 m del bordo: le due superfici coincidono e nessuna delle due fluttua
-  { const BW = bandOf, adj = [];
+  { const BW = bandH, adj = [];
     for (const P of PR) { if (P.r.bridge || P.r.tun || P.r.sty === 9) { adj.push(null); continue } const a = new Float32Array(P.m).fill(NaN);
-      for (let q = 0; q < P.m; q++) { const u = P.S2[q * 2], v = P.S2[q * 2 + 1]; let bw = 0, bh = 0;
+      for (let q = 0; q < P.m; q++) { const u = P.S2[q * 2], v = P.S2[q * 2 + 1]; let bw = 0, bh = 0, bR = -1, bD = 1e9;
         segNear(u, v, 12, (Q, pj, qj, dd, tt) => { if (Q === P || Q.r.bridge || Q.r.tun || Q.r.sty === 9 || Q.r.rank < P.r.rank || (Q.r.rank === P.r.rank && !P.r.ramp)) return; const hwQ = BW(Q.r); if (dd >= hwQ) return; const hq = hAtQ(Q, qj, tt), dh = Math.abs(hq - P.h[q]);
           // a più di 1,5–3 m di dislivello non è una confluenza ma una terrazza (via che corre sotto la strada grande): ognuna tiene la sua quota
-          const w = Math.min(1, (hwQ - dd) / 2) * Math.max(0, Math.min(1, (3 - dh) / 1.5)); if (w > bw) { bw = w; bh = hq } });
+          const w = Math.min(1, (hwQ - dd) / 2) * Math.max(0, Math.min(1, (3 - dh) / 1.5)); if (w > bw + 1e-9 || (Math.abs(w - bw) <= 1e-9 && w > 0 && (Q.r.rank > bR || (Q.r.rank === bR && (dd < bD - 1e-6 || (Math.abs(dd - bD) <= 1e-6 && hq > bh)))))) { bw = w; bh = hq; bR = Q.r.rank; bD = dd } });   /* v31.7b: a parità di peso decide il rango, poi la distanza, poi la quota (prima la prima trovata: l'ordine di visita cambia da una cella all'altra) */
         // alle estremità (6 m) la confluenza non agisce: lì comanda il nodo (l'estremità tocca esattamente ciò su cui finisce)
         bw *= Math.min(1, P.s[q] / 6, (P.s[P.m - 1] - P.s[q]) / 6); if (bw > 0) a[q] = P.h[q] + (bh - P.h[q]) * bw }
       adj.push(a) }
@@ -1580,7 +1584,7 @@ function buildCell(L, opt) {
     // punto di contatto non cambia: niente gradino all'incrocio)
     const tocco = new Map(); for (const Q of PR) for (const e of [0, Q.m - 1]) segNear(Q.S2[e * 2], Q.S2[e * 2 + 1], 6, (P2, pj, qj, dd) => { if (P2 === Q || dd >= Math.max(1, P2.r.w / 2) + .5) return; let a = tocco.get(P2); if (!a) tocco.set(P2, a = new Set()); a.add(qj); a.add(qj + 1) });
     for (const P of PR) { if (P.r.bridge || P.r.tun || P.r.sty === 9 || P.m < 3) continue; const m = P.m, fermo = new Uint8Array(m), h0 = Float32Array.from(P.h); fermo[0] = fermo[m - 1] = 1; for (const q of tocco.get(P) || []) if (q >= 0 && q < m) fermo[q] = 1;
-      for (let q = 1; q < m - 1; q++) { const u = P.S2[q * 2], v = P.S2[q * 2 + 1]; segNear(u, v, 8, (Q, pj, qj, dd, tt) => { if (fermo[q] || Q === P) return; if (dd < bandOf(Q.r) + .5 && Math.abs(hAtQ(Q, qj, tt) - P.h[q]) < 3) fermo[q] = 1 }) }
+      for (let q = 1; q < m - 1; q++) { const u = P.S2[q * 2], v = P.S2[q * 2 + 1]; segNear(u, v, 8, (Q, pj, qj, dd, tt) => { if (fermo[q] || Q === P) return; if (dd < Q.r.w / 2 + .5 + shoulder(Q.r) + .5 && Math.abs(hAtQ(Q, qj, tt) - P.h[q]) < 3) fermo[q] = 1   /* v31.7b: senza marciapiedi (uguale in tutte le celle) */ }) }
       for (let it = 0; it < 8; it++) for (let q = 1; q < m - 1; q++) { if (fermo[q]) continue; const la = P.s[q] - P.s[q - 1], lb = P.s[q + 1] - P.s[q]; if (la < 1e-3 || lb < 1e-3) continue; const lim = 1.5;
         const t = (P.h[q - 1] * lb + P.h[q + 1] * la) / (la + lb), nh = P.h[q] + (t - P.h[q]) * .5; P.h[q] = Math.max(h0[q] - lim, Math.min(h0[q] + lim, nh)) }
       for (let q = 0; q < m; q++) if (Math.abs(P.h[q] - h0[q]) > .05) mossi++; if (opt.dbg) P.fermo = fermo } stat.profiliLisciati = mossi }
@@ -1764,10 +1768,16 @@ function buildCell(L, opt) {
     const ba = deep(pax, paz, pay, R), bb = deep(pbx, pbz, pby, R), tall = (pay - ghT(pax, paz) > .35 || pby - ghT(pbx, pbz) > .35) && !sottoAltra(pax, paz, R) && !sottoAltra(pbx, pbz, R), G3 = tall ? MS : G0, c3 = tall ? stoneW : c0;   // una parete che resta in vista è un muro di sostegno, non terra
     if (sgn > 0) wallS(G3, pbx, pbz, pax, paz, bb, pby, ba, pay, c3); else wallS(G3, pax, paz, pbx, pbz, ba, pay, bb, pby, c3) };
   for (const R of RD) { const r = R.r, hw = r.w / 2, m = R.m, S2 = R.S2, lift = liftOf(r), u0 = r.sty / COLS + .004, u1 = (r.sty + 1) / COLS - .004;
-    const sideL = [], sideR = [];
+    const sideL = [], sideR = [], hwL = [], hwR = [];
+    // v31.7b: un sentiero o marciapiede che passa sotto il bordo di una strada più alta (carreggiate sovrapposte in pianta nei dati) si ferma
+    // contro il suo muro di sostegno invece di attraversarlo: su ogni lato il bordo dell'asfalto si ferma 5 cm prima del punto in cui entra
+    // nella carreggiata di una strada più alta di almeno 25 cm (mai meno di 0,3 m dall'asse). Le quote non cambiano
+    const stretto = A && r.c === 'path' && !r.bridge && !r.tun ? (u, v, ox, oz, y) => { for (let t = .3; t <= hw + 1e-6; t += .1) { const pu = u + ox * t, pv = v + oz * t; let alto = false;
+        segNear(pu, pv, 8, (Q, pj, qj, dd, tt) => { if (alto || Q.r === r || Q.r.tun || dd >= Q.r.w / 2 + .6) return; if (hAtQ(Q, qj, tt) + liftOf(Q.r) > y + .25) alto = true }); if (alto) return Math.max(.3, t - .05) } return hw } : null;
     for (let q = 0; q < m; q++) { const qa = Math.max(0, q - 1), qb = Math.min(m - 1, q + 1); let tx = S2[qb * 2] - S2[qa * 2], tz = S2[qb * 2 + 1] - S2[qa * 2 + 1]; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl;
-      const nx = -tz, nz = tx, y = R.h[q] + lift, u = S2[q * 2], v = S2[q * 2 + 1];
-      sideL.push(u + nx * hw, v + nz * hw, y); sideR.push(u - nx * hw, v - nz * hw, y) }
+      const nx = -tz, nz = tx, y = R.h[q] + lift, u = S2[q * 2], v = S2[q * 2 + 1], hl = stretto ? stretto(u, v, nx, nz, y) : hw, hr = stretto ? stretto(u, v, -nx, -nz, y) : hw;
+      sideL.push(u + nx * hl, v + nz * hl, y); sideR.push(u - nx * hr, v - nz * hr, y); if (stretto) { hwL.push(+hl.toFixed(2)); hwR.push(+hr.toFixed(2)); if (hl < hw || hr < hw) stat.sentieriRistretti = (stat.sentieriRistretti || 0) + 1 } }
+    if (stretto && opt.dbg) { R.hwL = hwL; R.hwR = hwR }
     // v31: nelle curve strette il bordo interno tornava indietro e il nastro si ripiegava (triangoli capovolti: buchi nell'asfalto);
     // il bordo interno si ferma dove smetterebbe di avanzare
     const noFold = sd => { for (let q = 1; q < m; q++) { const fx = S2[q * 2] - S2[q * 2 - 2], fz = S2[q * 2 + 1] - S2[q * 2 - 1]; if ((sd[q * 3] - sd[q * 3 - 3]) * fx + (sd[q * 3 + 1] - sd[q * 3 - 2]) * fz <= 0) { sd[q * 3] = sd[q * 3 - 3]; sd[q * 3 + 1] = sd[q * 3 - 2] } } };
@@ -2355,7 +2365,7 @@ function buildCell(L, opt) {
     for (const PP of aprons) { for (let q = 0; q < 4; q++) mk(PP[q][0], PP[q][1], PP[(q + 1) % 4][0], PP[(q + 1) % 4][1], 2); fillPoly([PP.flat().concat(PP[0])].map(r => r.map(x => x)), S, GMN, q => { GM[q] = 1 }) } }
   stat.edifici = nb; stat.strade = RD.length; stat.alberi = trees.length / 5; stat.ms = Date.now() - t0;
   stat.testi = texts.length; stat.oggetti = objs.length / 6;
-  if (opt.dbg) stat._dbg = { RD: RD.map(R => ({ fermo: R.P && R.P.fermo ? Array.from({ length: R.m }, (_, q) => { for (let k = 0; k < R.P.m; k++) if (R.P.S2[k * 2] === R.S2[q * 2] && R.P.S2[k * 2 + 1] === R.S2[q * 2 + 1]) return k === 0 || k === R.P.m - 1 ? 3 : R.P.fermo[k] ? 1 : 0; return 2 }) : null, idx: R.idx, S2: R.S2, h: R.h, m: R.m, w: R.r.w, c: R.r.c, sty: R.r.sty, sub: R.r.sub || R.r.subclass || null, bridge: !!R.r.bridge, tun: !!R.r.tun, rank: R.r.rank, one: !!R.r.one, ramp: !!R.r.ramp, lift: liftOf(R.r), cov: R.r.tun ? Array.from({ length: R.m }, (_, q) => ghT(R.S2[q * 2], R.S2[q * 2 + 1]) - (R.h[q] + liftOf(R.r) + 5.2)) : null })), d, MSo: MS.n, HGo: HG.n, GR: GRD, RLD };
+  if (opt.dbg) stat._dbg = { RD: RD.map(R => ({ hwL: R.hwL || null, hwR: R.hwR || null, fermo: R.P && R.P.fermo ? Array.from({ length: R.m }, (_, q) => { for (let k = 0; k < R.P.m; k++) if (R.P.S2[k * 2] === R.S2[q * 2] && R.P.S2[k * 2 + 1] === R.S2[q * 2 + 1]) return k === 0 || k === R.P.m - 1 ? 3 : R.P.fermo[k] ? 1 : 0; return 2 }) : null, idx: R.idx, S2: R.S2, h: R.h, m: R.m, w: R.r.w, c: R.r.c, sty: R.r.sty, sub: R.r.sub || R.r.subclass || null, bridge: !!R.r.bridge, tun: !!R.r.tun, rank: R.r.rank, one: !!R.r.one, ramp: !!R.r.ramp, lift: liftOf(R.r), cov: R.r.tun ? Array.from({ length: R.m }, (_, q) => ghT(R.S2[q * 2], R.S2[q * 2 + 1]) - (R.h[q] + liftOf(R.r) + 5.2)) : null })), d, MSo: MS.n, HGo: HG.n, GR: GRD, RLD };
   // raster delle quote stradali: due strati a 16 bit (0 = niente strada, altrimenti 1 + (quota − base) / 0,04 m): un quarto della memoria dei float
   let RHQ = null, RH2Q = null, RHB = 0; if (RHN) { let mn = 1e9; for (let p = 0; p < RHN * RHN; p++) { const h = RH[p]; if (h === h && h < mn) mn = h } RHB = mn < 1e9 ? mn - 1 : 0; RHQ = new Uint16Array(RHN * RHN); RH2Q = new Uint16Array(RHN * RHN);
     for (let p = 0; p < RHN * RHN; p++) { const h = RH[p], h2 = RH2[p]; if (h === h) RHQ[p] = Math.min(65535, 1 + Math.round((h - RHB) * 25)); if (h2 === h2) RH2Q[p] = Math.min(65535, 1 + Math.round((h2 - RHB) * 25)) } }
