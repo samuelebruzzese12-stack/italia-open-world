@@ -1584,6 +1584,29 @@ function buildCell(L, opt) {
       for (let it = 0; it < 8; it++) for (let q = 1; q < m - 1; q++) { if (fermo[q]) continue; const la = P.s[q] - P.s[q - 1], lb = P.s[q + 1] - P.s[q]; if (la < 1e-3 || lb < 1e-3) continue; const lim = 1.5;
         const t = (P.h[q - 1] * lb + P.h[q + 1] * la) / (la + lb), nh = P.h[q] + (t - P.h[q]) * .5; P.h[q] = Math.max(h0[q] - lim, Math.min(h0[q] + lim, nh)) }
       for (let q = 0; q < m; q++) if (Math.abs(P.h[q] - h0[q]) > .05) mossi++; if (opt.dbg) P.fermo = fermo } stat.profiliLisciati = mossi }
+  // v31.6: raccordo delle estremità. Un nodo raggruppa gli incroci a meno di 9 m e dà a tutto il gruppo una sola quota: l'estremità di una via che
+  // tocca un'altra strada a qualche metro dal centro del gruppo restava più alta o più bassa di quella strada nel punto di contatto (gradini di
+  // 30–80 cm fra marciapiedi, passerelle e vie). L'estremità prende la quota esatta del punto di contatto (a metà fra le due se si toccano due
+  // estremità; quella del ponte se l'altra è un ponte) e lo scarto si richiude lungo la via con la cubica di Bernstein B(t) = 3t² − 2t³
+  // (punti di controllo 0, 0, 1, 1): tangente nulla ai due capi, quindi profilo C¹ sia all'estremità sia dove il raccordo finisce
+  { const B3 = t => t * t * (3 - 2 * t), lf = r => .06 + r.rank * .004 + (r.bridge ? .2 : 0) /* come liftOf, definita più avanti */, corr = []; let nR = 0;
+    const gobba = [];   // estremità di un ponte (rigido) a metà di un tratto di un'altra via: è la via che si raccorda al ponte, da entrambi i lati
+    PR.forEach((P, pi) => { if (P.r.tun || P.r.sty === 9 || P.m < 2) return;
+      if (P.r.bridge) { for (const e of [0, P.m - 1]) { const u = P.S2[e * 2], v = P.S2[e * 2 + 1]; let best = null;
+          segNear(u, v, 4, (Q, pj, qj, dd, t) => { if (Q === P || Q.r.tun || Q.r.bridge || Q.r.sty === 9 || dd >= Math.max(1, Q.r.w / 2) || (best && dd >= best[0])) return; const sQ = sAt(Q, qj, t); if (sQ < .6 || sQ > Q.s[Q.m - 1] - .6) return; best = [dd, Q, sQ, P.h[e] + lf(P.r) - lf(Q.r) - hAtQ(Q, qj, t)] });
+          if (best && Math.abs(best[3]) >= .03 && Math.abs(best[3]) <= 1.5) gobba.push([best[1], best[2], best[3]]) } return }
+      for (const e of [0, P.m - 1]) { const u = P.S2[e * 2], v = P.S2[e * 2 + 1]; let best = null;
+        segNear(u, v, 4, (Q, pj, qj, dd, t) => { if (Q === P || Q.r.tun || Q.r.sty === 9 || dd >= Math.max(1, Q.r.w / 2) || (best && dd >= best[0])) return; const sQ = sAt(Q, qj, t), fineQ = sQ < .6 || sQ > Q.s[Q.m - 1] - .6;
+          best = [dd, hAtQ(Q, qj, t) + lf(Q.r) - lf(P.r), fineQ && !Q.r.bridge] });
+        if (!best) continue; const dh = (best[2] ? (best[1] - P.h[e]) / 2 : best[1] - P.h[e]); if (Math.abs(dh) < .03 || Math.abs(dh) > 1.5) continue; corr.push([P, e, dh]) } });
+    for (const [P, e, dh] of corr) { const Lend = P.s[P.m - 1], L = Math.min(Lend * .45, Math.max(6, Math.abs(dh) / .04)); nR++;
+      for (let q = 0; q < P.m; q++) { const d = e ? Lend - P.s[q] : P.s[q]; if (d < L) P.h[q] += dh * (1 - B3(d / L)) } }
+    for (const [Q, sc, dh] of gobba) { const L = Math.max(6, Math.abs(dh) / .04); nR++; let qc = 0, dc = 1e9;
+      for (let q = 0; q < Q.m; q++) { const d = Math.abs(Q.s[q] - sc); if (d < dc) { dc = d; qc = q } if (d < L) Q.h[q] += dh * (1 - B3(d / L)) }
+      // il punto di contatto sta fra due vertici: si aggiunge la differenza che resta dopo l'interpolazione lineare sul vertice più vicino
+      let k = 0; while (k < Q.m - 2 && Q.s[k + 1] < sc) k++; const tt = (sc - Q.s[k]) / (Q.s[k + 1] - Q.s[k] || 1e-9), resto = dh - dh * (1 - B3(Math.abs(Q.s[k] - sc) / L)) * (1 - tt) - dh * (1 - B3(Math.abs(Q.s[k + 1] - sc) / L)) * tt;
+      if (Math.abs(resto) > .05 && dc < 3) Q.h[qc] += resto }
+    stat.estremitaRaccordate = nR }
   // movimento terra lungo le strade (non sotto i ponti né nelle gallerie), versione 29.3. Per ogni vertice del terreno:
   //  1) spianamento morbido verso la quota della strada più vicina (entro ~11 m);
   //  2) scarpate: fuori dalla fascia della carreggiata il terreno non può stare più in basso del riporto 1:2 né più in alto della trincea 1:1,2
@@ -2332,7 +2355,7 @@ function buildCell(L, opt) {
     for (const PP of aprons) { for (let q = 0; q < 4; q++) mk(PP[q][0], PP[q][1], PP[(q + 1) % 4][0], PP[(q + 1) % 4][1], 2); fillPoly([PP.flat().concat(PP[0])].map(r => r.map(x => x)), S, GMN, q => { GM[q] = 1 }) } }
   stat.edifici = nb; stat.strade = RD.length; stat.alberi = trees.length / 5; stat.ms = Date.now() - t0;
   stat.testi = texts.length; stat.oggetti = objs.length / 6;
-  if (opt.dbg) stat._dbg = { RD: RD.map(R => ({ fermo: R.P && R.P.fermo ? Array.from({ length: R.m }, (_, q) => { for (let k = 0; k < R.P.m; k++) if (R.P.S2[k * 2] === R.S2[q * 2] && R.P.S2[k * 2 + 1] === R.S2[q * 2 + 1]) return k === 0 || k === R.P.m - 1 ? 3 : R.P.fermo[k] ? 1 : 0; return 2 }) : null, idx: R.idx, S2: R.S2, h: R.h, m: R.m, w: R.r.w, c: R.r.c, bridge: !!R.r.bridge, tun: !!R.r.tun, rank: R.r.rank, one: !!R.r.one, ramp: !!R.r.ramp, lift: liftOf(R.r), cov: R.r.tun ? Array.from({ length: R.m }, (_, q) => ghT(R.S2[q * 2], R.S2[q * 2 + 1]) - (R.h[q] + liftOf(R.r) + 5.2)) : null })), d, MSo: MS.n, HGo: HG.n, GR: GRD, RLD };
+  if (opt.dbg) stat._dbg = { RD: RD.map(R => ({ fermo: R.P && R.P.fermo ? Array.from({ length: R.m }, (_, q) => { for (let k = 0; k < R.P.m; k++) if (R.P.S2[k * 2] === R.S2[q * 2] && R.P.S2[k * 2 + 1] === R.S2[q * 2 + 1]) return k === 0 || k === R.P.m - 1 ? 3 : R.P.fermo[k] ? 1 : 0; return 2 }) : null, idx: R.idx, S2: R.S2, h: R.h, m: R.m, w: R.r.w, c: R.r.c, sty: R.r.sty, sub: R.r.sub || R.r.subclass || null, bridge: !!R.r.bridge, tun: !!R.r.tun, rank: R.r.rank, one: !!R.r.one, ramp: !!R.r.ramp, lift: liftOf(R.r), cov: R.r.tun ? Array.from({ length: R.m }, (_, q) => ghT(R.S2[q * 2], R.S2[q * 2 + 1]) - (R.h[q] + liftOf(R.r) + 5.2)) : null })), d, MSo: MS.n, HGo: HG.n, GR: GRD, RLD };
   // raster delle quote stradali: due strati a 16 bit (0 = niente strada, altrimenti 1 + (quota − base) / 0,04 m): un quarto della memoria dei float
   let RHQ = null, RH2Q = null, RHB = 0; if (RHN) { let mn = 1e9; for (let p = 0; p < RHN * RHN; p++) { const h = RH[p]; if (h === h && h < mn) mn = h } RHB = mn < 1e9 ? mn - 1 : 0; RHQ = new Uint16Array(RHN * RHN); RH2Q = new Uint16Array(RHN * RHN);
     for (let p = 0; p < RHN * RHN; p++) { const h = RH[p], h2 = RH2[p]; if (h === h) RHQ[p] = Math.min(65535, 1 + Math.round((h - RHB) * 25)); if (h2 === h2) RH2Q[p] = Math.min(65535, 1 + Math.round((h2 - RHB) * 25)) } }

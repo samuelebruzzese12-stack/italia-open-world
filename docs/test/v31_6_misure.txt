@@ -1,0 +1,83 @@
+ITALIA OPEN WORLD — versione 31.6: raccordo delle estremità agli incroci. Misure sulle celle costruite dal generatore vero
+(sorgenti/mappa_reale/cella.js). Dati salvati in locale: Monaco (OpenStreetMap e rilievo veri, 24 celle) e Andorra (OpenStreetMap vero,
+RILIEVO SINTETICO secondo metriche.js, 72 celle). Righe copiate dall'uscita dei programmi. Nessuna prova su telefono, PC o console.
+
+== Monaco — node sorgenti/mappa_reale/metriche.js — prima (31.5, commit 614b093)
+real_test: tile 6, celle 24 (4052 ms)  lc=no  file=cella.js  lat 43.73
+alberi sulla carreggiata: 0/2094 (0.0%)
+ciuffi d'erba sulla carreggiata: 0/230967 (0.0%)
+vertici di muretti/siepi dentro un'altra carreggiata: 393/81556
+incroci: 2691, gradino >30 cm: 13, >1 m: 0, massimo 0.82 m
+bordi fra celle: 181, gradino >30 cm: 2, >1 m: 0, massimo 0.56 m
+campioni di carreggiata: 130588, terreno sopra l'asfalto: 1 (0.0%), bordi più alti di 1,6 m (coperti fino al terreno): 8074
+bordo dell'asfalto rispetto al terreno: scarto medio 0.74 m, sospeso oltre 60 cm: 29.7%, oltre 1,8 m (muro di pietra): 9.8%
+segnaletica dipinta staccata (>10 cm): 1/3757
+gallerie: tratti di scatola disegnati col tetto fuori terra (>50 cm) 0/473
+rotatorie riconosciute: 2
+== Monaco — dopo (31.6)
+real_test: tile 6, celle 24 (4230 ms)  lc=no  file=cella.js  lat 43.73
+alberi sulla carreggiata: 0/2094 (0.0%)
+ciuffi d'erba sulla carreggiata: 0/230967 (0.0%)
+vertici di muretti/siepi dentro un'altra carreggiata: 391/81556
+incroci: 2691, gradino >30 cm: 0, >1 m: 0, massimo 0.20 m
+bordi fra celle: 181, gradino >30 cm: 2, >1 m: 0, massimo 0.56 m
+campioni di carreggiata: 130588, terreno sopra l'asfalto: 1 (0.0%), bordi più alti di 1,6 m (coperti fino al terreno): 8058
+bordo dell'asfalto rispetto al terreno: scarto medio 0.74 m, sospeso oltre 60 cm: 29.7%, oltre 1,8 m (muro di pietra): 9.8%
+segnaletica dipinta staccata (>10 cm): 1/3757
+gallerie: tratti di scatola disegnati col tetto fuori terra (>50 cm) 0/473
+rotatorie riconosciute: 2
+
+== Andorra — SET=real_test_andorra node sorgenti/mappa_reale/metriche.js — prima (31.5)
+real_test_andorra: tile 18, celle 72 (6369 ms)  lc=no  file=_c315.js  lat 42.53
+alberi sulla carreggiata: 0/119485 (0.0%)
+ciuffi d'erba sulla carreggiata: 0/2620398 (0.0%)
+vertici di muretti/siepi dentro un'altra carreggiata: 364/269616
+incroci: 1554, gradino >30 cm: 6, >1 m: 0, massimo 0.42 m
+bordi fra celle: 280, gradino >30 cm: 0, >1 m: 0, massimo 0.09 m
+campioni di carreggiata: 264587, terreno sopra l'asfalto: 3 (0.0%), bordi più alti di 1,6 m (coperti fino al terreno): 6668
+bordo dell'asfalto rispetto al terreno: scarto medio 0.54 m, sospeso oltre 60 cm: 20.3%, oltre 1,8 m (muro di pietra): 5.0%
+segnaletica dipinta staccata (>10 cm): 5/5609
+gallerie: tratti di scatola disegnati col tetto fuori terra (>50 cm) 0/1003
+rotatorie riconosciute: 26
+== Andorra — dopo (31.6)
+real_test_andorra: tile 18, celle 72 (6522 ms)  lc=no  file=cella.js  lat 42.53
+alberi sulla carreggiata: 0/119485 (0.0%)
+ciuffi d'erba sulla carreggiata: 0/2620398 (0.0%)
+vertici di muretti/siepi dentro un'altra carreggiata: 362/269652
+incroci: 1554, gradino >30 cm: 1, >1 m: 0, massimo 0.34 m
+bordi fra celle: 280, gradino >30 cm: 0, >1 m: 0, massimo 0.09 m
+campioni di carreggiata: 264587, terreno sopra l'asfalto: 3 (0.0%), bordi più alti di 1,6 m (coperti fino al terreno): 6662
+bordo dell'asfalto rispetto al terreno: scarto medio 0.54 m, sospeso oltre 60 cm: 20.3%, oltre 1,8 m (muro di pietra): 5.0%
+segnaletica dipinta staccata (>10 cm): 5/5609
+gallerie: tratti di scatola disegnati col tetto fuori terra (>50 cm) 0/1003
+rotatorie riconosciute: 26
+
+Gradini oltre 30 cm agli incroci, caso per caso (prima: Monaco 13, Andorra 6). Monaco 31.5, tipi di via ai due lati:
+  12 su 13 fra marciapiedi/sentieri/passerelle (path), 1 fra due strade minor (40 cm). Dopo: Monaco 0 (massimo 0,20 m).
+  Andorra dopo: 1 — due ponti (primary) che si toccano alle estremità, 0,34 m: i ponti sono rigidi e il raccordo non li modifica.
+
+== Facciate e profili — node tools/collaudo/facciate_profili.js (dopo)
+   real_test 17058/11948 u 733.2 v 788.0 scarto 0.15 m terreno 113.26 soffitto galleria - base 113.42
+real_test: colonne di facciata 12259, sospese 15 cm – 1 m: 1, oltre 1 m: 126 | profili: tratti 24443, cambi di pendenza >10 %: 1532 (6.77 %), >20 %: 541 (2.39 %)
+real_test_andorra: colonne di facciata 1313, sospese 15 cm – 1 m: 0, oltre 1 m: 39 | profili: tratti 52060, cambi di pendenza >10 %: 1748 (3.43 %), >20 %: 732 (1.44 %)
+
+== Muri di pietra «dentro un'altra carreggiata» (391 su 81 556 vertici a Monaco): nessuno è una siepe; sono vertici del gruppo pietra (MS),
+   cioè i muri di sostegno al bordo delle strade su pendio (31.2), dentro la carreggiata di un'altra via 0,25–4 m più in basso
+   (Monaco 31.5: 198 su sentieri, 100 su minor, 58 su primary, 34 su service; dislivello < 0,6 m: 184, 0,6–1,2: 83, 1,2–2: 39, > 2: 87).
+   Prove fatte e scartate (misure Monaco):
+   - marciapiede mappato a parte che prende la quota della strada accanto: 380, ma gradino fra celle 1,42 m → scartata
+   - pianerottolo intero ai nodi anche per i sentieri: 361, ma gradini agli incroci fino a 2,56 m (scalinate) → scartata
+   - pianerottolo intero solo per marciapiedi e zone pedonali: 369, gradini fino a 2,56 m → scartata
+
+== Chromium (pagina ricostruita, WebGL software, dati di Monaco in locale)
+-- test/browser_mappa_v31_gallerie.js: galleria di 72 m percorsa per 56,1 m su 56 senza urti; seconda galleria 20,1 m su 20
+-- test/browser_affondamento.js:
+a2_salita: {"pendenza":"39 %","viaM":326,"prove":[{"verso":"andata","passi":900,"sottoLaSuperficieOltre5cm":"0 %","sottoMassimoM":0},{"verso":"ritorno","passi":900,"sottoLaSuperficieOltre5cm":"0.7 %","sottoMassimoM":0.12}]}
+   Dove (scena modificata solo per registrare i punti, 6 passi su 900 nel ritorno): x −932,4…−932,7, z 536,3…534,2, quota del suolo
+   3,69 → 3,93 → 3,81 m. L'auto, guidata dalla prova a 25 m/s verso i punti della via, è a circa 18 m dall'asse della via e attraversa un
+   rialzo di 24 cm in 1,2 m; 0,12 m è il limite che la fisica dell'auto si dà sotto il suolo al centro (groundCar, 31.4). Non dipende dal
+   profilo della via: non modificato.
+errori nella pagina: 4 (net::ERR_TUNNEL_CONNECTION_FAILED: risorse esterne non raggiungibili da questo ambiente)
+
+== Test: node test/run.js → 71 superati (nuova cella sintetica «incrocio» su un pendio al 40 %; col generatore della 31.5 il test fallisce:
+   gradino di 0,45 m fra l'estremità di un marciapiede e la strada)

@@ -1,5 +1,20 @@
 # Cronologia delle versioni
 
+## Versione 31.6 — 2026-11-09 — raccordo delle estremità agli incroci
+Misure complete in `docs/test/v31_6_misure.txt`.
+- Gradini oltre 30 cm fra l'estremità di una via e la strada su cui finisce: Monaco 13 → 0 (massimo 0,82 → 0,20 m), Andorra 6 → 1 (due ponti
+  che si toccano, 0,34 m: i ponti restano rigidi). Causa: il nodo raggruppa gli incroci a meno di 9 m con una sola quota, e l'estremità di
+  un marciapiede a qualche metro dal centro del gruppo non coincideva con la strada nel punto di contatto. Ora l'estremità prende la quota
+  del punto di contatto e lo scarto si richiude lungo la via con la cubica di Bernstein 3t² − 2t³ (tangente nulla ai due capi: profilo C¹).
+  Se l'estremità è di un ponte, è la via toccata a raccordarsi da entrambi i lati.
+- Invariati: bordi fra celle (Monaco 2 gradini oltre 30 cm, come prima), segnaletica, facciate (1 e 0), pieghe dei profili (6,77 % e 3,43 %).
+- Muri di pietra dentro un'altra carreggiata: 393 → 391 a Monaco, 364 → 362 ad Andorra. Non sono siepi né vertici spostati dalla
+  lisciatura: sono i muri di sostegno al bordo di una strada che si sovrappone in pianta a un'altra più bassa. Tre correzioni provate e
+  scartate perché creavano gradini nuovi (elenco nelle misure).
+- Auto sulla via ripida di Monaco: 12 cm sotto il suolo per 6 passi su 900, fuori dall'asse della via (rialzo di 24 cm); non dipende dal
+  profilo, non modificato.
+- Test: 71 (nuova cella sintetica «incrocio»).
+
 ## Versione 31.5 — 2026-11-09 — facciate sul terreno, profili delle strade, dinamica a 200 Hz
 Misure complete in `docs/test/v31_5_misure.txt` (strumento `tools/collaudo/facciate_profili.js`).
 - Facciate sospese di 15 cm – 1 m: Monaco 15 → 1, Andorra 6 → 0. L'ultima è una parte di edificio con `min_height` = 3 m nei dati.

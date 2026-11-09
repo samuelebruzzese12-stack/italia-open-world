@@ -324,7 +324,14 @@ const MAPPA = (() => { const fs = require('fs'), dir = path.join(__dirname, '..'
     casa(330, 690, 30, 22); casa(560, 688, 30, 24);
     const h = (u, v) => 15 + .06 * u + 3 * Math.sin(u / 2.9) * Math.sin(v / 2.9) + 1.4 * Math.sin((u + v) / 5.9) + 22 * Math.exp(-(((u - 450) / 120) ** 2 + ((v - 700) / 90) ** 2));
     return { L: { transportation: { ext: E, n: L.length, feat: i => L[i] }, building: { ext: E, n: BLD.length, feat: i => BLD[i] } }, h } };
-  return { M, sv: cella(SVINCOLO, .02), pe: cella(PERIFERIA, .3), ga: cella(GALLERIA, .3), pd: cella(PENDIO, .3) } })();
+  // v31.6 — incrocio su un pendio al 40 %: due strade minori che si incrociano e marciapiedi che finiscono sulla strada a 6 m dall'incrocio (stesso
+  // gruppo di nodi, che ha una sola quota) e più lontano; con la 31.5 il marciapiede restava 45 cm sopra o sotto la strada nel punto di contatto
+  const INCROCIO = k => { const E = 4096, T = m => m / k, L = [], line = (pts, props) => L.push({ type: 2, props, parts: [pts.flatMap(([u, v]) => [T(u), T(v)])] });
+    line([[100, 450], [300, 450], [500, 450], [800, 450]], { class: 'minor' }); line([[300, 200], [300, 450], [300, 700]], { class: 'minor' });
+    for (const [u0, off] of [[300, 6], [300, -6], [550, 3]]) line([[u0 + off, 450], [u0 + off, 420], [u0 + off + 2, 380]], { class: 'path', subclass: 'footway' });
+    line([[600, 300], [600, 449]], { class: 'path', subclass: 'footway' });
+    return { L: { transportation: { ext: E, n: L.length, feat: i => L[i] } }, h: (u, v) => 20 + .4 * u + .05 * v } };
+  return { M, sv: cella(SVINCOLO, .02), pe: cella(PERIFERIA, .3), ga: cella(GALLERIA, .3), pd: cella(PENDIO, .3), in: cella(INCROCIO, .3) } })();
 // faccia anteriore (antioraria, come la disegna three.js) rispetto alla normale dichiarata e rispetto all'alto
 const MP = { concordi: g => { let c = 0, d = 0; const P = g.P, I = g.I, N = g.N; for (let q = 0; q < I.length; q += 3) { const a = I[q] * 3, b = I[q + 1] * 3, e = I[q + 2] * 3, u = [P[b] - P[a], P[b + 1] - P[a + 1], P[b + 2] - P[a + 2]], v = [P[e] - P[a], P[e + 1] - P[a + 1], P[e + 2] - P[a + 2]], n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]; if (Math.hypot(...n) < 1e-9) continue; (n[0] * N[a] + n[1] * N[a + 1] + n[2] * N[a + 2] > 0) ? c++ : d++ } return [c, d] },
   giu: g => { if (!g) return [0, 0]; let n = 0, bad = 0; const P = g.P, I = g.I; for (let q = 0; q < I.length; q += 3) { const a = I[q] * 3, b = I[q + 1] * 3, e = I[q + 2] * 3, ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], vx = P[e] - P[a], vy = P[e + 1] - P[a + 1], vz = P[e + 2] - P[a + 2], ny = uz * vx - ux * vz, l = Math.hypot(uy * vz - uz * vy, ny, ux * vy - uy * vx); if (l < .04) continue; n++; if (ny / l < -.05) bad++ } return [bad, n] } };
@@ -382,6 +389,13 @@ test('mappa: le facciate poggiano sul terreno disegnato o sul soffitto della gal
     for (const g of [].concat(r.BW || []).filter(Boolean)) { const P = g.P; if (!P) continue; for (let i = 0; i < P.length; i += 3) { const k = Math.round(P[i] * 5) + ',' + Math.round(P[i + 2] * 5); if (!basso.has(k) || basso.get(k) > P[i + 1]) basso.set(k, P[i + 1]) } }
     for (const [k, y] of basso) { const [x, z] = k.split(',').map(Number), u = -x / 5, v = -z / 5, e = y - Math.max(ter(u, v), tetto(u, v)); col++; if (e > .15 && e <= 1) { sosp++; if (!es) es = ' (es. ' + u.toFixed(1) + ', ' + v.toFixed(1) + ': ' + e.toFixed(2) + ' m)' } }
     ok(col > 5, nome + ': colonne di facciata ' + col); ok(sosp === 0, nome + ': ' + sosp + ' colonne di facciata sospese di 15 cm – 1 m' + es) } });
+test('mappa: l\'estremità di una via tocca la strada su cui finisce alla stessa quota (prima, vicino a un incrocio raggruppato, restava un gradino fino a 45 cm)', () => {
+  for (const nome of ['in', 'sv']) { const RD = MAPPA[nome].stat._dbg.RD, S = MAPPA[nome].S; let n = 0, peggiore = 0, es = '';
+    for (const R of RD) { if (R.tun) continue; for (const e of [0, R.m - 1]) { const u = R.S2[e * 2], v = R.S2[e * 2 + 1], he = R.h[e] + R.lift; if (u < 2 || v < 2 || u > S - 2 || v > S - 2) continue; let best = null;
+      for (const R2 of RD) { if (R2 === R || R2.tun) continue; for (let q = 0; q < R2.m - 1; q++) { const ax = R2.S2[q * 2], ay = R2.S2[q * 2 + 1], sx = R2.S2[q * 2 + 2] - ax, sy = R2.S2[q * 2 + 3] - ay, t = Math.max(0, Math.min(1, ((u - ax) * sx + (v - ay) * sy) / (sx * sx + sy * sy || 1e-9))), d = Math.hypot(ax + sx * t - u, ay + sy * t - v);
+        if (d < Math.max(1, R2.w / 2) && (!best || d < best[0])) best = [d, R2.h[q] + (R2.h[q + 1] - R2.h[q]) * t + R2.lift] } }
+      if (!best) continue; n++; const dh = Math.abs(he - best[1]); if (dh > peggiore) { peggiore = dh; es = ' (' + R.c + ' in ' + u.toFixed(0) + ', ' + v.toFixed(0) + ')' } } }
+    ok(n > 0, nome + ': nessuna estremità che tocca un\'altra strada'); ok(peggiore < .1, nome + ': gradino di ' + peggiore.toFixed(2) + ' m fra un\'estremità e la strada su cui finisce' + es) } });
 test('mappa: sotto il bordo delle strade su un pendio c\'è una scarpata che scende al terreno, rivolta verso l\'alto (prima una parete verticale: fascia marrone sospesa)', () => {
   const r = MAPPA.sv; ok((r.stat.scarpata || 0) > 200, 'metri di scarpata nello svincolo: ' + Math.round(r.stat.scarpata || 0)); const P = r.M.P, I = r.M.I; let su = 0, giu = 0;
   for (let q = 0; q < I.length; q += 3) { const a = I[q] * 3, b = I[q + 1] * 3, e = I[q + 2] * 3, ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], vx = P[e] - P[a], vy = P[e + 1] - P[a + 1], vz = P[e + 2] - P[a + 2], nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, l = Math.hypot(nx, ny, nz); if (l < .02 || Math.abs(ny / l) < .3 || Math.abs(ny / l) > .95) continue; ny > 0 ? su++ : giu++ }
