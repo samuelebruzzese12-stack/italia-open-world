@@ -1589,13 +1589,13 @@ function buildCell(L, opt) {
   // 30–80 cm fra marciapiedi, passerelle e vie). L'estremità prende la quota esatta del punto di contatto (a metà fra le due se si toccano due
   // estremità; quella del ponte se l'altra è un ponte) e lo scarto si richiude lungo la via con la cubica di Bernstein B(t) = 3t² − 2t³
   // (punti di controllo 0, 0, 1, 1): tangente nulla ai due capi, quindi profilo C¹ sia all'estremità sia dove il raccordo finisce
-  { const B3 = t => t * t * (3 - 2 * t), lf = r => .06 + r.rank * .004 + (r.bridge ? .2 : 0) /* come liftOf, definita più avanti */, corr = []; let nR = 0;
+  { const limR = MGN - 1, B3 = t => t * t * (3 - 2 * t), lf = r => .06 + r.rank * .004 + (r.bridge ? .2 : 0) /* come liftOf, definita più avanti */, corr = []; let nR = 0;
     const gobba = [];   // estremità di un ponte (rigido) a metà di un tratto di un'altra via: è la via che si raccorda al ponte, da entrambi i lati
     PR.forEach((P, pi) => { if (P.r.tun || P.r.sty === 9 || P.m < 2) return;
-      if (P.r.bridge) { for (const e of [0, P.m - 1]) { const u = P.S2[e * 2], v = P.S2[e * 2 + 1]; let best = null;
+      if (P.r.bridge) { for (const e of [0, P.m - 1]) { const u = P.S2[e * 2], v = P.S2[e * 2 + 1]; let best = null; if (u < -limR || v < -limR || u > S + limR || v > S + limR) continue;
           segNear(u, v, 4, (Q, pj, qj, dd, t) => { if (Q === P || Q.r.tun || Q.r.bridge || Q.r.sty === 9 || dd >= Math.max(1, Q.r.w / 2) || (best && dd >= best[0])) return; const sQ = sAt(Q, qj, t); if (sQ < .6 || sQ > Q.s[Q.m - 1] - .6) return; best = [dd, Q, sQ, P.h[e] + lf(P.r) - lf(Q.r) - hAtQ(Q, qj, t)] });
           if (best && Math.abs(best[3]) >= .03 && Math.abs(best[3]) <= 1.5) gobba.push([best[1], best[2], best[3]]) } return }
-      for (const e of [0, P.m - 1]) { const u = P.S2[e * 2], v = P.S2[e * 2 + 1]; let best = null;
+      for (const e of [0, P.m - 1]) { const u = P.S2[e * 2], v = P.S2[e * 2 + 1]; let best = null; if (u < -limR || v < -limR || u > S + limR || v > S + limR) continue;   // estremità create dal ritaglio al margine: non sono vere
         segNear(u, v, 4, (Q, pj, qj, dd, t) => { if (Q === P || Q.r.tun || Q.r.sty === 9 || dd >= Math.max(1, Q.r.w / 2) || (best && dd >= best[0])) return; const sQ = sAt(Q, qj, t), fineQ = sQ < .6 || sQ > Q.s[Q.m - 1] - .6;
           best = [dd, hAtQ(Q, qj, t) + lf(Q.r) - lf(P.r), fineQ && !Q.r.bridge] });
         if (!best) continue; const dh = (best[2] ? (best[1] - P.h[e]) / 2 : best[1] - P.h[e]); if (Math.abs(dh) < .03 || Math.abs(dh) > 1.5) continue; corr.push([P, e, dh]) } });
@@ -19330,7 +19330,7 @@ function walk(dt,ix,iy,run){const sy=Math.sin(yaw),cy=Math.cos(yaw),sp=run?6.5:4
   P.x=nx;P.z=nz;P.m.rotation.y=Math.atan2(vx,vz);P.sp=Math.hypot(vx,vz)}
  P.y+=(GY(P.x,P.z,P.y,true)-P.y)*Math.min(1,dt*14)}
 function groundCar(dt){const sn=Math.sin(C.h),cn=Math.cos(C.h),yh=V.y,yf=GY(C.x+sn*1.5,C.z+cn*1.5,yh),yb=GY(C.x-sn*1.5,C.z-cn*1.5,yh),yl=GY(C.x+cn*.9,C.z-sn*.9,yh),yr=GY(C.x-cn*.9,C.z+sn*.9,yh),k=Math.min(1,dt*12);
- V.y+=((yf+yb)/2-V.y)*k;V.y=Math.max(V.y,(yf+yb)/2-.03,GY(C.x,C.z,yh)-.12);V.tp+=(-Math.atan2(yf-yb,3)-V.tp)*k;V.tr+=(Math.atan2(yl-yr,1.8)-V.tr)*k}
+ V.y+=((yf+yb)/2-V.y)*k;V.y=Math.max(V.y,(yf+yb)/2-.03,GY(C.x,C.z,yh)-.12);{const ab=V.ab||(V.ab={vz:0,N:0,min:9,ctr:9}),tp=Math.tan(V.tp||0),tr=Math.tan(V.tr||0),SD=[[.9,0],[-.9,0],[0,.55],[0,-.55]],FO=.23,dist=()=>{let m=9;for(const[a,l]of SD){const x=C.x+sn*a+cn*l,z=C.z+cn*a-sn*l,f=V.y+FO-a*tp+l*tr;m=Math.min(m,f-GY(x,z,V.y))}return m},nn=Math.max(1,Math.ceil(dt/.005)),hh=dt/nn;for(let i=0;i<nn;i++){const p=.05-dist();if(p>0){ab.vz+=(2500*p-70*ab.vz)*hh;ab.N++}else ab.vz=Math.max(0,ab.vz-70*ab.vz*hh);if(ab.vz>0)V.y+=ab.vz*hh}const d=dist();ab.min=Math.min(ab.min,d);ab.ctr=Math.min(ab.ctr,V.y+FO-GY(C.x,C.z,V.y));V.abN=ab.N;V.abMin=ab.min;V.abCtr=ab.ctr}V.tp+=(-Math.atan2(yf-yb,3)-V.tp)*k;V.tr+=(Math.atan2(yl-yr,1.8)-V.tr)*k}
 function drive(dt,ix,iy){const hb=!!(K[' ']||K.hb);if(V.rol){crRollDrive(dt);return}if(V.flip){V.vx*=Math.exp(-6*dt);V.vz*=Math.exp(-6*dt);cs.v=0;return}
  let sn=Math.sin(C.h),cn=Math.cos(C.h),vf=V.vx*sn+V.vz*cn,vl=V.vz*sn-V.vx*cn;if(crTrip(V,carA,vl,Math.hypot(vf,vl),dt)){V.rlF=vf;crRollDrive(dt);return}
  const sp=Math.abs(vf),lock=.6/(1+sp*sp/220),EG=VEHX.guida();V.st+=(ix*lock*CARDMG.lk*EG.sterzoCorsa+(CARDMG.pull+EG.sterzoTiro)*Math.min(1,sp/6)-V.st)*Math.min(1,dt*9);

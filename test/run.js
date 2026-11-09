@@ -400,6 +400,15 @@ test('mappa: sotto il bordo delle strade su un pendio c\'è una scarpata che sce
   const r = MAPPA.sv; ok((r.stat.scarpata || 0) > 200, 'metri di scarpata nello svincolo: ' + Math.round(r.stat.scarpata || 0)); const P = r.M.P, I = r.M.I; let su = 0, giu = 0;
   for (let q = 0; q < I.length; q += 3) { const a = I[q] * 3, b = I[q + 1] * 3, e = I[q + 2] * 3, ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], vx = P[e] - P[a], vy = P[e + 1] - P[a + 1], vz = P[e + 2] - P[a + 2], nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, l = Math.hypot(nx, ny, nz); if (l < .02 || Math.abs(ny / l) < .3 || Math.abs(ny / l) > .95) continue; ny > 0 ? su++ : giu++ }
   ok(su > 100 && giu <= su * .01, 'facce inclinate verso l\'alto ' + su + ', verso il basso ' + giu) });
+test('protezione del pianale (index.html): l\'auto a 25 m/s su una gobba di 35 cm non tocca l\'asfalto col fondo; senza la forza lo tocca', () => {
+  const fs = require('fs'), html = fs.readFileSync(process.env.IOW_PAGINA || path.join(__dirname, '..', 'index.html'), 'utf8'), i = html.indexOf('function groundCar(dt){'), j = html.indexOf('\nfunction drive(', i);
+  ok(i > 0 && j > i, 'groundCar non trovata'); const src = html.slice(i, j); ok(src.includes('ab.vz+=(2500*p-70*ab.vz)*hh'), 'manca la forza del pianale');
+  // salita al 10 % con una gobba più corta del passo (rampe di 1,2 m fino a +35 cm, 0,4 m in cima), percorsa lungo z a 25 m/s, 60 passi al secondo
+  const GY = (x, z) => { const d = z - 30; return .1 * z + (d > 0 && d < 1.2 ? .35 * d / 1.2 : d >= 1.2 && d < 1.6 ? .35 : d >= 1.6 && d < 2.8 ? .35 * (2.8 - d) / 1.2 : 0) };
+  const prova = codice => { const C = { x: 0, z: 0, h: 0 }, V = { y: GY(0, 0), tp: 0, tr: 0 }, g = new Function('C', 'V', 'GY', codice + ';return groundCar')(C, V, GY);
+    for (let k = 0; k < 4; k++) g(1); V.ab = null; let fondo = 9; for (let t = 0; t < 180; t++) { C.z += 25 / 60; g(1 / 60); fondo = Math.min(fondo, V.ab.min) } return { fondo, attiva: V.ab.N } };
+  const con = prova(src), senza = prova(src.replace('ab.vz+=(2500*p-70*ab.vz)*hh;ab.N++', 'ab.N++'));
+  ok(senza.fondo < 0, 'senza la forza il fondo dovrebbe toccare: ' + senza.fondo.toFixed(3) + ' m'); ok(con.fondo >= 0, 'con la forza il fondo tocca: ' + con.fondo.toFixed(3) + ' m'); ok(con.attiva > 0, 'la forza non è mai intervenuta') });
 test('collisioni con la quota (index.html): un ostacolo con yb/yt non ferma chi passa sopra o sotto, ferma chi è alla sua quota; senza quota come prima', () => {
   const fs = require('fs'), html = fs.readFileSync(process.env.IOW_PAGINA || path.join(__dirname, '..', 'index.html'), 'utf8'), i = html.indexOf('function pushS(s,r)'), j = html.indexOf('function push(x,z,r', i), k2 = html.indexOf('return[PO.x,PO.z,PO.hit]}', j);
   ok(i > 0 && j > i && k2 > j, 'pushS/push non trovate'); const cl = (v, a, b) => Math.max(a, Math.min(b, v)), PO = {};

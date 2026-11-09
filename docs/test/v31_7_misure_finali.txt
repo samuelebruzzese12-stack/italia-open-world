@@ -1,0 +1,59 @@
+ITALIA OPEN WORLD — versione 31.7: protezione del pianale e muri di pietra fra strade sovrapposte. Misure finali.
+Righe copiate dall'uscita dei programmi. Prove in Chromium senza schermo (WebGL software) e in Node; dati di Monaco e Andorra salvati in
+locale (Andorra: OpenStreetMap vero, rilievo sintetico). NON è una validazione industriale: nessuna prova su telefono, PC, console,
+banco prova o veicolo reale; i parametri dell'auto sono generici (vedi tools/dinamica/README.md e docs/VEICOLI.md).
+
+== 1. Test automatici
+node test/run.js                     → 72 test superati, 0 falliti (nuovo: protezione del pianale su gobba sintetica, con e senza la forza)
+python3 tools/test_moduli_python.py  → 13 test, OK
+
+== 2. Auto sulla via ripida di Monaco (test/browser_affondamento.js)
+Altezza del fondo misurata sul modello del gioco, nel riferimento dell'auto: 0,23 m sopra il piano delle ruote al centro.
+-- con la protezione del pianale (31.7)
+a2_salita: {"pendenza":"39 %","viaM":326,"prove":[{"verso":"andata","passi":900,"sottoLaSuperficieOltre5cm":"0 %","sottoMassimoM":0,"fondoAsfaltoMinimoM":0.185,"fondoAsfaltoCentroMinimoM":0.277,"passiProtezionePianale":0},{"verso":"ritorno","passi":900,"sottoLaSuperficieOltre5cm":"0.7 %","sottoMassimoM":0.12,"fondoAsfaltoMinimoM":0.01,"fondoAsfaltoCentroMinimoM":0.11,"passiProtezionePianale":8}]}
+-- stessa prova, forza disattivata (solo per confronto)
+a2_salita: {"pendenza":"39 %","viaM":326,"prove":[{"verso":"andata","passi":900,"sottoLaSuperficieOltre5cm":"0 %","sottoMassimoM":0,"fondoAsfaltoMinimoM":0.185,"fondoAsfaltoCentroMinimoM":0.277,"passiProtezionePianale":0},{"verso":"ritorno","passi":900,"sottoLaSuperficieOltre5cm":"0.8 %","sottoMassimoM":0.12,"fondoAsfaltoMinimoM":-0.008,"fondoAsfaltoCentroMinimoM":0.11,"passiProtezionePianale":8}]}
+Lettura:
+- «sottoMassimoM» 0,12 è la distanza fra il suolo al centro dell'auto e il piano delle ruote, non una compenetrazione: con le ruote a terra su
+  una gobba più corta del passo il centro dell'auto sta per geometria sotto la cima della gobba. Il fondo resta 0,11 m sopra l'asfalto
+  («fondoAsfaltoCentroMinimoM»). Portare quel numero a 1,5 cm vorrebbe dire staccare le ruote dall'asfalto: non fatto.
+- Il contatto vero è del fondo vicino alla sonda posteriore: senza la forza −0,008 m (tocca), con la forza +0,010 m (non tocca).
+- La prova prima della 31.7 spostava l'auto senza azzerare beccheggio e rollio del punto di partenza: ora la appoggia sul pendio prima di
+  misurare (senza questa correzione la sonda posteriore leggeva −0,40 m al primo passo, un errore della prova, non dell'auto).
+
+== 3. Mappa: incroci, bordi fra celle, muri (node sorgenti/mappa_reale/metriche.js) — invariati rispetto alla 31.6
+-- Monaco
+real_test: tile 6, celle 24 (4038 ms)  lc=no  file=cella.js  lat 43.73
+alberi sulla carreggiata: 0/2094 (0.0%)
+ciuffi d'erba sulla carreggiata: 0/230967 (0.0%)
+vertici di muretti/siepi dentro un'altra carreggiata: 391/81556
+incroci: 2691, gradino >30 cm: 0, >1 m: 0, massimo 0.20 m
+bordi fra celle: 181, gradino >30 cm: 2, >1 m: 0, massimo 0.56 m
+campioni di carreggiata: 130588, terreno sopra l'asfalto: 1 (0.0%), bordi più alti di 1,6 m (coperti fino al terreno): 8058
+bordo dell'asfalto rispetto al terreno: scarto medio 0.74 m, sospeso oltre 60 cm: 29.7%, oltre 1,8 m (muro di pietra): 9.8%
+segnaletica dipinta staccata (>10 cm): 1/3757
+gallerie: tratti di scatola disegnati col tetto fuori terra (>50 cm) 0/473
+rotatorie riconosciute: 2
+-- Andorra (SET=real_test_andorra)
+real_test_andorra: tile 18, celle 72 (6344 ms)  lc=no  file=cella.js  lat 42.53
+alberi sulla carreggiata: 0/119485 (0.0%)
+ciuffi d'erba sulla carreggiata: 0/2620398 (0.0%)
+vertici di muretti/siepi dentro un'altra carreggiata: 362/269652
+incroci: 1554, gradino >30 cm: 1, >1 m: 0, massimo 0.34 m
+bordi fra celle: 280, gradino >30 cm: 0, >1 m: 0, massimo 0.09 m
+campioni di carreggiata: 264587, terreno sopra l'asfalto: 3 (0.0%), bordi più alti di 1,6 m (coperti fino al terreno): 6662
+bordo dell'asfalto rispetto al terreno: scarto medio 0.54 m, sospeso oltre 60 cm: 20.3%, oltre 1,8 m (muro di pietra): 5.0%
+segnaletica dipinta staccata (>10 cm): 5/5609
+gallerie: tratti di scatola disegnati col tetto fuori terra (>50 cm) 0/1003
+rotatorie riconosciute: 26
+
+== 4. Muri di pietra dentro un'altra carreggiata (Monaco 391, Andorra 362): NON azzerati
+Sono i muri di sostegno al bordo di una strada più alta la cui carreggiata, nei dati, si sovrappone in pianta a quella di una strada più
+bassa (soprattutto sentieri e marciapiedi). Spostare il muro verso l'esterno lungo la normale della strada lo porta più dentro la strada
+sottostante; abbassarlo lascia l'asfalto sospeso. Prova fatta nella 31.7: pianerottolo dei nodi largo quanto la strada anche per marciapiedi
+e zone pedonali, con raccordo delle estremità fino a 3 m → Monaco 369, Andorra 355, gradini agli incroci 0, ma un gradino nuovo di 0,69 m sul
+bordo fra le celle 17059/11948 e 17060/11948 (il sentiero sale di 1,5 m in 3,5 m solo in una delle due celle): scartata. Il seguito richiede di
+rendere il sistema dei nodi identico fra celle vicine.
+
+== 5. Chromium, gallerie (test/browser_mappa_v31_gallerie.js): galleria di 72 m percorsa per 56,1 m su 56 senza urti; seconda 20,1 su 20
+errori nella pagina: 4 (net::ERR_TUNNEL_CONNECTION_FAILED: risorse esterne non raggiungibili da questo ambiente)

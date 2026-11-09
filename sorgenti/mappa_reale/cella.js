@@ -291,13 +291,13 @@ function buildCell(L, opt) {
   // 30–80 cm fra marciapiedi, passerelle e vie). L'estremità prende la quota esatta del punto di contatto (a metà fra le due se si toccano due
   // estremità; quella del ponte se l'altra è un ponte) e lo scarto si richiude lungo la via con la cubica di Bernstein B(t) = 3t² − 2t³
   // (punti di controllo 0, 0, 1, 1): tangente nulla ai due capi, quindi profilo C¹ sia all'estremità sia dove il raccordo finisce
-  { const B3 = t => t * t * (3 - 2 * t), lf = r => .06 + r.rank * .004 + (r.bridge ? .2 : 0) /* come liftOf, definita più avanti */, corr = []; let nR = 0;
+  { const limR = MGN - 1, B3 = t => t * t * (3 - 2 * t), lf = r => .06 + r.rank * .004 + (r.bridge ? .2 : 0) /* come liftOf, definita più avanti */, corr = []; let nR = 0;
     const gobba = [];   // estremità di un ponte (rigido) a metà di un tratto di un'altra via: è la via che si raccorda al ponte, da entrambi i lati
     PR.forEach((P, pi) => { if (P.r.tun || P.r.sty === 9 || P.m < 2) return;
-      if (P.r.bridge) { for (const e of [0, P.m - 1]) { const u = P.S2[e * 2], v = P.S2[e * 2 + 1]; let best = null;
+      if (P.r.bridge) { for (const e of [0, P.m - 1]) { const u = P.S2[e * 2], v = P.S2[e * 2 + 1]; let best = null; if (u < -limR || v < -limR || u > S + limR || v > S + limR) continue;
           segNear(u, v, 4, (Q, pj, qj, dd, t) => { if (Q === P || Q.r.tun || Q.r.bridge || Q.r.sty === 9 || dd >= Math.max(1, Q.r.w / 2) || (best && dd >= best[0])) return; const sQ = sAt(Q, qj, t); if (sQ < .6 || sQ > Q.s[Q.m - 1] - .6) return; best = [dd, Q, sQ, P.h[e] + lf(P.r) - lf(Q.r) - hAtQ(Q, qj, t)] });
           if (best && Math.abs(best[3]) >= .03 && Math.abs(best[3]) <= 1.5) gobba.push([best[1], best[2], best[3]]) } return }
-      for (const e of [0, P.m - 1]) { const u = P.S2[e * 2], v = P.S2[e * 2 + 1]; let best = null;
+      for (const e of [0, P.m - 1]) { const u = P.S2[e * 2], v = P.S2[e * 2 + 1]; let best = null; if (u < -limR || v < -limR || u > S + limR || v > S + limR) continue;   // estremità create dal ritaglio al margine: non sono vere
         segNear(u, v, 4, (Q, pj, qj, dd, t) => { if (Q === P || Q.r.tun || Q.r.sty === 9 || dd >= Math.max(1, Q.r.w / 2) || (best && dd >= best[0])) return; const sQ = sAt(Q, qj, t), fineQ = sQ < .6 || sQ > Q.s[Q.m - 1] - .6;
           best = [dd, hAtQ(Q, qj, t) + lf(Q.r) - lf(P.r), fineQ && !Q.r.bridge] });
         if (!best) continue; const dh = (best[2] ? (best[1] - P.h[e]) / 2 : best[1] - P.h[e]); if (Math.abs(dh) < .03 || Math.abs(dh) > 1.5) continue; corr.push([P, e, dh]) } });

@@ -1,5 +1,16 @@
 # Cronologia delle versioni
 
+## Versione 31.7 — 2026-11-09 — protezione del pianale
+Misure in `docs/test/v31_7_misure_finali.txt`.
+- `groundCar` (sorgenti/patch_mappa_v31.py, passo 8): 4 sonde sotto il fondo (altezza 0,23 m misurata sul modello del gioco, con beccheggio
+  e rollio); se il fondo entra nei 5 cm sopra l'asfalto, forza elastica smorzata (K 2500 s⁻², C 70 s⁻¹) integrata a 200 Hz. Monaco, via ripida
+  al ritorno: fondo–asfalto minimo −0,008 m senza la forza, +0,010 m con la forza. I 12 cm fra suolo al centro e piano delle ruote sono la
+  geometria della gobba (fondo 0,11 m sopra l'asfalto), non una compenetrazione: non modificati.
+- `test/browser_affondamento.js`: prima di misurare appoggia l'auto sul pendio (prima restavano beccheggio e rollio del punto precedente).
+- `cella.js`: il raccordo delle estremità ignora le estremità create dal ritaglio al margine della cella (nessun effetto misurabile su questi
+  dati). Muri di pietra fra strade sovrapposte invariati (391, 362): prova sul pianerottolo dei marciapiedi scartata (gradino nuovo fra celle).
+- Test: 72.
+
 ## Versione 31.6 — 2026-11-09 — raccordo delle estremità agli incroci
 Misure complete in `docs/test/v31_6_misure.txt`.
 - Gradini oltre 30 cm fra l'estremità di una via e la strada su cui finisce: Monaco 13 → 0 (massimo 0,82 → 0,20 m), Andorra 6 → 1 (due ponti

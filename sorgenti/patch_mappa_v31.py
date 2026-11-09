@@ -60,8 +60,19 @@ def applica(h):
     # 7. (31.4) auto che affonda nell'asfalto: la quota dell'auto si avvicinava al suolo con un ritardo (k = 12/s), in salita restava sotto la
     #    superficie (Monaco, via al 49 %: sotto oltre 5 cm per il 44-57 % del percorso, fino a 1,1 m). Ora può scendere con calma (sospensione)
     #    ma non stare sotto la superficie fra le ruote, né sotto il suolo al centro oltre l'altezza da terra (12 cm)
-    h = rep("V.y+=((yf+yb)/2-V.y)*k;", "V.y+=((yf+yb)/2-V.y)*k;V.y=Math.max(V.y,(yf+yb)/2-.03,GY(C.x,C.z,yh)-.12);")
+    h = rep("V.y+=((yf+yb)/2-V.y)*k;", "V.y+=((yf+yb)/2-V.y)*k;V.y=Math.max(V.y,(yf+yb)/2-.03,GY(C.x,C.z,yh)-.12);" + PIANALE)
     return h, n[0]
+
+# 8. (31.7) protezione del pianale: 4 sonde sotto il fondo della carrozzeria (±0,9 m in lunghezza, ±0,55 m in larghezza) all'altezza misurata
+#    sul modello del gioco (fondo a 0,23 m sopra il piano delle ruote, nel riferimento dell'auto), con beccheggio e rollio correnti. Se il fondo
+#    entra nella fascia di 5 cm sopra l'asfalto, forza verticale elastica smorzata per unità di massa a = K·p − C·vz (K = 2500 s⁻²: 8 Hz;
+#    C = 70 s⁻¹: smorzamento 0,7), integrata a 200 Hz dentro il passo di gioco; spinge solo verso l'alto. Contatori in V (per le prove):
+#    abN passi con la forza attiva, abMin distanza minima fondo–asfalto, abCtr distanza minima al centro.
+PIANALE = ("{const ab=V.ab||(V.ab={vz:0,N:0,min:9,ctr:9}),tp=Math.tan(V.tp||0),tr=Math.tan(V.tr||0),SD=[[.9,0],[-.9,0],[0,.55],[0,-.55]],FO=.23,"
+           "dist=()=>{let m=9;for(const[a,l]of SD){const x=C.x+sn*a+cn*l,z=C.z+cn*a-sn*l,f=V.y+FO-a*tp+l*tr;m=Math.min(m,f-GY(x,z,V.y))}return m},"
+           "nn=Math.max(1,Math.ceil(dt/.005)),hh=dt/nn;"
+           "for(let i=0;i<nn;i++){const p=.05-dist();if(p>0){ab.vz+=(2500*p-70*ab.vz)*hh;ab.N++}else ab.vz=Math.max(0,ab.vz-70*ab.vz*hh);if(ab.vz>0)V.y+=ab.vz*hh}"
+           "const d=dist();ab.min=Math.min(ab.min,d);ab.ctr=Math.min(ab.ctr,V.y+FO-GY(C.x,C.z,V.y));V.abN=ab.N;V.abMin=ab.min;V.abCtr=ab.ctr}")
 
 if __name__ == '__main__':
     if len(sys.argv) != 3: raise SystemExit('uso: python3 patch_mappa_v31.py pagina_in.html pagina_out.html')
