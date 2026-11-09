@@ -1,5 +1,5 @@
 ITALIA OPEN WORLD — REPORT DI COLLAUDO DEL SOFTWARE (calcolato: tools/collaudo/report_finale.js)
-Generato: 2026-11-09 10:49 UTC — commit dba1fbe Versione 31.7: protezione del pianale nella fisica dell'auto — confronto con il commit dba1fbe
+Generato: 2026-11-09 10:55 UTC — commit 1c2cd3c Versione 31.7b: confini fra celle coerenti, sentieri fermati sotto le strade, report calcolato — confronto con il commit dba1fbe
 Ambito: misure automatiche su dati salvati in locale (Monaco: OpenStreetMap e rilievo veri; Andorra: OpenStreetMap vero, rilievo
 sintetico) e prove nel gioco in Chromium senza schermo con WebGL software. NON sono prove su telefono, PC, console, banco o veicolo
 reale; i parametri dell'auto sono generici e non validati. Non è una certificazione.
