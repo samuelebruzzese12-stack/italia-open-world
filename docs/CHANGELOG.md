@@ -1,5 +1,27 @@
 # Cronologia delle versioni
 
+## Versione 31.5 — 2026-11-09 — facciate sul terreno, profili delle strade, dinamica a 200 Hz
+Misure complete in `docs/test/v31_5_misure.txt` (strumento `tools/collaudo/facciate_profili.js`).
+- Facciate sospese di 15 cm – 1 m: Monaco 15 → 1, Andorra 6 → 0. L'ultima è una parte di edificio con `min_height` = 3 m nei dati.
+  Cause e correzioni in `cella.js`:
+  - la base degli edifici si calcolava con l'interpolazione bilineare della griglia; ora usa il minimo esatto della mesh disegnata lungo ogni
+    lato (estremi e attraversamenti delle linee della griglia e delle diagonali, `minLato`);
+  - il campanile delle chiese partiva dalla quota agli spigoli dell'edificio: ora dal terreno sotto i suoi lati;
+  - i vani dei passaggi stradali sotto gli edifici si restringono dove sotto il soffitto restano meno di 2,2 m;
+  - i vani delle gallerie sotto gli edifici finiscono sul soffitto della galleria (5,2 m, prima 5,5), sono larghi quanto la scatola
+    (carreggiata/2 + 1 m, prima + 1,5 m) e divisi in tratti da 0,5 m con la volta locale (prima un'unica quota, la più alta).
+- Pieghe dei profili stradali (cambi di pendenza > 10 % ai vertici): Monaco 8,22 → 6,78 %, Andorra 4,34 → 3,42 % (> 20 %: 2,69 → 2,38 %,
+  1,64 → 1,42 %). La lisciatura ora blocca solo i vertici dentro un'altra carreggiata e i due vertici del tratto toccato dall'estremità di
+  un'altra strada, con 8 passate invece di 4. Gradini agli incroci (13 oltre 30 cm), bordi fra celle (2) e segnaletica staccata (1)
+  sono invariati. Due metriche peggiorano di poco: vertici di muretti/siepi dentro un'altra carreggiata 374 → 393 (su ~81 000) e bordi
+  coperti fino al terreno 7975 → 8074 su 130 588 campioni. Il resto delle pieghe sta nei nodi degli incroci, dove la quota della strada
+  che incrocia impone lo spigolo; non è stato eliminato.
+- Test: 70 (`test/run.js`, nuova cella sintetica «pendio» con terreno irregolare e galleria in salita sotto due palazzi; il test delle
+  facciate fallisce col generatore della 31.4: 6 colonne sospese). Chromium: galleria di 72 m percorsa per tutti i 56 m senza urti; auto
+  sulla via più ripida (39 %) sotto l'asfalto oltre 5 cm per lo 0–0,7 % del percorso, al massimo 12 cm.
+- Dinamica 7-DoF (`tools/dinamica/`): configurazione predefinita a passo fisso 200 Hz (`DT`), 1610 kg, Iz 2450 kg·m² (prima 2700),
+  partenza a 50 m/s (`V0`); telemetria completa per campione nei risultati. Test Python: 13.
+
 ## Moduli Python di studio — 2026-11-08
 `tools/dinamica/` (7-DoF con Magic Formula combinata, ESP/ABS/TCS/EBD a 200 Hz e blackout; centralina VCU-EBS su modello bicicletta a 60 Hz)
 e `tools/companion/` (chat con l'informatore e assalto al rifugio). Autonomi, non collegati al gioco; risultati e limiti nei rispettivi README.

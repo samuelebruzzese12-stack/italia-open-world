@@ -1,0 +1,51 @@
+ITALIA OPEN WORLD — versione 31.5: misure prima e dopo sulle celle costruite dal generatore vero (sorgenti/mappa_reale/cella.js)
+Dati: Monaco (6 tile z14 = 24 celle z15) e Andorra (tutte le celle della cartella con almeno 12 strade), salvati in locale. Righe copiate
+dall'uscita dei programmi. Nessuna prova su telefono, PC o console.
+
+== PRIMA (cella.js della 31.4, commit e317456) — script di misura della 31.4 (fondamenta.js, gradini.js)
+real_test colonne di facciata 9456 base sopra il terreno >15 cm 198 (2.09 %) >1 m 183 massimo 40.6 m
+real_test_andorra colonne di facciata 1311 base sopra il terreno >15 cm 49 (3.74 %) >1 m 43 massimo 46.2 m
+  → nella fascia 15 cm – 1 m: Monaco 198 − 183 = 15, Andorra 49 − 43 = 6 (elenco colonna per colonna: 15 e 6 righe)
+real_test tratti 24443 km 108.9 | salti >50 cm in meno di 2 m: 12 | cambi di pendenza ai vertici >10 %: 1859 (8.22 %) >20 %: 609
+real_test_andorra tratti 52060 km 253.8 | salti >50 cm in meno di 2 m: 24 | cambi di pendenza ai vertici >10 %: 2211 (4.34 %) >20 %: 833
+
+== DOPO — node tools/collaudo/facciate_profili.js (ESEMPI=1). L'appoggio è la mesh del terreno o, dentro la scatola di una galleria, il suo
+   soffitto (5,2 m sopra la strada): con questa regola le colonne «oltre 1 m» sono di più di quelle della misura vecchia solo perché ogni
+   tratto di vano di galleria aggiunge vertici; il conteggio non è confrontabile riga per riga con quello di prima
+   real_test 17058/11948 u 733.2 v 788.0 scarto 0.15 m terreno 113.26 soffitto galleria - base 113.42
+real_test: colonne di facciata 12259, sospese 15 cm – 1 m: 1, oltre 1 m: 126 | profili: tratti 24443, cambi di pendenza >10 %: 1533 (6.78 %), >20 %: 539 (2.38 %)
+real_test_andorra: colonne di facciata 1313, sospese 15 cm – 1 m: 0, oltre 1 m: 39 | profili: tratti 52060, cambi di pendenza >10 %: 1738 (3.42 %), >20 %: 722 (1.42 %)
+  → l'unica colonna rimasta (Monaco, 733,2 / 788,0) è una parte di edificio con min_height = 3 m in OpenStreetMap: sollevata per dati,
+    il terreno lì è più alto della base di 15 cm
+
+== Gradini, bordi, segnaletica (node sorgenti/mappa_reale/metriche.js, Monaco) — prima
+real_test: tile 6, celle 24 (3993 ms)  lc=no  file=cella.js  lat 43.73
+alberi sulla carreggiata: 0/2094 (0.0%)
+ciuffi d'erba sulla carreggiata: 0/230967 (0.0%)
+vertici di muretti/siepi dentro un'altra carreggiata: 374/80892
+incroci: 2691, gradino >30 cm: 13, >1 m: 0, massimo 0.82 m
+bordi fra celle: 181, gradino >30 cm: 2, >1 m: 0, massimo 0.56 m
+campioni di carreggiata: 130588, terreno sopra l'asfalto: 1 (0.0%), bordi più alti di 1,6 m (coperti fino al terreno): 7975
+bordo dell'asfalto rispetto al terreno: scarto medio 0.74 m, sospeso oltre 60 cm: 29.7%, oltre 1,8 m (muro di pietra): 9.8%
+segnaletica dipinta staccata (>10 cm): 1/3757
+gallerie: tratti di scatola disegnati col tetto fuori terra (>50 cm) 0/471
+rotatorie riconosciute: 2
+== dopo
+real_test: tile 6, celle 24 (4052 ms)  lc=no  file=cella.js  lat 43.73
+alberi sulla carreggiata: 0/2094 (0.0%)
+ciuffi d'erba sulla carreggiata: 0/230967 (0.0%)
+vertici di muretti/siepi dentro un'altra carreggiata: 393/81556
+incroci: 2691, gradino >30 cm: 13, >1 m: 0, massimo 0.82 m
+bordi fra celle: 181, gradino >30 cm: 2, >1 m: 0, massimo 0.56 m
+campioni di carreggiata: 130588, terreno sopra l'asfalto: 1 (0.0%), bordi più alti di 1,6 m (coperti fino al terreno): 8074
+bordo dell'asfalto rispetto al terreno: scarto medio 0.74 m, sospeso oltre 60 cm: 29.7%, oltre 1,8 m (muro di pietra): 9.8%
+segnaletica dipinta staccata (>10 cm): 1/3757
+gallerie: tratti di scatola disegnati col tetto fuori terra (>50 cm) 0/473
+rotatorie riconosciute: 2
+
+== Chromium (pagina ricostruita, WebGL software, dati di Monaco in locale; passi sincroni di 1/60 s)
+-- test/browser_mappa_v31_gallerie.js (campo «traccia» omesso)
+k3_guida: [{"lineaMediaM":72,"daPercorrereM":56,"percorsiM":56.1,"velMinKmh":32,"quota":[36.3,37.2],"eventiDanno":0,"primoUrto":null},{"lineaMediaM":36,"daPercorrereM":20,"percorsiM":20.1,"velMinKmh":33,"quota":[71.7,73.4],"eventiDanno":0,"primoUrto":null}]
+-- test/browser_affondamento.js (la via più ripida scelta dal gioco ora è al 39 %: con i profili lisciati non è più la stessa via della 31.4)
+a2_salita: {"pendenza":"39 %","viaM":326,"prove":[{"verso":"andata","passi":900,"sottoLaSuperficieOltre5cm":"0 %","sottoMassimoM":0},{"verso":"ritorno","passi":900,"sottoLaSuperficieOltre5cm":"0.7 %","sottoMassimoM":0.12}]}
+errori nella pagina: 4 (net::ERR_TUNNEL_CONNECTION_FAILED: risorse esterne non raggiungibili da questo ambiente)

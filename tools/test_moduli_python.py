@@ -39,6 +39,41 @@ class Dinamica7DoF(unittest.TestCase):
             self.assertAlmostEqual(a, -b, places=6)
 
 
+class Dinamica200Hz(unittest.TestCase):
+    """Configurazione predefinita (200 Hz, 1610 kg, Iz 2450, 50 m/s) e telemetria campionata a ogni passo dopo l'urto a 16 g."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.r = D7.execute_high_fidelity_simulation(durata=4.0, F_pit=3000.0, t_freno=1.5, stampa=False)
+        cls.sano, cls.ko = cls.r[0]['telemetria'], cls.r[1]['telemetria']
+
+    def test_parametri_predefiniti(self):
+        P = D7.Parametri()
+        self.assertEqual((D7.DT, P.m, P.Iz, D7.V0), (0.005, 1610.0, 2450.0, 50.0))
+        self.assertEqual(D7.SevenDoFVehicleDynamics().s[0], 50.0)
+
+    def test_un_campione_ogni_5_ms(self):
+        for T in (self.sano, self.ko):
+            self.assertEqual(len(T), 801)                                  # 4 s a 200 Hz, estremi compresi
+            for a, b in zip(T, T[1:]):
+                self.assertAlmostEqual(b[0] - a[0], 0.005, places=9)
+
+    def test_blackout_azzera_esp_e_tcs_a_ogni_campione(self):
+        self.assertFalse(any(x[8] for x in self.ko if x[0] < 1.0))       # prima dell'urto la centralina funziona
+        dopo = [x for x in self.ko if x[0] >= 1.0]
+        self.assertTrue(all(x[8] for x in dopo))
+        self.assertTrue(all(x[6] == 0.0 and x[7] == 0.0 for x in dopo))   # Mz dell'ESP e taglio di coppia del TCS a zero
+        self.assertFalse(any(x[8] for x in self.sano))
+        self.assertGreater(max(abs(x[6]) for x in self.sano), 1000.0)      # l'auto sana riceve la correzione dell'ESP
+
+    def test_ruote_bloccate_e_testacoda(self):
+        bloccati = [x for x in self.ko if x[0] >= 1.5 and max(x[5]) <= -0.99]
+        self.assertGreater(len(bloccati), 100)                             # λ = −1 su tutte e quattro per oltre 0,5 s
+        self.assertGreater(min(min(x[5]) for x in self.sano), -0.5)        # con l'ABS nessuna ruota si blocca
+        self.assertGreater(abs(self.r[1]['rotazione_totale_gradi']), 150)
+        self.assertGreater(max(abs(x[2]) for x in self.ko), math.radians(80))
+
+
 class VcuEbs(unittest.TestCase):
     def test_blackout_e_log(self):
         u = VE.VehicleControlUnit()

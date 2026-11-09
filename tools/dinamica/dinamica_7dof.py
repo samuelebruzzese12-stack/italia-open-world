@@ -24,10 +24,14 @@ import math
 G = 9.81
 
 
+DT = 0.005               # passo fisso predefinito: 200 Hz (fisica e centralina nello stesso ciclo)
+V0 = 50.0                # velocità iniziale predefinita: 180 km/h in autostrada
+
+
 class Parametri:
     """Berlina a trazione anteriore (valori generici, ordine di grandezza)."""
     m = 1610.0            # massa [kg]
-    Iz = 2700.0           # inerzia d'imbardata [kg m²]
+    Iz = 2450.0           # inerzia d'imbardata [kg m²]
     a = 1.20              # baricentro → asse anteriore [m]
     b = 1.50              # baricentro → asse posteriore [m]
     wf = 1.55             # carreggiata anteriore [m]
@@ -54,7 +58,7 @@ class SevenDoFVehicleDynamics:
     """Integra le 7 equazioni del moto con RK4. Ruote nell'ordine fl, fr, rl, rr; y del veicolo verso sinistra, imbardata positiva a sinistra."""
     RUOTE = ('fl', 'fr', 'rl', 'rr')
 
-    def __init__(self, p=None, v0=50.0):
+    def __init__(self, p=None, v0=V0):
         self.p = p or Parametri()
         P = self.p
         self.s = [v0, 0.0, 0.0] + [v0 / P.Re] * 4          # vx, vy, r, ω×4
@@ -192,6 +196,7 @@ class MechatronicVehicleControlUnit:
         self.tcs_i = [0.0] * 2              # integrale del PID del TCS (ruote motrici anteriori)
         self.tcs_e = [0.0] * 2
         self.Mz = 0.0
+        self.taglio_tcs = 0.0              # coppia tolta dal TCS nell'ultimo passo [N m] (telemetria)
         self.log = []
 
     def inject_soft_body_crash_event(self, g_force, t=None):
@@ -217,6 +222,7 @@ class MechatronicVehicleControlUnit:
         Tb = [freno_cmd * P.Tb_max[i] for i in range(4)]
         Tm = [Tm_cmd / 2, Tm_cmd / 2, 0.0, 0.0]          # trazione anteriore, differenziale aperto
         self.Mz = 0.0
+        self.taglio_tcs = 0.0
         if self.SYSTEM_INTEGRITY_COMPROMISED:
             return Tm, Tb                                 # blackout: nessun calcolo, freni e coppia grezzi
         # TCS: PID discreto sullo scorrimento delle ruote motrici
@@ -225,6 +231,7 @@ class MechatronicVehicleControlUnit:
             if e > 0:
                 self.tcs_i[i] += e * dt
                 taglio = 4000 * e + 20000 * self.tcs_i[i] + 50 * (e - self.tcs_e[i]) / dt
+                self.taglio_tcs += min(Tm[i], max(0.0, taglio))
                 Tm[i] = max(0.0, Tm[i] - taglio)
             else:
                 self.tcs_i[i] = max(0.0, self.tcs_i[i] - dt * .5)
@@ -257,16 +264,17 @@ class MechatronicVehicleControlUnit:
         return Tm, Tb
 
 
-def execute_high_fidelity_simulation(durata=6.0, dt=0.005, v0=50.0, F_pit=6000.0, t_pit=(1.0, 1.5), t_freno=1.5, stampa=True):
+def execute_high_fidelity_simulation(durata=6.0, dt=DT, v0=V0, F_pit=6000.0, t_pit=(1.0, 1.5), t_freno=1.5, stampa=True):
     """Due veicoli uguali a 180 km/h. Manovra PIT: forza laterale costante sul paraurti posteriore per 0,5 s. Il primo resta con la centralina
     operativa (urto letto a 6 g), il secondo subisce un urto letto a 16 g sulla centralina (blackout). Dopo l'urto il guidatore frena a fondo
-    con lo sterzo dritto. Restituisce i risultati numerici e (se stampa) scrive la telemetria."""
+    con lo sterzo dritto. Restituisce i risultati numerici; ogni risultato ha anche 'telemetria': un campione per ogni passo di 200 Hz
+    (t, vx, β, r, ψ, λ delle 4 ruote, Mz dell'ESP, coppia tolta dal TCS, stato della centralina). Se stampa scrive la telemetria ridotta."""
     P = Parametri()
     casi = []
     for nome, g_urto in (('SANO (centralina operativa)', 6.0), ('BLACKOUT (urto da 16 g)', 16.0)):
         v = SevenDoFVehicleDynamics(P, v0)
         ecu = MechatronicVehicleControlUnit(v)
-        casi.append({'nome': nome, 'v': v, 'ecu': ecu, 'g': g_urto, 'righe': [], 'max_beta': 0.0, 'max_r': 0.0, 'colpito': False})
+        casi.append({'nome': nome, 'v': v, 'ecu': ecu, 'g': g_urto, 'righe': [], 'tel': [], 'max_beta': 0.0, 'max_r': 0.0, 'colpito': False})
     braccio = -(P.b + 0.9)                                 # punto d'urto: paraurti posteriore
     n = int(durata / dt)
     for k in range(n + 1):
@@ -287,6 +295,8 @@ def execute_high_fidelity_simulation(durata=6.0, dt=0.005, v0=50.0, F_pit=6000.0
             F = F_pit if pit else 0.0
             if math.hypot(v.s[0], v.s[1]) > 0.3:
                 v.passo(dt, delta, Tm, Tb, F_ext=F, M_ext=F * braccio)
+            c['tel'].append((round(t, 6), v.s[0], v.beta, v.s[2], v.psi, tuple(v.ultimo.get('lambda', (0.0,) * 4)), ecu.Mz, ecu.taglio_tcs,
+                             ecu.SYSTEM_INTEGRITY_COMPROMISED))
             c['max_beta'] = max(c['max_beta'], abs(v.beta))
             c['max_r'] = max(c['max_r'], abs(v.s[2]))
             ogni = 0.1 if t < 2.5 else 0.5
@@ -302,7 +312,8 @@ def execute_high_fidelity_simulation(durata=6.0, dt=0.005, v0=50.0, F_pit=6000.0
         v = c['v']
         risultati.append({'caso': c['nome'], 'beta_max_gradi': round(math.degrees(c['max_beta']), 1), 'imbardata_max_rad_s': round(c['max_r'], 3),
                           'rotazione_totale_gradi': round(math.degrees(v.psi), 1), 'scostamento_laterale_m': round(v.Y, 1),
-                          'velocita_finale_kmh': round(v.s[0] * 3.6, 1), 'spazio_m': round(v.X, 1), 'ruote_bloccate': sum(v.bloccata)})
+                          'velocita_finale_kmh': round(v.s[0] * 3.6, 1), 'spazio_m': round(v.X, 1), 'ruote_bloccate': sum(v.bloccata),
+                          'telemetria': c['tel']})
         if stampa:
             print('\n=== ' + c['nome'] + ' ===')
             for t, msg in c['ecu'].log:
@@ -312,7 +323,7 @@ def execute_high_fidelity_simulation(durata=6.0, dt=0.005, v0=50.0, F_pit=6000.0
     if stampa:
         print('\n=== RIEPILOGO ===')
         for r in risultati:
-            print(r)
+            print({k: x for k, x in r.items() if k != 'telemetria'})
     return risultati
 
 

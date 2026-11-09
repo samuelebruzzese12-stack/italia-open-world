@@ -87,7 +87,7 @@ class VehicleControlUnit:
 
 
 class ModelloBicicletta:
-    m, Iz, a, b, h = 1610.0, 2700.0, 1.20, 1.50, 0.55
+    m, Iz, a, b, h = 1610.0, 2450.0, 1.20, 1.50, 0.55
     Re, Iw = 0.317, 2.4                  # una ruota per asse (inerzia di due ruote)
     Caf, Car = 110000.0, 125000.0        # rigidezza di deriva per asse [N/rad]
     Cx = 160000.0                        # rigidezza longitudinale [N per unità di scorrimento]

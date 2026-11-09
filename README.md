@@ -37,7 +37,7 @@ Catalogo delle fonti e licenze: [docs/RESOURCE_CATALOG.md](docs/RESOURCE_CATALOG
 - `motore/danni_solver.js` — Vehicle Damage Solver: energia d'urto, registro degli eventi, stato per zona, ruote e sospensioni, componenti distaccabili
 - `motore/profili_danno.js` — zone strutturali nominate sulla rete deformabile e profili di danno per veicolo (importazione del JSON del progetto)
 - `motore/calibrazione.js` — prove riproducibili e confronto con i dati dichiarati (`node motore/calibrazione.js`)
-- `test/run.js` — test automatici dei moduli, del solver e della mappa (cause dei difetti della v31: verso dei triangoli, guardrail, viadotti, pareti, collisioni con la quota, gallerie, siepi, sagome degli edifici) (`node test/run.js`: 69 test)
+- `test/run.js` — test automatici dei moduli, del solver e della mappa (cause dei difetti della v31: verso dei triangoli, guardrail, viadotti, pareti, collisioni con la quota, gallerie, siepi, sagome degli edifici) (`node test/run.js`: 70 test)
 - `test/scene_chromium.js`, `test/browser_mappa_v31_*.js` — prove nel gioco vero in Chromium (immagini prima/dopo, guida contro un guardrail, su un cavalcavia e nelle gallerie di Monaco); risultati in `docs/test/v31_chromium.txt`
 - `armi/modelli/*.json` — modelli 3D delle armi
 - `radio/` — brano della radio di bordo
