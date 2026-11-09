@@ -624,6 +624,10 @@ print('patch solver V30 applicata:',_n,'sostituzioni')
 _sp=_ilu.spec_from_file_location('patch_mappa_v31',REPO+'sorgenti/patch_mappa_v31.py'); _pm=_ilu.module_from_spec(_sp); _sp.loader.exec_module(_pm)
 h,_n=_pm.applica(h); assert h.count('PO.y')>=4 and 'r.rails' in h, 'integrazione delle collisioni con la quota mancante'
 print('patch mappa V31 applicata:',_n,'sostituzioni')
+# 67) Versione 32: blackout della centralina negli urti forti e informatore con assalto al covo (sorgenti/patch_v32.py, motore/informatore.js)
+_sp=_ilu.spec_from_file_location('patch_v32',REPO+'sorgenti/patch_v32.py'); _pm=_ilu.module_from_spec(_sp); _sp.loader.exec_module(_pm)
+h,_n=_pm.applica(h); assert 'motore/informatore.js' in h and 'vcuUrto(ev,m1)' in h and 'infStep(dt)' in h, 'integrazione v32 mancante'
+print('patch v32 applicata:',_n,'sostituzioni')
 open(OUT,'w',encoding='utf-8').write(h)
 js=re.findall(r'<script>([\s\S]*?)</script>',h)[-1]
 os.makedirs(D+'h',exist_ok=True); open(D+PSJ,'w',encoding='utf-8').write(js)

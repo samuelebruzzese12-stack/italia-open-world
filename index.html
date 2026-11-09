@@ -88,7 +88,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 #armBtns{position:absolute;right:calc(10px + var(--sr));bottom:calc(10px + var(--sb));display:flex;gap:8px;z-index:2}#armBtns .b{height:48px}#armProva{background:rgba(190,30,30,.62)}
 #armLic{position:absolute;left:calc(10px + var(--sl));right:calc(10px + var(--sr));top:calc(54px + var(--st));bottom:calc(10px + var(--sb));background:rgba(12,14,17,.95);color:#e4e4e4;border-radius:12px;padding:10px 14px;overflow-y:auto;font:12px/1.45 system-ui,sans-serif;z-index:3;touch-action:pan-y}
 #armLic h3{margin:0 0 6px;font-size:16px;color:#fff}#armLic h4{margin:10px 0 3px;font-size:13px;color:#e0b040}#armLic p{margin:3px 0}#armLic ul{margin:3px 0;padding-left:18px}#armLic li{margin:3px 0}#armLic pre{white-space:pre-wrap;font:10.5px/1.35 ui-monospace,monospace;opacity:.8;margin:6px 0}#armLicX{position:sticky;top:0;float:right;height:34px}#armLic a{color:#8fc3ff;text-decoration:underline}
-#armList *,#armInfo *,#armLic *,#pp,#pp *{touch-action:pan-y}#armCat *{touch-action:pan-x}
+#armList *,#armInfo *,#armLic *,#pp,#pp *{touch-action:pan-y}#ibtn{position:absolute;left:calc(10px + var(--sl));top:calc(248px + var(--st));width:42px;height:42px;border-radius:50%;padding:0;font-size:20px;display:flex;align-items:center;justify-content:center}#ibtn.nuovo{box-shadow:0 0 0 3px #e53935}#ip{position:absolute;left:calc(60px + var(--sl));top:calc(56px + var(--st));width:min(88vw,380px);max-height:calc(100% - 66px);overflow:auto;background:rgba(16,24,34,.95);color:#fff;border-radius:12px;padding:10px;font-size:13px;z-index:30}#ip[hidden]{display:none}#ip .ph{font-weight:800;margin-bottom:6px}#ip .pr{display:flex;gap:6px;margin:8px 0}#ip .s{height:38px;padding:0 10px;font-size:13px}#i_stato{opacity:.85;margin-bottom:6px}#i_chat{max-height:34vh;overflow:auto;background:rgba(255,255,255,.06);border-radius:8px;padding:6px}#i_chat div{padding:3px 0}#i_chat .io{color:#9ecbff}#i_txt{flex:1;min-width:0;height:38px;border-radius:8px;border:0;padding:0 8px;font-size:15px}#ip .nota{font-size:11px;opacity:.6}#ip,#ip *{touch-action:pan-y}#armCat *{touch-action:pan-x}
 #armCred{position:absolute;left:44%;right:calc(330px + var(--sr));bottom:calc(14px + var(--sb));color:#fff;opacity:.6;font:10px system-ui,sans-serif;pointer-events:none}
 @media (orientation:portrait){#armCat{left:0;right:0;width:auto;flex-wrap:nowrap;overflow-x:auto;padding:0 calc(8px + var(--sr)) 2px calc(8px + var(--sl));scrollbar-width:none}#armCat::-webkit-scrollbar{display:none}#armCat .b{height:32px;font-size:12px}#armList{top:auto;height:31%;width:auto;right:8px}#armView{left:0;top:100px;bottom:52%}#armInfo{left:8px;right:8px;width:auto;bottom:calc(31% + 70px);max-height:17%}#armBtns{bottom:calc(31% + 14px)}#armCred{display:none}}
 #colpi{bottom:calc(216px + var(--sb))}
@@ -2508,7 +2508,7 @@ onmessage = async e => { const m = e.data;
 <div class="chip" id="toast"></div>
 <div id="cr">Mappa © OpenStreetMap contributors · OpenMapTiles · OpenFreeMap · Rilievo Mapterhorn (INGV TINITALY e fonti regionali) · © ESA WorldCover 2021, dati Copernicus Sentinel (CC BY 4.0) · Texture Poly Haven e ambientCG (CC0) · Auto: «Alfa Romeo 159 Sedan And Wagon» di Nieve5677 (sketchfab.com), CC BY 4.0</div>
 <canvas id="mm" width="240" height="240"></canvas><div class="chip" id="zn"></div>
-<div id="arr" hidden></div><button class="b" id="pbtn">🚔</button><button class="b" id="vbtn" title="Veicolo">🚗</button><div id="vp" hidden></div><div id="gbx"><button class="b" id="gdn">−</button><button class="b" id="gup">+</button></div><div class="chip" id="heat" style="display:none"></div><div class="chip" id="dmg" style="display:none"></div><button class="b" id="rep" style="display:none">🔧 Ripara l'auto</button><div id="sub"></div>
+<div id="arr" hidden></div><button class="b" id="pbtn">🚔</button><button class="b" id="vbtn" title="Veicolo">🚗</button><button class="b" id="ibtn" title="Telefono: informatore">📱</button><div id="ip" hidden><div class="ph">📱 Informatore della Questura</div><div id="i_stato"></div><div id="i_chat"></div><div class="pr"><input id="i_txt" type="text" maxlength="140" placeholder="Scrivi all'informatore…" autocomplete="off"><button class="b s" id="i_send">Invia</button></div><div class="pr"><button class="b s" id="i_covo">📍 Covo qui</button><button class="b s" id="i_x">Chiudi</button></div><div class="nota">Personaggi, articoli e carceri sono di finzione. L'informatore capisce frasi su indagini, accuse, piani e posizione.</div></div><div id="vp" hidden></div><div id="gbx"><button class="b" id="gdn">−</button><button class="b" id="gup">+</button></div><div class="chip" id="heat" style="display:none"></div><div class="chip" id="dmg" style="display:none"></div><button class="b" id="rep" style="display:none">🔧 Ripara l'auto</button><div id="sub"></div>
 <div id="mirino"><i class="a"></i><i class="bb"></i><i class="c"></i><i class="d"></i><i class="p"></i></div>
 <button class="b" id="bspara">SPARA</button><button class="b" id="bmira">MIRA</button><button class="b" id="bricarica">RICARICA</button>
 <div class="chip" id="colpi"></div><button class="b" id="barmi" title="Armeria">ARMI</button><button class="b" id="bfull" title="Schermo intero"><svg class="i1" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg><svg class="i2" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg></button>
@@ -2520,7 +2520,7 @@ onmessage = async e => { const m = e.data;
 <div id="rld"><div id="rlt">Caricamento della mappa reale…</div><div id="rlp"></div><div id="rle"></div><button class="b" id="rlr" hidden>Riprova</button><div id="rla">Mappa © OpenStreetMap contributors · OpenMapTiles · OpenFreeMap · Rilievo Mapterhorn (INGV TINITALY e fonti regionali)</div></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="motore/veicoli_db.js"></script><script src="motore/fisica_veicolo.js"></script><script src="motore/ecu.js"></script><script src="motore/danni_meccanici.js"></script><script src="motore/calibrazione.js"></script><script src="motore/profili_danno.js"></script><script src="motore/danni_solver.js"></script>
+<script src="motore/veicoli_db.js"></script><script src="motore/fisica_veicolo.js"></script><script src="motore/ecu.js"></script><script src="motore/danni_meccanici.js"></script><script src="motore/calibrazione.js"></script><script src="motore/profili_danno.js"></script><script src="motore/danni_solver.js"></script><script src="motore/informatore.js"></script>
 <script>
 ( function () {
 
@@ -19142,7 +19142,7 @@ const VDS={ok:!!(window.IOW_SOLVER&&window.IOW_PROFILI),st:null,T:null,cfg:null,
  /* evento d'urto: dai dati del contatto all'energia propria e alla velocità equivalente u per la rete */
  evento(a,car,lx,lz,Dx,Dz,imp,kind,xtra){if(!VDS.ok||!VDS.ready())return null;const own=car.u||a,T=VDS.tpl(own),Mt=IOW_PROFILI.massa(T,own.sb),m1=VDS.massaDi(car),m2=kind==='car'?(xtra&&Number.isFinite(xtra.m2)?xtra.m2:m1):Infinity;
   const fa=IOW_SOLVER.faccia(Dx,Dz),st=VDS.stDi(own),ev=IOW_SOLVER.evento(st,{t:performance.now()/1000,lx,lz,nx:Dx,nz:Dz,vn:imp,m1,m2,kind,faccia:fa,facciaAltro:xtra&&xtra.facciaAltro,id:xtra&&xtra.id,Mt,Fsnerv:VDS.fsn?VDS.fsn[fa]:0});
-  if(own===carA&&typeof VEHOK!=='undefined'&&VEHOK&&imp>=3.2)IOW_DANNI.urto(DANS,{lx,lz,imp,kind,massa:m1,t:VEHX.t,energia:ev.Eown,duplicato:ev.duplicato});   /* storico ed energia nel modulo meccanico (una sola volta per evento) */
+  if(own===carA&&typeof VEHOK!=='undefined'&&VEHOK&&imp>=3.2)IOW_DANNI.urto(DANS,{lx,lz,imp,kind,massa:m1,t:VEHX.t,energia:ev.Eown,duplicato:ev.duplicato});if(own===carA&&imp>=3.2)vcuUrto(ev,m1);   /* storico ed energia nel modulo meccanico (una sola volta per evento) */
   return ev},
  /* ribaltamento: evento registrato (energia dalla velocità di caduta); la rete la schiaccia rlCrash con la sua taratura */
  eventoRib(own,r){if(!VDS.ok||!VDS.ready()||!r.ev)return null;const e=r.ev,m1=own===carA?VDS.T.Mt:VDS.massaDi({u:own}),pv=RPOLY[e.k],st=VDS.stDi(own);const ev=IOW_SOLVER.evento(st,{t:performance.now()/1000,lx:-pv[0],lz:0,nx:-Math.sin(r.phi),nz:0,vn:e.v,m1,m2:Infinity,kind:'ground',faccia:Math.cos(r.phi)<-.7?'tetto':'lato',Mt:IOW_PROFILI.massa(VDS.tpl(own),own.sb)});
@@ -19268,7 +19268,7 @@ function dmgRepairSpot(){if(!inCar||Math.hypot(V.vx,V.vz)>1)return null;for(cons
 /* pulsante Ripara sempre disponibile quando l'auto è danneggiata: si ripara da fermi (2,5 s; durante un inseguimento 6 s, e la polizia può arrivare) */
 let DMGREP=null;
 function dmgRepairStart(){if(!inCar)return;const D=carA.dmg,fl=!!(carA.tyre&&carA.tyre.f.some(v=>v>0))||!!V.flip;if(((!D||!D.on)&&!fl)||DMGREP)return;if(Math.hypot(V.vx,V.vz)>1){toast('Fermati per riparare l\'auto');return}const chase=!!(PD.case&&PD.case.phase!=='ended');DMGREP={t:0,dur:chase?6:2.5};toast(chase?'Riparazione d\'emergenza: resta fermo 6 secondi':'Riparazione in corso…')}
-function dmgRepairStep(dt){if(!DMGREP)return;const b=$('#rep');if(!inCar||Math.hypot(V.vx,V.vz)>1.5){DMGREP=null;toast('Riparazione interrotta');if(b)b.textContent='🔧 Ripara l\'auto';return}DMGREP.t+=dt;const p=Math.min(1,DMGREP.t/DMGREP.dur);if(b)b.textContent='🔧 '+Math.round(p*100)+'%';if(p>=1){DMGREP=null;dmgRepair(carA);dmgDrive();dmgHud();if(b)b.textContent='🔧 Ripara l\'auto';toast('Auto riparata')}}
+function dmgRepairStep(dt){if(!DMGREP)return;const b=$('#rep');if(!inCar||Math.hypot(V.vx,V.vz)>1.5){DMGREP=null;toast('Riparazione interrotta');if(b)b.textContent='🔧 Ripara l\'auto';return}DMGREP.t+=dt;const p=Math.min(1,DMGREP.t/DMGREP.dur);if(b)b.textContent='🔧 '+Math.round(p*100)+'%';if(p>=1){DMGREP=null;dmgRepair(carA);vcuRipara();dmgDrive();dmgHud();if(b)b.textContent='🔧 Ripara l\'auto';toast('Auto riparata')}}
 let DMGRT=0;function dmgUi(dt){dmgRepairStep(dt);const b=$('#rep');if(!b)return;DMGRT+=dt;if(DMGRT<.25)return;DMGRT=0;const D=carA.dmg,show=!!(inCar&&((D&&D.on)||(carA.tyre&&carA.tyre.f.some(v=>v>0))||V.flip))||!!DMGREP;b.style.display=show?'block':'none'}
 /* urto fra due auto (giocatore o pattuglia) da pdCollide: punto di contatto, direzione verso l'interno dell'auto, velocità d'urto */
 function dmgPair(b,px,pz,nx,nz,imp,other){if(imp*.8<3.2)return;const xtra=other&&VDS.ok?{m2:VDS.massaDi(other.p?{player:true}:{u:other.u}),facciaAltro:VDS.facciaDi(other,px,pz,-nx,-nz),id:VDS.idCoppia(b,other)}:null;
@@ -20055,7 +20055,38 @@ if(VEHOK){
  $('#gup').addEventListener('pointerdown',e=>{e.stopPropagation();VEHX.cmd='su'});$('#gdn').addEventListener('pointerdown',e=>{e.stopPropagation();VEHX.cmd='giu'});
  addEventListener('keydown',e=>{if(!inCar)return;const k=e.key.toLowerCase();if(k==='x')VEHX.cmd='su';else if(k==='z')VEHX.cmd='giu';else if(k==='n'){VEH.cambio.modo=VEH.cambio.modo==='auto'?'man':'auto';toast(VEH.cambio.modo==='auto'?'Cambio automatico':'Cambio manuale: Z scala, X sale')}});
 }
-function step(dt){const ts=performance.now()/1000;dmgDrive();dmgStep(dt);VEHX.step(dt);crStep(dt);if(inCar)dmgSmokeFor(carA,{x:C.x,z:C.z,h:C.h,y:V.y},dt);dmgUi(dt);if(RADIO.el&&!RADIO.el.paused){const tv=(VOICE.cur?.22:1)*RADIO.vol*(inCar?1:0);RADIO.el.volume+=(tv-RADIO.el.volume)*Math.min(1,dt*4)}
+/* ---- v32: blackout della centralina negli urti forti (sorgenti/patch_v32.py) ---- */
+const VCU={ko:false,g:0,gMax:0,soglia:15,ids:[],n:0};
+function vcuUrto(ev,m){if(!ev||ev.duplicato||typeof VEHOK==='undefined'||!VEHOK||!ECUN)return;const dv=Math.abs(ev.J||0)/Math.max(1,m||1),dur=Math.min(.25,Math.max(.04,Number.isFinite(ev.durata)&&ev.durata>0?ev.durata:.1)),g=dv/dur/9.81;
+ VCU.g=g;VCU.gMax=Math.max(VCU.gMax,g);VCU.n++;if(g<=VCU.soglia||VCU.ko)return;VCU.ko=true;
+ for(const e of ['ABS','ESC'])VCU.ids.push(IOW_ECU.iniettaGuasto(ECUN,{ecu:e,tipo:'timeout',descr:'blackout da urto di '+g.toFixed(1)+' g'}));
+ toast('[CENTRALINA KO] Urto di '+g.toFixed(1)+' g: ABS, ESP e ASR disattivati — controllo puramente meccanico')}
+function vcuRipara(){if(!VCU.ko||!ECUN)return;for(const id of VCU.ids)IOW_ECU.rimuoviGuasti(ECUN,id);VCU.ids=[];VCU.ko=false;VCU.gMax=0}
+/* ---- v32: informatore e assalto al covo (motore/informatore.js) ---- */
+const INF={ok:false,acc:0,ui:false,badge:false};
+function infStato(){if(!window.IOW_INFORMATORE)return null;if(!S.inf||!IOW_INFORMATORE.valido(S.inf))S.inf=IOW_INFORMATORE.crea();return S.inf}
+function infAggancia(){if(INF.ok||!window.IOW_INFORMATORE||typeof PL==='undefined'||!PL.offence)return;const o=PL.offence;
+ PL.offence=function(kind){const prima=PL.lastOff[kind],r=o.apply(this,arguments);try{if(PL.lastOff[kind]!==prima){const st=infStato();if(st){IOW_INFORMATORE.reato(st,kind);save()}}}catch(e){}return r};INF.ok=true}
+function infDove(){const T=inCar?C:P;let n='';try{n=REAL.placeName(T.x,T.z)||''}catch(e){}return{x:T.x,z:T.z,luogo:n}}
+function infUi(){if(INF.ui)return;INF.ui=true;const b=$('#ibtn'),p=$('#ip');if(!b||!p)return;const stop=e=>e.stopPropagation();
+ b.addEventListener('pointerdown',e=>{e.stopPropagation();p.hidden=!p.hidden;INF.badge=false;b.classList.remove('nuovo');infRender()});
+ for(const ev of ['pointerdown','touchstart','keydown','keyup'])p.addEventListener(ev,stop);
+ $('#i_send').addEventListener('click',()=>{const i=$('#i_txt'),t=i.value.trim();if(!t)return;const st=infStato();if(!st)return;IOW_INFORMATORE.rispondi(st,t,{stelle:Math.round(PL.heat||0)});i.value='';save();infRender()});
+ $('#i_txt').addEventListener('keydown',e=>{if(e.key==='Enter')$('#i_send').click()});
+ $('#i_covo').addEventListener('click',()=>{const st=infStato();if(!st)return;const d=infDove();IOW_INFORMATORE.fissaCovo(st,d.x,d.z,d.luogo||'zona senza nome');save();toast('Covo fissato: '+(d.luogo||'qui'));infRender()});
+ $('#i_x').addEventListener('click',()=>{p.hidden=true})}
+function infRender(){const p=$('#ip');if(!p||p.hidden)return;const st=infStato();if(!st)return;const I=IOW_INFORMATORE,a=I.anni(st),pi=st.piano;
+ $('#i_stato').textContent=(st.covo?'Covo: '+st.covo.nome+(pi.attivo?' — operazione in corso: '+I.fase(st)+' '+Math.floor(pi.avanzamento)+' %':pi.fatto?' — operazione finita':' — nessuna operazione'):'Nessun covo: tocca «Covo qui»')+' · Fedina: '+(a?a+' anni ('+I.carcere(a)+')':'pulita');
+ const L=$('#i_chat');L.innerHTML='';for(const m of st.chat.slice(-14)){const d=document.createElement('div');d.className=m.da==='io'?'io':'inf';d.textContent=(m.da==='io'?'Tu: ':'Informatore: ')+m.testo;L.appendChild(d)}L.scrollTop=L.scrollHeight}
+function infStep(dt){if(!window.IOW_INFORMATORE)return;infAggancia();infUi();INF.acc+=dt;if(INF.acc<.25)return;const st=infStato();if(!st){INF.acc=0;return}
+ const d=infDove(),visto=typeof PL!=='undefined'&&PL.units.some(u=>u.see&&u.status!=='gone'),ev=IOW_INFORMATORE.passo(st,INF.acc,{t:PL.t,stelle:Math.round(PL.heat||0),visto,x:d.x,z:d.z,luogo:d.luogo});INF.acc=0;
+ for(const e of ev){if(e.tipo==='irruzione'){try{say(e.testo,4)}catch(x){}PL.heat=5;PL.seenT=PL.t;for(let k=0;k<4;k++){const u=spawnPatrol(e.x,e.z,true,true);if(u)u.state='chase'}toast('Irruzione al covo di '+e.covo+'! Scappa')}
+  else{toast((e.tipo==='notifica'?'📱 ':'📱 Informatore: ')+e.testo);if(e.tipo==='notifica')try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(x){}}
+  st.chat.push({da:'informatore',testo:e.testo});INF.badge=true;const b=$('#ibtn');if(b&&$('#ip').hidden)b.classList.add('nuovo')}
+ if(ev.length)save();infRender()}
+/* per le prove automatiche (come window.__iow) */
+window.__v32={VCU,INF,infStato,infStep,get ecu(){return typeof ECUN!=='undefined'?ECUN:null},get PL(){return typeof PL!=='undefined'?PL:null},get veh(){return typeof VEH!=='undefined'?VEH:null}};
+function step(dt){const ts=performance.now()/1000;try{infStep(dt)}catch(e){}dmgDrive();dmgStep(dt);VEHX.step(dt);crStep(dt);if(inCar)dmgSmokeFor(carA,{x:C.x,z:C.z,h:C.h,y:V.y},dt);dmgUi(dt);if(RADIO.el&&!RADIO.el.paused){const tv=(VOICE.cur?.22:1)*RADIO.vol*(inCar?1:0);RADIO.el.volume+=(tv-RADIO.el.volume)*Math.min(1,dt*4)}
  const ix=cl(joy.x+(K.d||K.arrowright?1:0)-(K.a||K.arrowleft?1:0),-1,1),iy=cl(joy.y+(K.w||K.arrowup?1:0)-(K.s||K.arrowdown?1:0),-1,1);
  if(!menu&&!mapOpen){if(inCar)drive(dt,ix,iy);else walk(dt,ix,iy,!!K.shift)}if(!inCar)parked(dt);
  doorA+=((S.door?-PI/2:0)-doorA)*Math.min(1,dt*8);door.rotation.y=doorA;
