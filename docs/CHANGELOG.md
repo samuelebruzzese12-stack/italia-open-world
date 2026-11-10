@@ -1,5 +1,11 @@
 # Cronologia delle versioni
 
+## Versione 33.1 — 2026-11-10 — quadro rifatto e comandi che non coprono più il gioco
+- Quadro ridisegnato da zero con un aspetto proprio (plancia bassa, strumenti a cannocchiale con cornice cromata, display monocromatico,
+  spie in una fila): la 33 riprendeva troppo l'immagine d'esempio ed era troppo grande (1200 × 880 → 1200 × 470; 258 × 101 px su 760 × 296).
+- Frecce, pedali e pulsanti più piccoli e spostati fuori dalla colonna di sinistra, dalla minimappa e dal nome della via; «Scendi»,
+  «Freno a mano», «Ripara» e cambio manuale riposizionati. Nuovo test: nessuna sovrapposizione fra tutti gli elementi su 5 schermi.
+
 ## Versione 33 — 2026-11-10 — quadro strumenti analogico-digitale, frecce e pedali, fari e portiere bloccate
 Documentazione: `docs/CRUSCOTTO.md`. Prove: `docs/test/v33_cruscotto_chromium.txt`, immagini `docs/img/v33_*.png`.
 - `motore/cruscotto.js` (nuovo): tachimetro 0–280 km/h con consumo istantaneo km/l, contagiri 0–8 con zona rossa dal limitatore, display a

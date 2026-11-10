@@ -23,8 +23,8 @@ module.exports = function (T) {
   const corri = (A, sec, inp, amb, fari, extra, ogni) => { const st = []; for (let i = 0; i < Math.round(sec * 60); i++) { A.passo(1 / 60, Object.assign({}, inp), amb, fari, extra); if (ogni) ogni(A.m, i) } return A.m };
 
   /* ---------------- strumenti ---------------- */
-  test('quadro: scale vere (tachimetro 0–280 su 220°, contagiri 0–8 su 190°, zona rossa dal limitatore del veicolo) e funzioni di lettura', () => {
-    const L = Q.LAYOUT; vicino(Q.angolo(L.vel, 0), 160, 1e-9); vicino(Q.angolo(L.vel, 140 / 280), 270, 1e-9, '140 km/h in alto'); vicino(Q.angolo(L.vel, 1), 380, 1e-9);
+  test('quadro: scale vere (tachimetro 0–280 e contagiri 0–8 su 270°, zona rossa dal limitatore del veicolo) e funzioni di lettura', () => {
+    const L = Q.LAYOUT; vicino(Q.angolo(L.vel, 0), 135, 1e-9); vicino(Q.angolo(L.vel, 140 / 280), 270, 1e-9, '140 km/h in alto'); vicino(Q.angolo(L.vel, 1), 405, 1e-9);
     vicino(Q.angolo(L.giri, 4 / 8), 270, 1e-9, '4000 giri in alto'); ok(Q.crea({ redline: P.limitatore }).redline === P.limitatore, 'zona rossa dal limitatore (' + P.limitatore + ')');
     vicino(Q.tempFrazione(95), 0.5, 1e-9, 'temperatura tamponata a metà'); ok(Q.tempFrazione(40) === 0 && Q.tempFrazione(130) === 1 && Q.tempFrazione(115) > 0.6);
     vicino(Q.kmlIstantaneo(90, 4.5), 20, 1e-9); ok(Q.kmlIstantaneo(0, 0.6) === 0 && Q.kmlIstantaneo(80, 0) === 30, 'fermo 0 km/l, rilascio a fondo scala');

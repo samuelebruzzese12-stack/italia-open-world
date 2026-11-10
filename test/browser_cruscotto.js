@@ -13,42 +13,20 @@ async function prova(nome, fn) { try { const r = await fn(); pass++; esiti.push(
 const rosso = c => c[0] > 170 && c[1] < 130 && c[2] < 120, luce = c => c[0] + c[1] + c[2];
 const COLORI = { rosso: c => c[0] > 180 && c[1] < 140 && c[2] < 130, arancione: c => c[0] > 200 && c[1] > 60 && c[1] < 190 && c[2] < 110, ambra: c => c[0] > 200 && c[1] > 120 && c[2] < 120, giallo: c => c[0] > 200 && c[1] > 160 && c[2] < 140, verde: c => c[1] > 170 && c[0] < 150 && c[2] < 200, blu: c => c[2] > 200 && c[0] < 140, bianco: c => c[0] > 200 && c[1] > 200 && c[2] > 200 };
 
-/* banco d'integrazione: pezzi veri della pagina costruita */
-function banco() {
-  const html = fs.readFileSync(path.join(R, 'index.html'), 'utf8');
-  const css = (html.match(/<style>([\s\S]*?)<\/style>/g) || []).join('\n');
-  const i = html.indexOf('<div id="hud">'); let d = 0, fine = -1; const re = /<div\b|<\/div>/g; re.lastIndex = i; let m;
-  while ((m = re.exec(html))) { d += m[0] === '<div' ? 1 : -1; if (d === 0) { fine = re.lastIndex; break } }
-  const hud = html.slice(i, fine), g0 = html.indexOf('var CRU={'), g1 = html.indexOf('function step(dt){', g0);
-  const glue = html.slice(html.lastIndexOf('/* ====', g0), g1);
-  const stub = `
-  const $=s=>document.querySelector(s);window.TOASTS=[];const toast=t=>TOASTS.push(t);const cl=(v,a,b)=>v<a?a:v>b?b:v;
-  var inCar=true,VEHOK=true;const K={},V={vx:0,vz:0,y:0,pt:0},C={x:0,z:0,h:0},P={x:0,z:0,y:0,r:.4},cs={v:0},UNI={uNight:{value:0}};
-  window.TERRENO_SOPRA=0;const REAL={terrainH:(x,z)=>V.y+TERRENO_SOPRA};const push=(x,z)=>[x,z,0],GY=()=>0;
-  window.CHIAMATE=[];function crBang(){CHIAMATE.push('crBang')}function crGlassCrack(){CHIAMATE.push('crGlassCrack')}function crGlassBreak(a,c,k){CHIAMATE.push('crGlassBreak:'+k)}
-  const VEH=IOW_FISICA.crea(IOW_VEICOLI.parametri('alfa_159_19_jtdm_150'),{Tambiente:18,carburante:42});VEH.motore.Tacqua=88;
-  const ECUN=IOW_ECU.crea(VEH,{seed:12}),DANS=IOW_DANNI.crea(),VDS={st:{zone:null}},carA={};
-  var exitCar=function(){if(Math.hypot(V.vx,V.vz)>3)return;inCar=false;CHIAMATE.push('exitCar')};
-  window.passo=function(dt,inp){const ctx=IOW_DANNI.aggiorna(DANS,dt,null,VEH);const o=inCar?CRU.comandi(dt):null;IOW_FISICA.passo(VEH,dt,Object.assign({iy:o?o.iy:0,sterzo:o?-o.ix*.3:0},inp||{}));IOW_ECU.passo(ECUN,dt,{danni:ctx});C.h+=VEH.r*dt;C.x+=VEH.v*Math.sin(C.h)*dt;C.z+=VEH.v*Math.cos(C.h)*dt;V.vx=VEH.v*Math.sin(C.h);V.vz=VEH.v*Math.cos(C.h);CRU.step(dt);return o};`;
-  const page = `<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${css}<style>html,body{margin:0;height:100%;overflow:hidden;background:linear-gradient(180deg,#7fa6c9 0%,#c9d7e2 45%,#5d6266 46%,#3d4043 100%)!important}#rld{display:none!important}</style></head><body>
-${hud}
-<script src="../motore/cruscotto.js"></script><script src="../motore/veicoli_db.js"></script><script src="../motore/pneumatici_mf.js"></script><script src="../motore/controllo_dinamica.js"></script><script src="../motore/fisica_veicolo.js"></script><script src="../motore/ecu.js"></script><script src="../motore/danni_meccanici.js"></script>
-<script>${stub}\n${glue}\nwindow.CRU=CRU;</script></body></html>`;
-  const f = path.join(__dirname, '_banco_cruscotto.html'); fs.writeFileSync(f, page); return f;
-}
+const { banco, IN_AUTO } = require('./banco_cruscotto.js');
 
 (async () => {
   const browser = await chromium.launch(); const errori = [];
   /* ======================== A) disegno controllato sui pixel ======================== */
-  const pg = await browser.newPage({ viewport: { width: 1200, height: 880 } });
+  const pg = await browser.newPage({ viewport: { width: 1200, height: 470 } });
   pg.on('pageerror', e => errori.push('A: ' + e.message)); pg.on('console', m => { if (m.type() === 'error') errori.push('A: ' + m.text()) });
   await pg.goto('file://' + path.join(__dirname, 'cruscotto_prova.html'));
   const L = await pg.evaluate(() => IOW_CRUSCOTTO.LAYOUT);
-  await prova('A1 quadro spento (fuori dall\'auto): nessuna spia accesa, display spento, anelli rossi accesi', async () => {
+  await prova('A1 quadro spento (fuori dall\'auto): nessuna spia accesa, display spento, cornici cromate visibili', async () => {
     await pg.evaluate(() => scenario('spento', 1, { quadro: false }));
     for (const id in L.spie) { const c = await pg.evaluate(([x, y]) => massimo(x, y, 24), [L.spie[id].x, L.spie[id].y]); ok(luce(c) < 200, id + ' non è buia: ' + c) }
     const lcd = await pg.evaluate(([x, y]) => colore(x, y, 8), [L.lcd.x + L.lcd.w / 2, L.lcd.y + L.lcd.h / 2]); ok(luce(lcd) < 120, 'display spento ' + lcd);
-    const anello = await pg.evaluate(([x, y]) => massimo(x, y, 4), [L.vel.cx + L.vel.r + 8, L.vel.cy]); ok(rosso(anello), 'anello ' + anello);
+    const anello = await pg.evaluate(([x, y]) => massimo(x, y, 4), [L.vel.cx - L.vel.r - 12, L.vel.cy - 30]); ok(luce(anello) > 450, 'cornice cromata ' + anello);
     await pg.screenshot({ path: path.join(R, 'docs/img/v33_cruscotto_spento.png') }); return 'display ' + lcd;
   });
   await prova('A2 ogni spia accesa ha il colore della sua funzione (21 spie, controllo dei pixel)', async () => {
@@ -77,25 +55,36 @@ ${hud}
     ok(ago(v100), 'tachimetro a 100: ' + v100); ok(!ago(v160), 'a 160 non c\'è: ' + v160); ok(ago(g24), 'contagiri a 2400: ' + g24); ok(!ago(g60), 'a 6000 non c\'è: ' + g60); ok(ago(c50), 'carburante a metà: ' + c50);
     await pg.screenshot({ path: path.join(R, 'docs/img/v33_cruscotto_100kmh.png') }); return '100 km/h ' + v100 + ', 2400 giri ' + g24;
   });
-  await prova('A5 display retroilluminato blu con chilometri totali e parziali', async () => {
-    const r = await pg.evaluate(() => scenario('lcd', 1, { quadro: true })); const c = await pg.evaluate(([x, y]) => colore(x, y, 4), [L.lcd.x + 12, L.lcd.y + 14]);
-    ok(c[2] > 120 && c[2] > c[0] * 2, 'fondo blu ' + c); ok(r.lcd.totale.trim() === '157256' && r.lcd.parziale === '0.0', JSON.stringify(r.lcd)); return 'totale ' + r.lcd.totale + ', parziale ' + r.lcd.parziale;
+  await prova('A5 display con chilometri totali e parziali (cifre chiare su fondo nero)', async () => {
+    const r = await pg.evaluate(() => scenario('lcd', 1, { quadro: true })); const c = await pg.evaluate(([x, y]) => colore(x, y, 4), [L.lcd.x + L.lcd.w / 2, L.lcd.y + L.lcd.h - 8]), cifre = await pg.evaluate(([x, y]) => massimo(x, y, 30), [L.lcd.x + 70, L.lcd.y + 43]);
+    ok(luce(c) < 40, 'fondo nero ' + c); ok(luce(cifre) > 600, 'cifre accese ' + cifre); ok(r.lcd.totale.trim() === '157256' && r.lcd.parziale === '0.0', JSON.stringify(r.lcd)); return 'totale ' + r.lcd.totale + ', parziale ' + r.lcd.parziale;
   });
 
   /* ======================== B) banco d'integrazione con la pagina vera ======================== */
   const f = banco();
-  const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
+  const ctx = await browser.newContext({ viewport: { width: 760, height: 296 }, deviceScaleFactor: 2.77, hasTouch: true, isMobile: true });
   const p = await ctx.newPage(); p.on('pageerror', e => errori.push('B: ' + e.message)); p.on('console', m => { if (m.type() === 'error') errori.push('B: ' + m.text()) });
-  await p.goto('file://' + f); await p.waitForTimeout(300);
+  await p.goto('file://' + f); await p.waitForTimeout(300); await p.evaluate(IN_AUTO);
   const box = async s => p.evaluate(s => { const r = document.querySelector(s).getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height, vis: getComputedStyle(document.querySelector(s)).display !== 'none' && r.width > 0 } }, s);
   const giri = async (n, inp) => p.evaluate(([n, inp]) => { let o; for (let i = 0; i < n; i++) o = passo(1 / 60, inp); return { o, v: VEH.v, ix: o && o.ix, crq: !document.querySelector('#crq').hidden } }, [n, inp || null]);
   const tocco = async (s, rel, azione) => { const b = await box(s), x = b.x + b.w / 2, y = b.y + b.h * rel; await p.evaluate(([s, x, y, a]) => { const el = document.querySelector(s); el.dispatchEvent(new PointerEvent(a, { bubbles: true, cancelable: true, pointerId: s === '#pacc' ? 11 : s === '#pfreno' ? 12 : 13, pointerType: 'touch', clientX: x, clientY: y, isPrimary: false })) }, [s, x, y, azione]) };
-  await prova('B1 in auto la levetta non c\'è più: #joy nascosta, frecce, pedali e quadro visibili e senza sovrapposizioni (schermo 844×390)', async () => {
-    await giri(30); const j = await box('#joy'), sx = await box('#gsx'), dx = await box('#gdx'), pa = await box('#pacc'), pf = await box('#pfreno'), q = await box('#crq'), act = await box('#act');
-    ok(!j.vis, 'levetta visibile'); ok(sx.vis && dx.vis && pa.vis && pf.vis && q.vis, 'comandi o quadro non visibili');
-    const sov = (a, b) => !(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y);
-    const cr = await box('#cr'), top = await p.evaluate(() => [...document.querySelectorAll('#top .b')].map(b => { const r = b.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height } })); const el = { sx, dx, pa, pf, q, act, cr }; top.forEach((t, i) => { el['top' + i] = t }); for (const a in el) for (const b in el) if (a < b && !(a.startsWith('top') && b.startsWith('top'))) ok(!sov(el[a], el[b]), a + ' si sovrappone a ' + b);
-    await p.screenshot({ path: path.join(R, 'docs/img/v33_comandi_telefono.png') }); return 'quadro ' + Math.round(q.w) + '×' + Math.round(q.h) + ' px, pedali ' + Math.round(pf.w) + '×' + Math.round(pf.h) + ' e ' + Math.round(pa.w) + '×' + Math.round(pa.h);
+  await prova('B1 in auto: levetta assente; frecce, pedali, quadro e TUTTI i pulsanti del gioco senza sovrapposizioni e dentro lo schermo, su 5 schermi (760×296 = telefono con la barra del browser)', async () => {
+    const MIEI = ['gsx', 'gdx', 'lfari', 'lemer', 'lnebbia', 'pfreno', 'pacc', 'crq', 'act', 'hb', 'gbx', 'rep', 'zn', 'cr'];
+    const ALTRI = ['w', 'tbtn', 'rbtn', 'v360', 'vw', 'mm', 'pbtn', 'vbtn', 'barmi', 'bfull', 'heat'];
+    const rep = [];
+    for (const [w, h] of [[760, 296], [845, 390], [915, 412], [667, 375], [1280, 720]]) {
+      const c2 = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, hasTouch: true, isMobile: w < 1000 }), q = await c2.newPage(); q.on('pageerror', e => errori.push('B1: ' + e.message));
+      await q.goto('file://' + f); await q.waitForTimeout(150); await q.evaluate(IN_AUTO);
+      await q.evaluate(() => { for (let i = 0; i < 5; i++) passo(1 / 60); const g = document.querySelector('#gbx'); g.style.display = 'flex'; const r = document.querySelector('#rep'); r.style.display = 'block'; const ht = document.querySelector('#heat'); ht.style.display = 'block'; ht.textContent = '🚔 INSEGUIMENTO · ★★★☆☆ · 3 pattuglie' });   // caso peggiore: cambio manuale, riparazione e inseguimento visibili insieme
+      const B = await q.evaluate(ids => Object.fromEntries(ids.map(id => { const e = document.getElementById(id); if (!e) return [id, null]; const cs = getComputedStyle(e), r = e.getBoundingClientRect(); return [id, cs.display === 'none' || r.width < 2 ? null : { x: r.left, y: r.top, r: r.right, b: r.bottom }] })), MIEI.concat(ALTRI, ['joy']));
+      ok(!B.joy, w + '×' + h + ': levetta visibile');
+      for (const id of MIEI.concat(ALTRI)) { const b = B[id]; if (!b) { ok(!['gsx', 'gdx', 'pfreno', 'pacc', 'crq', 'act'].includes(id), w + '×' + h + ': manca ' + id); continue } ok(b.x >= -1 && b.y >= -1 && b.r <= w + 1 && b.b <= h + 1, w + '×' + h + ': ' + id + ' esce dallo schermo ' + JSON.stringify(b)) }
+      const sov = (a, b) => Math.min(a.r, b.r) - Math.max(a.x, b.x) > 1 && Math.min(a.b, b.b) - Math.max(a.y, b.y) > 1, tutti = MIEI.concat(ALTRI);
+      for (let a = 0; a < tutti.length; a++) for (let b = a + 1; b < tutti.length; b++) { const A = tutti[a], Bb = tutti[b]; if (!B[A] || !B[Bb]) continue; if (!MIEI.includes(A) && !MIEI.includes(Bb)) continue; ok(!sov(B[A], B[Bb]), w + '×' + h + ': ' + A + ' si sovrappone a ' + Bb + ' ' + JSON.stringify([B[A], B[Bb]])) }
+      if (w === 760) await q.screenshot({ path: path.join(R, 'docs/img/v33_comandi_telefono.png') });
+      const qd = B.crq; rep.push(w + '×' + h + ' quadro ' + Math.round(qd.r - qd.x) + '×' + Math.round(qd.b - qd.y)); await c2.close();
+    }
+    return rep.join(', ');
   });
   await prova('B2 pedale dell\'acceleratore toccato in alto → 100 % e l\'auto accelera; toccato in basso → 25 %; rilasciato → 0', async () => {
     await tocco('#pacc', 0.05, 'pointerdown'); let r = await giri(240); ok(r.o.acc > 0.95, 'acc ' + r.o.acc); ok(r.v > 10, 'velocità ' + r.v.toFixed(1));
@@ -115,13 +104,13 @@ ${hud}
   });
   await prova('B5 urto da 20 g (blackout): ABS ed ESP fisse sul quadro disegnato, luci di emergenza accese da sole', async () => {
     const s = await p.evaluate(() => { IOW_FISICA.urto(VEH, 20); for (let i = 0; i < 10; i++) passo(1 / 60); return { abs: CRU.ultimo.spie.abs.stato, esp: CRU.ultimo.spie.esp.stato, em: CRU.fari.emergenza, frecce: CRU.ultimo.spie.frecciaSx.stato } });
-    ok(s.abs === 'accesa' && s.esp === 'accesa' && s.em && s.frecce === 'freccia', JSON.stringify(s)); await p.evaluate(() => { CRU.dim = 1; document.querySelector('#crq').classList.add('grande'); for (let i = 0; i < 8; i++) passo(1 / 60) });
-    await p.screenshot({ path: path.join(R, 'docs/img/v33_blackout_telefono.png') }); await p.evaluate(() => { CRU.dim = 0; document.querySelector('#crq').classList.remove('grande') }); return JSON.stringify(s);
+    ok(s.abs === 'accesa' && s.esp === 'accesa' && s.em && s.frecce === 'freccia', JSON.stringify(s)); await p.evaluate(() => { for (let i = 0; i < 8; i++) passo(1 / 60) });
+    await p.screenshot({ path: path.join(R, 'docs/img/v33_blackout_telefono.png') }); return JSON.stringify(s);
   });
   await prova('B6 fari e polizia: in galleria (8 m di montagna sopra) a fari spenti la polizia vede solo entro 35 m, con le posizioni 70 m, con i fari normale', async () => {
     const r = await p.evaluate(() => { TERRENO_SOPRA = 8; const out = {}; for (const m of ['spenti', 'posizione', 'anabbaglianti', 'auto']) { CRU.fari.modo = m; passo(1 / 60); out[m] = [CRU.galleria, CRU.fariEffettivi(), CRU.visibilitaMax()] } TERRENO_SOPRA = 0; CRU.fari.modo = 'spenti'; passo(1 / 60); out.fuori = [CRU.galleria, CRU.visibilitaMax()]; CRU.fari.modo = 'auto'; return out });
     ok(r.spenti[0] && r.spenti[2] === 35 && r.posizione[2] === 70 && r.anabbaglianti[2] > 1e6 && r.auto[1] === 'anabbaglianti', JSON.stringify(r)); ok(!r.fuori[0] && r.fuori[1] > 1e6, 'di giorno fuori dalla galleria si vede: ' + r.fuori);
-    const b = await p.evaluate(() => { document.querySelector('#lfari').click(); return document.querySelector('#lfari').textContent }); ok(/SPENTI/.test(b), 'pulsante fari: ' + b); await p.evaluate(() => { CRU.fari.modo = 'auto'; CRU.etichette() }); return JSON.stringify(r);
+    const b = await p.evaluate(() => { document.querySelector('#lfari').click(); return document.querySelector('#lfari').textContent }); ok(/OFF/.test(b), 'pulsante fari: ' + b); await p.evaluate(() => { CRU.fari.modo = 'auto'; CRU.etichette() }); return JSON.stringify(r);
   });
   await prova('B7 auto accartocciata: portiere bloccate, spie P e portiere accese, 10 calci (crepa al 4°, parabrezza sfondato al 10°), poi a piedi la levetta torna', async () => {
     const r = await p.evaluate(() => { for (let i = 0; i < 400 && Math.abs(VEH.v) > 0.05; i++) passo(1 / 60, { freno: 1, iy: -0.01 }); V.vx = V.vz = 0; VDS.st.zone = { porte: { integrita: 0.42 }, montanti: { integrita: 0.7 }, abitacolo: { integrita: 0.85 } }; passo(1 / 60); passo(1 / 60);

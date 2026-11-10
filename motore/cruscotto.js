@@ -1,17 +1,21 @@
-/* ITALIA OPEN WORLD — Quadro strumenti analogico-digitale del veicolo e comandi di guida a schermo (versione 33)
-   =============================================================================================================
+/* ITALIA OPEN WORLD — Quadro strumenti del veicolo e comandi di guida a schermo (versione 33.1)
+   =============================================================================================
    Modulo puro: gira nel browser (window.IOW_CRUSCOTTO) e in Node (module.exports). La LOGICA (aggiorna, comandi) non usa il DOM ed è
    provata in Node (test/cruscotto.js); il DISEGNO (disegna) usa solo l'API Canvas 2D ed è provato in Chromium con il controllo dei pixel
-   (test/browser_cruscotto.js). Grafica originale, vettoriale, disegnata qui: nessuna immagine esterna.
+   (test/browser_cruscotto.js). Disegno originale del progetto, vettoriale: nessuna immagine esterna.
 
-   STRUMENTI (coordinate di progetto 1200 × 880, scalate alla dimensione dello schermo)
-   - Contagiri 0–8 (×1000 giri/min), zona rossa dal regime del limitatore del veicolo (diesel 1.9 JTDm: 4600 giri), zona arancione 500 giri
-     prima. - Tachimetro 0–280 km/h, legato a |vx| della dinamica a 200 Hz (tolleranza di lettura configurabile, predefinita 0 %).
-   - Consumo istantaneo km/l (0–30) nel quadrante del tachimetro: v[km/h] / consumo[L/h], filtrato 0,6 s; in rilascio (iniezione tagliata)
-     va a fondo scala, da fermo a zero. - Display centrale: chilometri totali (6 cifre) e parziali della sessione (0,1 km) con cifre a 7
-     segmenti, marcia, chiave dell'assistenza. Percorrenza misurata sulla MAPPA (spostamento dell'auto fra un fotogramma e l'altro;
-     salti oltre 80 m/s esclusi: teletrasporti). - Temperatura del refrigerante C–H (strumento «tamponato» come nei veicoli reali: fermo
-     a metà fra 80 e 105 °C) e livello del carburante E–F (galleggiante smorzato 6 s, risalita rapida all'accensione).
+   ASPETTO (33.1): plancia bassa e compatta, due strumenti «a cannocchiale» con cornice cromata (contagiri a sinistra, tachimetro a destra,
+   scala a 270°), display monocromatico al centro con le frecce sopra, temperatura a sinistra e carburante a destra, tutte le altre spie in
+   una sola fila in basso. Proporzioni 1200 × 470: sul telefono occupa circa un terzo della larghezza e meno di un terzo dell'altezza.
+
+   STRUMENTI
+   - Contagiri 0–8 (×1000 giri/min), zona rossa dal regime del limitatore del veicolo (diesel 1.9 JTDm: 4600 giri), arancione 500 giri prima.
+   - Tachimetro 0–280 km/h, legato a |vx| della dinamica a 200 Hz (tolleranza di lettura configurabile, predefinita 0 %), con in basso il
+     consumo istantaneo km/l (0–30): v[km/h] / consumo[L/h], filtrato 0,6 s; in rilascio (iniezione tagliata) a fondo scala, da fermo zero.
+   - Display: chilometri totali (6 cifre) e parziali della sessione (0,1 km) con cifre a 7 segmenti, marcia, chiave dell'assistenza.
+     Percorrenza misurata sulla MAPPA (spostamento dell'auto fra un fotogramma e l'altro; salti oltre 80 m/s esclusi: teletrasporti).
+   - Temperatura del refrigerante C–H (strumento «tamponato» come nei veicoli reali: fermo a metà fra 80 e 105 °C) e livello del
+     carburante E–F (galleggiante smorzato 6 s, risalita rapida all'accensione).
    - Lancette con dinamica del secondo ordine (motori passo-passo: pulsazione 16 rad/s, smorzamento 0,72) e «giro di prova» all'accensione.
 
    SPIE (21) — stato da variabili del motore fisico, della centralina a 200 Hz, della rete ECU, dei danni e del gioco:
@@ -29,28 +33,29 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
   const cl = (v, a, b) => v < a ? a : v > b ? b : v, D2R = Math.PI / 180;
-  const W = 1200, H = 880;
+  const W = 1200, H = 470;
 
-  /* ------------------------------------------------------------------ disposizione (coordinate di progetto) */
+  /* ------------------------------------------------------------------ disposizione (coordinate di progetto 1200 × 470) */
   const COL = { rosso: '#ff2b1c', arancione: '#ff7417', ambra: '#ffb400', giallo: '#ffd21f', verde: '#18e07c', blu: '#1f9dff', bianco: '#f4f4f4' };
+  const FILA = ['abbaglianti', 'anabbaglianti', 'posizione', 'retronebbia', 'luciGuaste', 'sensoriPark', 'cintura', 'porte', 'frenoMano', 'freno', 'abs', 'esp', 'motore', 'olio', 'batteria', 'temperatura', 'riserva', 'lunotto', 'lavavetri'];
+  const SPIE = {
+    abbaglianti: { c: 'blu', n: 'Abbaglianti' }, anabbaglianti: { c: 'verde', n: 'Anabbaglianti' }, posizione: { c: 'verde', n: 'Luci di posizione' }, retronebbia: { c: 'ambra', n: 'Retronebbia' },
+    luciGuaste: { c: 'arancione', n: 'Luci esterne guaste' }, sensoriPark: { c: 'bianco', n: 'Sensori di parcheggio' }, cintura: { c: 'rosso', n: 'Cintura di sicurezza' }, porte: { c: 'rosso', n: 'Portiere' },
+    frenoMano: { c: 'rosso', n: 'Freno di stazionamento' }, freno: { c: 'rosso', n: 'Impianto frenante' }, abs: { c: 'arancione', n: 'ABS' }, esp: { c: 'ambra', n: 'ESP / controllo di trazione' },
+    motore: { c: 'giallo', n: 'Guasto motore' }, olio: { c: 'rosso', n: 'Pressione olio' }, batteria: { c: 'rosso', n: 'Batteria / alternatore' }, temperatura: { c: 'rosso', n: 'Temperatura refrigerante' },
+    riserva: { c: 'ambra', n: 'Riserva carburante' }, lunotto: { c: 'ambra', n: 'Lunotto termico' }, lavavetri: { c: 'ambra', n: 'Liquido lavavetri' },
+    frecciaSx: { x: 563, y: 74, c: 'verde', n: 'Freccia sinistra' }, frecciaDx: { x: 637, y: 74, c: 'verde', n: 'Freccia destra' },
+  };
+  FILA.forEach((id, i) => { SPIE[id].x = 96 + i * 56; SPIE[id].y = 433 });
   const LAYOUT = {
-    W, H,
-    giri: { cx: 400, cy: 432, r: 178, a0: 175, a1: 365, max: 8 },
-    vel: { cx: 797, cy: 437, r: 178, a0: 160, a1: 380, max: 280 },
-    kml: { cx: 800, cy: 538, r: 54, a0: 152, a1: 28, max: 30 },
-    temp: { cx: 192, cy: 572, r: 108, a0: 135, a1: 225 },
-    carb: { cx: 990, cy: 572, r: 108, a0: 45, a1: -45 },
-    lcd: { x: 318, y: 488, w: 166, h: 70 },
-    spie: {
-      abbaglianti: { x: 327, y: 105, c: 'blu', n: 'Abbaglianti' }, posizione: { x: 410, y: 105, c: 'verde', n: 'Luci di posizione' },
-      batteria: { x: 494, y: 105, c: 'rosso', n: 'Batteria / alternatore' }, luciGuaste: { x: 595, y: 105, c: 'arancione', n: 'Luci esterne guaste' },
-      olio: { x: 683, y: 105, c: 'rosso', n: 'Pressione olio' }, freno: { x: 773, y: 105, c: 'rosso', n: 'Impianto frenante' }, motore: { x: 866, y: 105, c: 'giallo', n: 'Guasto motore' },
-      frecciaSx: { x: 528, y: 197, c: 'verde', n: 'Freccia sinistra' }, frecciaDx: { x: 678, y: 197, c: 'verde', n: 'Freccia destra' }, sensoriPark: { x: 607, y: 262, c: 'bianco', n: 'Sensori di parcheggio' },
-      esp: { x: 608, y: 580, c: 'ambra', n: 'ESP / controllo di trazione' }, abs: { x: 533, y: 662, c: 'arancione', n: 'ABS' }, temperatura: { x: 655, y: 662, c: 'rosso', n: 'Temperatura refrigerante' },
-      riserva: { x: 272, y: 785, c: 'ambra', n: 'Riserva carburante' }, lunotto: { x: 356, y: 785, c: 'ambra', n: 'Lunotto termico' }, frenoMano: { x: 441, y: 785, c: 'rosso', n: 'Freno di stazionamento' },
-      anabbaglianti: { x: 524, y: 785, c: 'verde', n: 'Anabbaglianti' }, porte: { x: 607, y: 785, c: 'rosso', n: 'Portiere' }, cintura: { x: 690, y: 785, c: 'rosso', n: 'Cintura di sicurezza' },
-      lavavetri: { x: 775, y: 785, c: 'ambra', n: 'Liquido lavavetri' }, retronebbia: { x: 872, y: 785, c: 'ambra', n: 'Retronebbia' },
-    },
+    W, H, dimSpia: 40,
+    giri: { cx: 352, cy: 222, r: 162, a0: 135, a1: 405, max: 8 },
+    vel: { cx: 848, cy: 222, r: 162, a0: 135, a1: 405, max: 280 },
+    kml: { cx: 848, cy: 338, r: 44, a0: 212, a1: 328, max: 30 },
+    temp: { cx: 150, cy: 236, r: 86, a0: 135, a1: 225 },
+    carb: { cx: 1050, cy: 236, r: 86, a0: 45, a1: -45 },
+    lcd: { x: 528, y: 118, w: 144, h: 186 },
+    spie: SPIE,
   };
   const ID_SPIE = Object.keys(LAYOUT.spie);
   const NON_IN_AUTOTEST = { frecciaSx: 1, frecciaDx: 1, abbaglianti: 1, posizione: 1, anabbaglianti: 1, retronebbia: 1, sensoriPark: 1 };
@@ -187,82 +192,100 @@
   function arco(g, cx, cy, r, a0, a1, ccw) { g.beginPath(); g.arc(cx, cy, r, a0 * D2R, a1 * D2R, !!ccw) }
   function polare(cx, cy, r, aDeg) { return [cx + r * Math.cos(aDeg * D2R), cy + r * Math.sin(aDeg * D2R)] }
 
-  /* --- quadrante circolare (fondo statico) --- */
-  function quadrante(g, Q, opz) {
-    const { cx, cy, r } = Q;
-    // corpo: fondo nero profondo con leggera luce al centro
-    let gr = g.createRadialGradient(cx, cy - r * 0.2, r * 0.05, cx, cy, r * 1.05); gr.addColorStop(0, '#16090a'); gr.addColorStop(0.55, '#0b0606'); gr.addColorStop(1, '#030202');
-    g.fillStyle = gr; arco(g, cx, cy, r + 14, 0, 360); g.fill();
-    // anello rosso retroilluminato (doppio: alone + filo)
-    g.save(); g.shadowColor = 'rgba(255,40,30,.95)'; g.shadowBlur = 34; g.lineWidth = 15; g.strokeStyle = '#d4140e'; arco(g, cx, cy, r + 8, 0, 360); g.stroke();
-    g.shadowBlur = 12; g.lineWidth = 4; g.strokeStyle = '#ff5a40'; arco(g, cx, cy, r + 9, 0, 360); g.stroke(); g.restore();
-    g.lineWidth = 2; g.strokeStyle = 'rgba(255,90,70,.35)'; arco(g, cx, cy, r - 6, 0, 360); g.stroke();
-    // alone rosso interno (luce che filtra dall'anello)
-    gr = g.createRadialGradient(cx, cy, r * 0.62, cx, cy, r + 4); gr.addColorStop(0, 'rgba(255,30,20,0)'); gr.addColorStop(1, 'rgba(255,30,20,.16)'); g.fillStyle = gr; arco(g, cx, cy, r + 4, 0, 360); g.fill();
-    // tacche e numeri
-    const tick = (f, len, w, col, glow) => { const a = angolo(Q, f), [x0, y0] = polare(cx, cy, r - 14, a), [x1, y1] = polare(cx, cy, r - 14 - len, a); g.save(); if (glow) { g.shadowColor = col; g.shadowBlur = glow } g.strokeStyle = col; g.lineWidth = w; g.lineCap = 'butt'; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); g.restore() };
-    for (let i = 0; i <= opz.nMin; i++) { const f = i / opz.nMin, v = f * Q.max, maj = Math.abs(v / opz.maj - Math.round(v / opz.maj)) < 1e-6, med = !maj && opz.med && Math.abs(v / opz.med - Math.round(v / opz.med)) < 1e-6; const rosso = opz.rosso !== undefined && v >= opz.rosso - 1e-6, aran = opz.arancio !== undefined && v >= opz.arancio - 1e-6 && !rosso;
-      tick(f, maj ? (opz.lMaj || 24) : med ? 13 : 8, maj ? 4 : med ? 2.6 : 1.5, rosso ? '#ff2a18' : aran ? '#ff8a20' : '#f2f2f2', rosso ? 8 : maj ? 3 : 0) }
-    if (opz.rosso !== undefined) { g.save(); g.shadowColor = '#ff1a10'; g.shadowBlur = 16; g.strokeStyle = 'rgba(255,26,16,.85)'; g.lineWidth = 7; arco(g, cx, cy, r - 17, angolo(Q, opz.rosso / Q.max), angolo(Q, 1)); g.stroke(); g.restore() }
-    g.fillStyle = '#f4f4f4'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    for (let v = 0; v <= Q.max + 1e-6; v += opz.maj) { const [x, y] = polare(cx, cy, r - opz.rNum, angolo(Q, v / Q.max)); g.font = '500 ' + opz.fs + 'px ' + FONT; g.save(); g.shadowColor = 'rgba(255,255,255,.35)'; g.shadowBlur = 4; g.translate(x, y); g.scale(opz.cond || 1, 1); g.fillText(String(Math.round(v)), 0, 0); g.restore() }   // cifre condensate come sui quadri veri
-    g.font = '400 19px ' + FONT; g.fillStyle = '#e8e8e8'; g.fillText(opz.unita, cx, cy - r * 0.44);
+  /* --- plancia: palpebra scura che avvolge i due cannocchiali, fascia delle spie in basso --- */
+  function plancia(g) {
+    const G = LAYOUT; g.save();
+    const forma = () => { g.beginPath(); if (g.roundRect) g.roundRect(14, 96, W - 28, H - 104, 38); else g.rect(14, 96, W - 28, H - 104); g.moveTo(G.giri.cx + 186, G.giri.cy); g.arc(G.giri.cx, G.giri.cy, 186, 0, Math.PI * 2); g.moveTo(G.vel.cx + 186, G.vel.cy); g.arc(G.vel.cx, G.vel.cy, 186, 0, Math.PI * 2) };
+    g.shadowColor = 'rgba(0,0,0,.55)'; g.shadowBlur = 18; g.shadowOffsetY = 6;
+    const gr = g.createLinearGradient(0, 30, 0, H); gr.addColorStop(0, '#24262b'); gr.addColorStop(0.18, '#121317'); gr.addColorStop(1, '#08090b'); g.fillStyle = gr; forma(); g.fill('nonzero');
+    g.shadowColor = 'transparent'; g.lineWidth = 2; g.strokeStyle = 'rgba(255,255,255,.10)';
+    for (const Q of [G.giri, G.vel]) { arco(g, Q.cx, Q.cy, 185, 200, 340); g.stroke() }
+    // trama morbida della palpebra (finto materiale goffrato)
+    g.globalAlpha = 0.045; for (let i = 0; i < 700; i++) { g.fillStyle = i % 2 ? '#fff' : '#000'; g.fillRect(20 + (i * 137) % (W - 40), 100 + (i * 59) % (H - 110), 2, 2) } g.globalAlpha = 1;
+    // fascia delle spie: incassata
+    const fy = 408, fh = 50; g.fillStyle = '#040405'; g.beginPath(); if (g.roundRect) g.roundRect(60, fy, W - 120, fh, 14); else g.rect(60, fy, W - 120, fh); g.fill();
+    const ig = g.createLinearGradient(0, fy, 0, fy + fh); ig.addColorStop(0, 'rgba(0,0,0,.8)'); ig.addColorStop(0.3, 'rgba(0,0,0,0)'); g.fillStyle = ig; g.fill();
+    g.strokeStyle = 'rgba(255,255,255,.07)'; g.lineWidth = 1.5; g.stroke(); g.restore();
   }
-  /* --- piccolo strumento km/l nel tachimetro --- */
-  function quadranteKml(g) {
-    const Q = LAYOUT.kml; g.save(); g.strokeStyle = '#f0f0f0';
-    for (let i = 0; i <= 30; i++) { const a = angolo(Q, i / 30), maj = i % 5 === 0, [x0, y0] = polare(Q.cx, Q.cy, Q.r, a), [x1, y1] = polare(Q.cx, Q.cy, Q.r - (maj ? 11 : 6), a); g.lineWidth = maj ? 2.4 : 1.3; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke() }
-    g.fillStyle = '#f0f0f0'; g.font = '600 20px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle';
-    let [x, y] = polare(Q.cx, Q.cy, Q.r + 14, Q.a0); g.fillText('−', x, y); [x, y] = polare(Q.cx, Q.cy, Q.r + 14, Q.a1); g.fillText('+', x, y);
-    g.font = '400 14px ' + FONT; g.fillText('km/l', Q.cx, Q.cy + Q.r * 0.62); g.restore();
-  }
-  /* --- strumento laterale ad arco (temperatura, carburante) --- */
-  function quadranteLaterale(g, Q, et0, et1, icona, colIcona, rosso0, rosso1) {
-    g.save();
-    for (let i = 0; i <= 20; i++) { const f = i / 20, a = angolo(Q, f), maj = i % 5 === 0, rs = (rosso0 !== undefined && f >= rosso0 - 1e-6 && f <= rosso1 + 1e-6), [x0, y0] = polare(Q.cx, Q.cy, Q.r, a), [x1, y1] = polare(Q.cx, Q.cy, Q.r - (maj ? 16 : 9), a);
-      g.strokeStyle = rs ? '#ff2a18' : '#efefef'; g.lineWidth = maj ? 3.2 : 1.6; if (rs) { g.shadowColor = '#ff2010'; g.shadowBlur = 8 } else g.shadowBlur = 0; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke() }
-    g.shadowBlur = 0; g.fillStyle = '#f2f2f2'; g.font = '500 26px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle';
-    let [x, y] = polare(Q.cx, Q.cy, Q.r - 36, angolo(Q, 0)); g.fillText(et0, x + (Q.a1 < Q.a0 ? 6 : -6), y + 8); [x, y] = polare(Q.cx, Q.cy, Q.r - 36, angolo(Q, 1)); g.fillText(et1, x + (Q.a1 < Q.a0 ? 6 : -6), y - 8);
-    const [ix, iy] = polare(Q.cx, Q.cy, Q.r + 26, angolo(Q, 1.18)); simbolo(g, icona, ix, iy, 40, colIcona, true); g.restore();
-  }
-  /* --- lancetta --- */
-  function lancetta(g, cx, cy, aDeg, lung, coda, larg, perno) {
-    g.save(); g.translate(cx, cy); g.rotate(aDeg * D2R);
-    g.shadowColor = 'rgba(255,40,20,.9)'; g.shadowBlur = 16;
-    const gr = g.createLinearGradient(-coda, 0, lung, 0); gr.addColorStop(0, '#7a0a04'); gr.addColorStop(0.35, '#ff3a1c'); gr.addColorStop(1, '#ffb08a');
-    g.fillStyle = gr; g.beginPath(); g.moveTo(-coda, -larg * 1.1); g.lineTo(lung, -larg * 0.22); g.lineTo(lung + 2, 0); g.lineTo(lung, larg * 0.22); g.lineTo(-coda, larg * 1.1); g.closePath(); g.fill();
-    g.shadowBlur = 0; g.strokeStyle = 'rgba(255,220,200,.55)'; g.lineWidth = 1; g.beginPath(); g.moveTo(0, -larg * 0.3); g.lineTo(lung - 4, -larg * 0.08); g.stroke(); g.restore();
-    // mozzo con bordo rosso e riflesso
-    g.save(); let hg = g.createRadialGradient(cx - perno * 0.3, cy - perno * 0.3, 1, cx, cy, perno); hg.addColorStop(0, '#3a3a3a'); hg.addColorStop(0.6, '#0c0c0c'); hg.addColorStop(1, '#000'); g.fillStyle = hg; g.shadowColor = 'rgba(255,40,20,.8)'; g.shadowBlur = 10; arco(g, cx, cy, perno, 0, 360); g.fill();
-    g.shadowBlur = 0; g.strokeStyle = 'rgba(255,60,40,.7)'; g.lineWidth = 1.5; arco(g, cx, cy, perno, 0, 360); g.stroke(); g.restore();
-  }
-  /* --- cifre a 7 segmenti (display) --- */
-  const SEG = { '0': 'abcdef', '1': 'bc', '2': 'abged', '3': 'abgcd', '4': 'fgbc', '5': 'afgcd', '6': 'afgedc', '7': 'abc', '8': 'abcdefg', '9': 'abcdfg', '-': 'g', ' ': '', 'R': 'efa' + 'b' + 'g', 'N': 'ecab' + 'f', 'P': 'abfge' };
-  function cifra(g, ch, x, y, w, h, on, off) {
-    const t = Math.max(2, w * 0.17), k = SEG[ch] !== undefined ? SEG[ch] : '', sl = w * 0.12;
-    const segs = { a: [[t, 0], [w - t, 0]], b: [[w, t], [w, h / 2 - t / 2]], c: [[w, h / 2 + t / 2], [w, h - t]], d: [[t, h], [w - t, h]], e: [[0, h / 2 + t / 2], [0, h - t]], f: [[0, t], [0, h / 2 - t / 2]], g: [[t, h / 2], [w - t, h / 2]] };
-    g.save(); g.lineCap = 'round'; g.lineWidth = t;
-    for (const s in segs) { const acceso = k.indexOf(s) >= 0, [p0, p1] = segs[s]; g.strokeStyle = acceso ? on : off; if (acceso) { g.shadowColor = on; g.shadowBlur = 8 } else g.shadowBlur = 0;
-      const sk = yy => (h - yy) / h * sl; g.beginPath(); g.moveTo(x + p0[0] + sk(p0[1]), y + p0[1]); g.lineTo(x + p1[0] + sk(p1[1]), y + p1[1]); g.stroke() }
+  /* --- cannocchiale: cornice cromata, tubo profondo, quadrante, scala --- */
+  function cannocchiale(g, Q, opz) {
+    const { cx, cy, r } = Q; g.save();
+    // tubo (profondità): anello scuro con sfumatura verso l'interno
+    let tg = g.createRadialGradient(cx, cy, r * 0.9, cx, cy, r + 20); tg.addColorStop(0, '#000'); tg.addColorStop(1, '#2a2c31'); g.fillStyle = tg; arco(g, cx, cy, r + 20, 0, 360); g.fill();
+    // cornice cromata
+    const cg = g.createLinearGradient(cx - r, cy - r - 20, cx + r * 0.6, cy + r + 20); cg.addColorStop(0, '#fbfbfc'); cg.addColorStop(0.25, '#8b8f96'); cg.addColorStop(0.5, '#e4e6ea'); cg.addColorStop(0.75, '#5d6067'); cg.addColorStop(1, '#c9ccd2');
+    g.lineWidth = 9; g.strokeStyle = cg; arco(g, cx, cy, r + 12, 0, 360); g.stroke(); g.lineWidth = 1.2; g.strokeStyle = 'rgba(0,0,0,.8)'; arco(g, cx, cy, r + 7, 0, 360); g.stroke();
+    // quadrante
+    const fg = g.createRadialGradient(cx, cy - r * 0.35, r * 0.1, cx, cy, r + 6); fg.addColorStop(0, '#202227'); fg.addColorStop(0.7, '#0d0e11'); fg.addColorStop(1, '#030304'); g.fillStyle = fg; arco(g, cx, cy, r + 6, 0, 360); g.fill();
+    // ombra della palpebra in alto (il quadrante sta in fondo al tubo)
+    const og = g.createLinearGradient(0, cy - r, 0, cy - r * 0.35); og.addColorStop(0, 'rgba(0,0,0,.55)'); og.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = og; arco(g, cx, cy, r + 6, 0, 360); g.fill();
+    // scala
+    const tick = (f, l0, l1, w, col) => { const a = angolo(Q, f), [x0, y0] = polare(cx, cy, r - l0, a), [x1, y1] = polare(cx, cy, r - l1, a); g.strokeStyle = col; g.lineWidth = w; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke() };
+    if (opz.rosso !== undefined) { g.save(); g.strokeStyle = 'rgba(230,24,16,.9)'; g.lineWidth = 9; arco(g, cx, cy, r - 9, angolo(Q, opz.rosso / Q.max), angolo(Q, 1)); g.stroke(); g.strokeStyle = 'rgba(255,140,30,.75)'; arco(g, cx, cy, r - 9, angolo(Q, opz.arancio / Q.max), angolo(Q, opz.rosso / Q.max)); g.stroke(); g.restore() }
+    g.save(); g.shadowColor = 'rgba(220,235,255,.55)'; g.shadowBlur = 3;
+    for (let i = 0; i <= opz.nMin; i++) { const f = i / opz.nMin, v = f * Q.max, maj = Math.abs(v / opz.maj - Math.round(v / opz.maj)) < 1e-6, med = !maj && opz.med && Math.abs(v / opz.med - Math.round(v / opz.med)) < 1e-6;
+      tick(f, 4, maj ? 24 : med ? 16 : 11, maj ? 4.2 : med ? 2.4 : 1.4, '#f1f3f6') }
+    g.fillStyle = '#f4f6f8'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (let v = 0; v <= Q.max + 1e-6; v += opz.maj) { const [x, y] = polare(cx, cy, r - opz.rNum, angolo(Q, v / Q.max)); g.font = '600 ' + opz.fs + 'px ' + FONT; g.save(); g.translate(x, y); g.scale(opz.cond || 1, 1); g.fillText(String(Math.round(v)), 0, 0); g.restore() }
+    g.restore();
+    g.fillStyle = '#9fa4ad'; g.font = '500 15px ' + FONT; g.textAlign = 'center'; g.fillText(opz.unita, cx, cy - r * 0.36);
     g.restore();
   }
-  function testo7(g, str, x, y, w, h, gap, on, off) { let cx = x; for (const ch of str) { if (ch === '.') { g.save(); g.fillStyle = on; g.shadowColor = on; g.shadowBlur = 6; g.fillRect(cx - gap * 0.7, y + h - 3, 4, 4); g.restore(); continue } cifra(g, ch, cx, y, w, h, on, off); cx += w + gap } return cx }
-  function display(g, M, opz) {
-    const L = LAYOUT.lcd; g.save();
-    const gr = g.createLinearGradient(L.x, L.y, L.x, L.y + L.h); gr.addColorStop(0, '#1238c8'); gr.addColorStop(0.5, '#0a2aa6'); gr.addColorStop(1, '#071d7c');
-    g.shadowColor = 'rgba(40,110,255,.75)'; g.shadowBlur = 26; g.fillStyle = gr; g.beginPath(); if (g.roundRect) g.roundRect(L.x, L.y, L.w, L.h, 5); else g.rect(L.x, L.y, L.w, L.h); g.fill(); g.restore();
-    if (!M || !M.quadro) { g.save(); g.fillStyle = 'rgba(0,0,0,.72)'; g.fillRect(L.x, L.y, L.w, L.h); g.restore(); return }
-    const on = '#eaf2ff', off = 'rgba(160,190,255,.10)';
-    testo7(g, M.lcd.totale, L.x + 40, L.y + 7, 15, 26, 5.5, on, off);
-    g.save(); g.fillStyle = on; g.font = '500 15px ' + FONT; g.textBaseline = 'alphabetic'; g.fillText('km', L.x + 8, L.y + 62); g.restore();
-    const par = M.lcd.parziale.padStart(5, ' '); testo7(g, par.replace('.', ''), L.x + 36, L.y + 41, 10, 19, 4.5, on, off);
-    g.save(); g.fillStyle = on; g.shadowColor = on; g.shadowBlur = 6; g.fillRect(L.x + 36 + 3 * 14.5 - 3.6, L.y + 57, 3.5, 3.5); g.restore();
-    if (M.lcd.marcia) { g.save(); g.fillStyle = on; g.font = '700 17px ' + FONT; g.textAlign = 'center'; g.fillText(M.lcd.marcia, L.x + L.w - 44, L.y + 58); g.restore() }
-    if (M.lcd.assistenza) simbolo(g, 'chiave', L.x + L.w - 18, L.y + 52, 22, on, true);
+  function quadranteKml(g) {
+    const Q = LAYOUT.kml; g.save(); g.strokeStyle = '#d9dce2';
+    for (let i = 0; i <= 30; i++) { const a = angolo(Q, i / 30), maj = i % 10 === 0, med = i % 5 === 0, [x0, y0] = polare(Q.cx, Q.cy, Q.r, a), [x1, y1] = polare(Q.cx, Q.cy, Q.r - (maj ? 10 : med ? 7 : 4), a); g.lineWidth = maj ? 2.4 : 1.2; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke() }
+    g.fillStyle = '#d9dce2'; g.font = '600 13px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (const [v, t] of [[0, '0'], [15, '15'], [30, '30']]) { const [x, y] = polare(Q.cx, Q.cy, Q.r + 11, angolo(Q, v / 30)); g.fillText(t, x, y) }
+    g.fillStyle = '#9fa4ad'; g.font = '500 12px ' + FONT; g.fillText('km/l', Q.cx, Q.cy + 14); g.restore();
   }
-  /* riflesso del vetro sopra ogni quadrante */
-  function vetro(g, cx, cy, r) { g.save(); arco(g, cx, cy, r + 2, 0, 360); g.clip(); const gr = g.createLinearGradient(cx - r, cy - r, cx + r * 0.4, cy + r * 0.3); gr.addColorStop(0, 'rgba(255,255,255,.075)'); gr.addColorStop(0.45, 'rgba(255,255,255,.015)'); gr.addColorStop(0.46, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(cx - r, cy - r, 2 * r, 2 * r); g.restore() }
-
+  /* --- strumento laterale ad arco (temperatura, carburante) --- */
+  function laterale(g, Q, et0, et1, icona, r0, r1) {
+    g.save();
+    g.fillStyle = '#060607'; g.beginPath(); g.moveTo(Q.cx, Q.cy); g.arc(Q.cx, Q.cy, Q.r + 10, Math.min(Q.a0, Q.a1) * D2R - 0.12, Math.max(Q.a0, Q.a1) * D2R + 0.12); g.closePath(); g.fill();
+    for (let i = 0; i <= 16; i++) { const f = i / 16, a = angolo(Q, f), maj = i % 4 === 0, rs = (f >= r0 - 1e-6 && f <= r1 + 1e-6), [x0, y0] = polare(Q.cx, Q.cy, Q.r, a), [x1, y1] = polare(Q.cx, Q.cy, Q.r - (maj ? 15 : 8), a);
+      g.strokeStyle = rs ? '#ff2a18' : '#eceef2'; g.lineWidth = maj ? 3.4 : 1.6; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke() }
+    g.fillStyle = '#f2f4f7'; g.font = '700 22px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle';
+    let [x, y] = polare(Q.cx, Q.cy, Q.r - 32, angolo(Q, 0)); g.fillText(et0, x, y); [x, y] = polare(Q.cx, Q.cy, Q.r - 32, angolo(Q, 1)); g.fillText(et1, x, y);
+    const [ix, iy] = polare(Q.cx, Q.cy, Q.r - 4, angolo(Q, 1.32)); simbolo(g, icona, ix, iy, 28, '#c9ccd2', false); g.restore();
+  }
+  /* --- lancetta rossa --- */
+  function lancetta(g, cx, cy, aDeg, lung, coda, larg, perno) {
+    g.save(); g.translate(cx, cy); g.rotate(aDeg * D2R);
+    g.shadowColor = 'rgba(255,50,30,.75)'; g.shadowBlur = 8;
+    const gr = g.createLinearGradient(-coda, 0, lung, 0); gr.addColorStop(0, '#6a0703'); gr.addColorStop(0.3, '#e8200f'); gr.addColorStop(1, '#ff7a4a');
+    g.fillStyle = gr; g.beginPath(); g.moveTo(-coda, -larg); g.lineTo(lung, -larg * 0.25); g.lineTo(lung + 2, 0); g.lineTo(lung, larg * 0.25); g.lineTo(-coda, larg); g.closePath(); g.fill();
+    g.restore();
+    g.save(); const hg = g.createRadialGradient(cx - perno * 0.35, cy - perno * 0.35, 1, cx, cy, perno); hg.addColorStop(0, '#d7d9de'); hg.addColorStop(0.35, '#5c6067'); hg.addColorStop(1, '#141518'); g.fillStyle = hg; arco(g, cx, cy, perno, 0, 360); g.fill();
+    g.fillStyle = '#0a0a0c'; arco(g, cx, cy, perno * 0.55, 0, 360); g.fill(); g.restore();
+  }
+  /* --- cifre a 7 segmenti (display) --- */
+  const SEG = { '0': 'abcdef', '1': 'bc', '2': 'abged', '3': 'abgcd', '4': 'fgbc', '5': 'afgcd', '6': 'afgedc', '7': 'abc', '8': 'abcdefg', '9': 'abcdfg', '-': 'g', ' ': '', 'R': 'efab', 'N': 'ecab', 'P': 'abfge' };
+  function cifra(g, ch, x, y, w, h, on, off) {
+    const t = Math.max(2, w * 0.18), k = SEG[ch] !== undefined ? SEG[ch] : '', sl = w * 0.12;
+    const segs = { a: [[t, 0], [w - t, 0]], b: [[w, t], [w, h / 2 - t / 2]], c: [[w, h / 2 + t / 2], [w, h - t]], d: [[t, h], [w - t, h]], e: [[0, h / 2 + t / 2], [0, h - t]], f: [[0, t], [0, h / 2 - t / 2]], g: [[t, h / 2], [w - t, h / 2]] };
+    g.save(); g.lineCap = 'round'; g.lineWidth = t;
+    for (const s in segs) { const acceso = k.indexOf(s) >= 0, [p0, p1] = segs[s]; g.strokeStyle = acceso ? on : off; const sk = yy => (h - yy) / h * sl; g.beginPath(); g.moveTo(x + p0[0] + sk(p0[1]), y + p0[1]); g.lineTo(x + p1[0] + sk(p1[1]), y + p1[1]); g.stroke() }
+    g.restore();
+  }
+  function testo7(g, str, x, y, w, h, gap, on, off) { let cx = x; for (const ch of str) { cifra(g, ch, cx, y, w, h, on, off); cx += w + gap } return cx }
+  /* display monocromatico (cristalli liquidi negativi: cifre chiare su fondo nero) */
+  function display(g, M) {
+    const L = LAYOUT.lcd; g.save();
+    g.fillStyle = '#020203'; g.beginPath(); if (g.roundRect) g.roundRect(L.x, L.y, L.w, L.h, 10); else g.rect(L.x, L.y, L.w, L.h); g.fill();
+    g.strokeStyle = 'rgba(255,255,255,.12)'; g.lineWidth = 2; g.stroke(); g.restore();
+    if (!M || !M.quadro) return;
+    const on = '#e9f1f6', off = 'rgba(200,220,235,.06)', x0 = L.x + 12;
+    g.save(); g.fillStyle = '#8c949c'; g.font = '600 12px ' + FONT; g.textBaseline = 'alphabetic'; g.fillText('TOTALE', x0, L.y + 22); g.fillText('PARZIALE', x0, L.y + 82); g.restore();
+    testo7(g, M.lcd.totale, x0 + 2, L.y + 30, 13, 26, 6, on, off);
+    g.save(); g.fillStyle = on; g.font = '600 13px ' + FONT; g.fillText('km', L.x + L.w - 30, L.y + 22); g.restore();
+    const par = M.lcd.parziale.padStart(5, ' ').replace('.', ''); testo7(g, par, x0 + 21, L.y + 90, 13, 26, 6, on, off);
+    g.save(); g.fillStyle = on; g.fillRect(x0 + 21 + 3 * 19 - 4, L.y + 113, 4, 4); g.restore();
+    g.save(); g.strokeStyle = 'rgba(255,255,255,.1)'; g.beginPath(); g.moveTo(L.x + 10, L.y + 132); g.lineTo(L.x + L.w - 10, L.y + 132); g.stroke(); g.restore();
+    if (M.lcd.marcia) { g.save(); g.fillStyle = '#8c949c'; g.font = '600 12px ' + FONT; g.fillText('MARCIA', x0, L.y + 160); g.fillStyle = on; g.font = '700 30px ' + FONT; g.textAlign = 'right'; g.textBaseline = 'middle'; g.fillText(M.lcd.marcia, L.x + L.w - 14, L.y + 158); g.restore() }
+    if (M.lcd.assistenza) simbolo(g, 'chiave', L.x + L.w - 58, L.y + 158, 20, '#ffb400', true);
+  }
+  /* riflesso del vetro sopra ogni cannocchiale */
+  function vetro(g, cx, cy, r) { g.save(); arco(g, cx, cy, r, 0, 360); g.clip(); const gr = g.createLinearGradient(cx - r, cy - r, cx + r * 0.3, cy + r * 0.2); gr.addColorStop(0, 'rgba(255,255,255,.09)'); gr.addColorStop(0.42, 'rgba(255,255,255,.02)'); gr.addColorStop(0.43, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(cx - r, cy - r, 2 * r, 2 * r); g.restore() }
   /* --- simboli delle spie (disegno vettoriale originale, forme dei pittogrammi normalizzati ISO 2575) --- */
   function simbolo(g, id, x, y, sz, col, acceso) {
     g.save(); g.translate(x, y); const k = sz / 60; g.scale(k, k);
@@ -300,21 +323,19 @@
     g.restore();
   }
 
-  /* fondo statico (quadranti, scale, etichette, simboli spenti) in una tela fuori schermo, rifatta solo se cambia la dimensione */
+  /* fondo statico (plancia, cannocchiali, scale, etichette, simboli spenti) in una tela fuori schermo, rifatta solo se cambia la dimensione */
   const CACHE = { k: '', c: null };
   function sfondo(crea2d, w, h, redline) {
     const key = w + 'x' + h + ':' + redline; if (CACHE.k === key) return CACHE.c;
     const c = crea2d(w, h), g = c.getContext('2d'), s = Math.min(w / W, h / H);
     g.save(); g.translate((w - W * s) / 2, (h - H * s) / 2); g.scale(s, s);
-    const bg = g.createRadialGradient(W / 2, H * 0.5, 50, W / 2, H * 0.5, W * 0.62); bg.addColorStop(0, '#121214'); bg.addColorStop(1, '#040405'); g.fillStyle = bg; g.beginPath(); if (g.roundRect) g.roundRect(4, 4, W - 8, H - 8, 46); else g.rect(4, 4, W - 8, H - 8); g.fill();
-    // trama satinata della plancia
-    g.globalAlpha = 0.05; for (let i = 0; i < 400; i++) { g.fillStyle = i % 2 ? '#fff' : '#000'; g.fillRect((i * 97) % W, (i * 61) % H, 2, 2) } g.globalAlpha = 1;
-    quadrante(g, LAYOUT.giri, { nMin: 40, maj: 1, med: 0.5, fs: 33, rNum: 58, unita: 'x1000 r/min', rosso: redline / 1000, arancio: (redline - 500) / 1000 });
-    quadrante(g, LAYOUT.vel, { nMin: 140, maj: 20, med: 10, fs: 23, rNum: 50, lMaj: 17, cond: 0.8, unita: 'km/h' });
+    plancia(g);
+    laterale(g, LAYOUT.temp, 'C', 'H', 'termometro', 0.8, 1);
+    laterale(g, LAYOUT.carb, 'E', 'F', 'carburante', 0, 0.12);
+    cannocchiale(g, LAYOUT.giri, { nMin: 40, maj: 1, med: 0.5, fs: 30, rNum: 46, unita: '×1000 giri/min', rosso: redline / 1000, arancio: (redline - 500) / 1000 });
+    cannocchiale(g, LAYOUT.vel, { nMin: 140, maj: 20, med: 10, fs: 22, rNum: 44, cond: 0.82, unita: 'km/h' });
     quadranteKml(g);
-    quadranteLaterale(g, LAYOUT.temp, 'C', 'H', 'termometro', '#f2f2f2', 0.8, 1);
-    quadranteLaterale(g, LAYOUT.carb, 'E', 'F', 'carburante', '#f2f2f2', 0, 0.12);
-    for (const id of ID_SPIE) { const p = LAYOUT.spie[id]; g.save(); g.globalAlpha = 0.085; simbolo(g, id, p.x, p.y, 60, '#9a9a9a', false); g.restore() }   // spie spente: appena visibili dietro il vetro fumé
+    for (const id of ID_SPIE) { const p = LAYOUT.spie[id]; g.save(); g.globalAlpha = 0.07; simbolo(g, id, p.x, p.y, LAYOUT.dimSpia, '#a0a0a0', false); g.restore() }   // spie spente: appena visibili dietro il vetro fumé
     g.restore(); CACHE.k = key; CACHE.c = c; return c;
   }
 
@@ -326,20 +347,19 @@
     ctx.save(); ctx.translate((w - W * s) / 2, (h - H * s) / 2); ctx.scale(s, s);
     display(ctx, M);
     if (M) {
-      for (const id of ID_SPIE) { const sp = M.spie[id]; if (sp && sp.accesa) { const p = LAYOUT.spie[id]; simbolo(ctx, id, p.x, p.y, 60, COL[p.c], true) } }
+      for (const id of ID_SPIE) { const sp = M.spie[id]; if (sp && sp.accesa) { const p = LAYOUT.spie[id]; simbolo(ctx, id, p.x, p.y, LAYOUT.dimSpia, COL[p.c], true) } }
       const A = M.angoli, G = LAYOUT;
-      lancetta(ctx, G.kml.cx, G.kml.cy, A.kml, G.kml.r - 6, 8, 3, 9);
-      lancetta(ctx, G.temp.cx, G.temp.cy, A.temp, G.temp.r - 4, 12, 4, 12);
-      lancetta(ctx, G.carb.cx, G.carb.cy, A.carb, G.carb.r - 4, 12, 4, 12);
-      lancetta(ctx, G.giri.cx, G.giri.cy, A.giri, G.giri.r - 26, 34, 6, 17);
-      lancetta(ctx, G.vel.cx, G.vel.cy, A.vel, G.vel.r - 26, 34, 6, 17);
+      lancetta(ctx, G.kml.cx, G.kml.cy, A.kml, G.kml.r - 6, 6, 2.6, 7);
+      lancetta(ctx, G.temp.cx, G.temp.cy, A.temp, G.temp.r - 6, 10, 3.6, 10);
+      lancetta(ctx, G.carb.cx, G.carb.cy, A.carb, G.carb.r - 6, 10, 3.6, 10);
+      lancetta(ctx, G.giri.cx, G.giri.cy, A.giri, G.giri.r - 14, 30, 5.5, 16);
+      lancetta(ctx, G.vel.cx, G.vel.cy, A.vel, G.vel.r - 14, 30, 5.5, 16);
     }
-    vetro(ctx, LAYOUT.giri.cx, LAYOUT.giri.cy, LAYOUT.giri.r + 10); vetro(ctx, LAYOUT.vel.cx, LAYOUT.vel.cy, LAYOUT.vel.r + 10);
+    vetro(ctx, LAYOUT.giri.cx, LAYOUT.giri.cy, LAYOUT.giri.r + 8); vetro(ctx, LAYOUT.vel.cx, LAYOUT.vel.cy, LAYOUT.vel.r + 8);
     ctx.restore();
   }
   /* punto (in pixel della tela w × h) di una coordinata di progetto: per i test e per i tocchi */
   function aPixel(w, h, x, y) { const s = Math.min(w / W, h / H); return [(w - W * s) / 2 + x * s, (h - H * s) / 2 + y * s] }
-  function puntaLancetta(G, aDeg, rientro) { return polare(G.cx, G.cy, G.r - (rientro || 30), aDeg) }
 
-  return { versione: '1.0.0', W, H, LAYOUT, COL, ID_SPIE, crea, aggiorna, accesa, tempFrazione, kmlIstantaneo, angolo, creaComandi, premi, rilascia, passoComandi, disegna, simbolo, aPixel, puntaLancetta };
+  return { versione: '1.1.0', W, H, LAYOUT, COL, ID_SPIE, crea, aggiorna, accesa, tempFrazione, kmlIstantaneo, angolo, creaComandi, premi, rilascia, passoComandi, disegna, simbolo, aPixel };
 });

@@ -5,17 +5,20 @@ Modulo: `motore/cruscotto.js` (logica + disegno vettoriale su Canvas, nessuna im
 `node test/browser_cruscotto.js` (13 prove in Chromium con controllo dei pixel; registro in
 [`docs/test/v33_cruscotto_chromium.txt`](test/v33_cruscotto_chromium.txt)). Immagini: `docs/img/v33_*.png`.
 
-La disposizione segue il riferimento fornito (contagiri a sinistra, tachimetro a destra con il consumo istantaneo, display blu al centro,
-temperatura e carburante ai lati, spie sopra e sotto). La grafica è disegnata da zero: i simboli seguono le forme dei pittogrammi
-normalizzati (ISO 2575), non sono copiati da nessuna immagine.
+**Aspetto (33.1).** Disegno originale del progetto: plancia bassa e compatta con due strumenti «a cannocchiale» e cornice cromata
+(contagiri a sinistra, tachimetro a destra, scala a 270°), display monocromatico al centro con le frecce sopra, temperatura a sinistra e
+carburante a destra, tutte le altre spie in una sola fila in basso. Proporzioni 1200 × 470: su un telefono con la barra del browser
+(760 × 296) misura 258 × 101 px. La prima versione (33) aveva preso troppo dall'immagine d'esempio (anelli rossi, display blu, due file di
+spie) ed era troppo grande, con i comandi sopra i pulsanti del gioco: è stata rifatta. I simboli seguono le forme dei pittogrammi
+normalizzati (ISO 2575), disegnati a mano in vettoriale.
 
 ## Strumenti
 | Strumento | Legato a | Dettagli |
 |---|---|---|
-| Tachimetro 0–280 km/h (220°) | \|vx\| della dinamica a 200 Hz (`VEH.v`) | tacche ogni 2 km/h, numeri ogni 20; lancetta rossa con dinamica del secondo ordine (16 rad/s, smorzamento 0,72) come i motori passo-passo dei quadri veri; tolleranza di lettura configurabile (0 %) |
+| Tachimetro 0–280 km/h (270°) | \|vx\| della dinamica a 200 Hz (`VEH.v`) | tacche ogni 2 km/h, numeri ogni 20; lancetta rossa con dinamica del secondo ordine (16 rad/s, smorzamento 0,72) come i motori passo-passo dei quadri veri; tolleranza di lettura configurabile (0 %) |
 | Consumo istantaneo km/l (0–30) | velocità / consumo del motore (`motore.consumoLh`) | filtrato 0,6 s; in rilascio con l'iniezione tagliata va a fondo scala, da fermo a zero |
-| Contagiri 0–8 ×1000 giri/min (190°) | `motore.rpm` | zona rossa dal limitatore del veicolo (Alfa 159 1.9 JTDm: 4600 giri), arancione 500 giri prima |
-| Display (cifre a 7 segmenti) | spostamento dell'auto **sulla mappa** | totali (6 cifre, partono da 157 256 km e si salvano) e parziali della sessione a 0,1 km; salti oltre 80 m/s esclusi (teletrasporti); marcia; chiave quando un componente meccanico è sotto il 70 %; tocco lungo sul display: azzera i parziali |
+| Contagiri 0–8 ×1000 giri/min (270°) | `motore.rpm` | zona rossa dal limitatore del veicolo (Alfa 159 1.9 JTDm: 4600 giri), arancione 500 giri prima |
+| Display (cifre chiare a 7 segmenti su fondo nero) | spostamento dell'auto **sulla mappa** | totali (6 cifre, partono da 157 256 km e si salvano) e parziali della sessione a 0,1 km; salti oltre 80 m/s esclusi (teletrasporti); marcia; chiave quando un componente meccanico è sotto il 70 %; tocco lungo sul display: azzera i parziali |
 | Temperatura C–H | `motore.Tacqua` | strumento «tamponato» come nelle auto vere: fermo a metà fra 80 e 105 °C; zona rossa in alto |
 | Carburante E–F | litri nel serbatoio / capacità | galleggiante smorzato 6 s (non oscilla in curva), risalita rapida all'accensione; zona rossa in basso |
 
@@ -66,10 +69,13 @@ Quando la deformazione supera le soglie (Vehicle Damage Solver: zona «porte» s
 (n/10)»**: a auto ferma ogni tocco è un calcio (suono e scossone); al 4° il parabrezza si crepa, al 10° si sfonda (`crGlassBreak`) e si
 esce dal davanti. Le spie P e portiere restano accese fino a quel momento. La riparazione della carrozzeria in officina sblocca le portiere.
 
-## Quadro sullo schermo
-In basso al centro, tra frecce e pedali; tocco: piccolo → grande → nascosto («⏲ QUADRO»). Disegnato a 30 fotogrammi al secondo con
-la densità di pixel dello schermo (massimo 2×); il fondo (quadranti, scale, numeri) è disegnato una volta sola. In auto i crediti della
-mappa (obbligatori) passano in alto, piccoli.
+## Disposizione sullo schermo (in auto)
+Misurata su 5 schermi (760×296 come un telefono con la barra del browser, 845×390, 915×412, 667×375, 1280×720) con un test che fallisce se
+due elementi si toccano o se uno esce dallo schermo: colonna di pulsanti del gioco a sinistra (non toccata), frecce e pulsanti delle luci
+subito alla sua destra, quadro in basso al centro (34 % della larghezza), pedali in basso a destra, «Scendi dall'auto», «Freno a mano» e
+«Ripara» sopra i pedali e sotto la minimappa, cambio manuale accanto ai pedali, nome della via in alto al centro su una riga, crediti della
+mappa (obbligatori) in alto in piccolo. Tocco sul quadro: lo nasconde («⏲ QUADRO») o lo rimostra; tocco lungo sul display: azzera i
+parziali. Disegnato a 30 fotogrammi al secondo con la densità di pixel dello schermo (massimo 2×); il fondo è disegnato una volta sola.
 
 ## Prove
 - `node test/run.js`: 111 test, di cui 14 sul quadro guidato dal motore fisico vero (lancette sulla velocità e sui giri durante
@@ -77,8 +83,8 @@ mappa (obbligatori) passano in alto, piccoli.
   ABS che lampeggia in una frenata vera, ESP che lampeggia sulla neve, blackout con spie fisse, guasto di un sensore, motore KO dai danni,
   autotest, portiere, emergenza a 1,5 Hz, sensori in retromarcia, cintura, pedali lineari sulla coppia e freno con ABS).
 - `node test/browser_cruscotto.js`: 13 prove in Chromium — disegno controllato sui pixel (21 spie col loro colore, spie spente buie,
-  lampeggio acceso/spento e fisso in blackout, lancette sull'angolo giusto, display blu) e banco d'integrazione con CSS, HUD e codice
-  del quadro **veri della pagina** (levetta assente in auto e presente a piedi, nessuna sovrapposizione su 844×390, tocchi veri su pedali e
+  lampeggio acceso/spento e fisso in blackout, lancette sull'angolo giusto, display) e banco d'integrazione con CSS, HUD e codice
+  del quadro **veri della pagina** (levetta assente in auto e presente a piedi, nessuna sovrapposizione fra tutti i pulsanti del gioco e i comandi nuovi su 5 schermi, tocchi veri su pedali e
   frecce, multitocco, ABS in frenata con il pedale, blackout, fari e visibilità della polizia in galleria, 10 calci con crepa e
   parabrezza sfondato, 0 errori JavaScript). Il gioco intero non si è potuto avviare in Chromium perché three.js non si scarica dal
   contenitore delle prove.

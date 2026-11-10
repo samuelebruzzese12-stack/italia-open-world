@@ -1,6 +1,6 @@
 <!doctype html><html lang="it"><head><meta charset="utf-8"><title>Prova del quadro strumenti</title>
 <style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
-<canvas id="c" width="1200" height="880"></canvas>
+<canvas id="c" width="1200" height="470"></canvas>
 <script src="../motore/cruscotto.js"></script>
 <script>
 /* scenari del quadro per le prove grafiche (test/browser_cruscotto.js): ogni scenario simula alcuni secondi con la logica vera e disegna */
@@ -13,6 +13,6 @@ window.scenario = function (nome, secondi, I, tFinale) {
   C.disegna(g, m); window.ultimo = m; return { aghi: m.aghi, angoli: m.angoli, lcd: m.lcd, spie: Object.fromEntries(Object.entries(m.spie).map(([k, v]) => [k, v.stato + (v.accesa ? '*' : '')])) };
 };
 /* colore medio di un'area quadrata (coordinate di progetto) */
-window.colore = function (x, y, r) { const [px, py] = C.aPixel(cv.width, cv.height, x, y), d = g.getImageData(Math.round(px - r), Math.round(py - r), 2 * r + 1, 2 * r + 1).data; let R = 0, G = 0, B = 0, n = d.length / 4; for (let i = 0; i < d.length; i += 4) { R += d[i]; G += d[i + 1]; B += d[i + 2] } return [Math.round(R / n), Math.round(G / n), Math.round(B / n)] };
-window.massimo = function (x, y, r) { const [px, py] = C.aPixel(cv.width, cv.height, x, y), d = g.getImageData(Math.round(px - r), Math.round(py - r), 2 * r + 1, 2 * r + 1).data; let best = [0, 0, 0], bs = -1; for (let i = 0; i < d.length; i += 4) { const s = d[i] + d[i + 1] + d[i + 2]; if (s > bs) { bs = s; best = [d[i], d[i + 1], d[i + 2]] } } return best };
+window.colore = function (x, y, r) { const [px, py] = C.aPixel(cv.width, cv.height, x, y), d = g.getImageData(Math.round(px - r), Math.round(py - r), 2 * r + 1, 2 * r + 1).data; let R = 0, G = 0, B = 0, n = d.length / 4; for (let i = 0; i < d.length; i += 4) { const a = d[i + 3] / 255; R += d[i] * a; G += d[i + 1] * a; B += d[i + 2] * a } return [Math.round(R / n), Math.round(G / n), Math.round(B / n)] };
+window.massimo = function (x, y, r) { const [px, py] = C.aPixel(cv.width, cv.height, x, y), d = g.getImageData(Math.round(px - r), Math.round(py - r), 2 * r + 1, 2 * r + 1).data; let best = [0, 0, 0], bs = -1; for (let i = 0; i < d.length; i += 4) { const a = d[i + 3] / 255, c = [d[i] * a, d[i + 1] * a, d[i + 2] * a].map(Math.round), s = c[0] + c[1] + c[2]; if (s > bs) { bs = s; best = c } } return best };   /* colori composti su nero (i pixel trasparenti non contano) */
 </script></body></html>

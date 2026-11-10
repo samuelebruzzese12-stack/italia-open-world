@@ -135,32 +135,35 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 #vbtn{position:absolute;left:calc(10px + var(--sl));top:calc(232px + var(--st));width:46px;height:46px;border-radius:50%;padding:0;font-size:22px;display:flex;align-items:center;justify-content:center}
 #vp{position:absolute;left:calc(10px + var(--sl));top:calc(124px + var(--st));width:min(92vw,520px);max-height:66vh;overflow:auto;background:rgba(16,24,34,.95);color:#fff;border-radius:12px;padding:10px;font-size:13px;line-height:1.3;z-index:5}#vp[hidden]{display:none}#vp,#vp *{touch-action:pan-y}#vp .ph{font-weight:800;margin-bottom:4px}#vp .pr{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}#vp .s{height:34px;padding:0 9px;font-size:12px;min-width:0}#vp .s.on{background:var(--go)}#vp .s[disabled]{opacity:.4}#vp .vrow{margin:3px 0}#vp .vg{font-size:15px;margin:2px 0 4px}#vp .vnote{font-size:11px;opacity:.8;margin:4px 0}#vp .vt{width:100%;border-collapse:collapse;font-size:12px}#vp .vt td{padding:3px 4px;border-top:1px solid rgba(255,255,255,.12);vertical-align:top}#vp .vbar{display:inline-block;width:64px;height:8px;background:rgba(255,255,255,.15);border-radius:4px;vertical-align:middle;overflow:hidden}#vp .vbar i{display:block;height:100%}#vp .vok{color:#7fd8a8}#vp .vko{color:#ff8f8f;font-weight:700}#vp .vmem{color:#f3c76b}#vp .vpre{margin:0;font:10.5px/1.3 monospace;white-space:pre-wrap;max-height:120px;overflow:auto;background:#0008;border-radius:8px;padding:6px}
 #gbx{position:absolute;right:calc(20px + var(--sr));bottom:calc(236px + var(--sb));display:none;gap:6px}
-/* ===== V33: quadro strumenti, frecce e pedali ===== */
-#crq{position:absolute;left:50%;bottom:calc(4px + var(--sb));transform:translateX(-50%);width:min(31vw,380px);aspect-ratio:1200/880;filter:drop-shadow(0 6px 16px rgba(0,0,0,.65));touch-action:none;cursor:pointer}
-#crq[hidden]{display:none}#crq.grande{width:min(47vw,600px)}#crq canvas{width:100%;height:100%;display:block}
-#crq.nascosto{width:auto;aspect-ratio:auto;height:30px;padding:0 12px;border-radius:15px;background:rgba(10,10,12,.78);color:#ff4a36;font:700 12px system-ui,sans-serif;display:flex;align-items:center;letter-spacing:.06em}
+/* ===== V33.1: quadro strumenti, frecce e pedali. Misurato su 760×296 (telefono con la barra del browser), 845×390, 915×412, 667×375,
+   1280×720: nessun elemento sopra un altro (test/browser_cruscotto.js). Il gioco ha già la colonna di pulsanti a sinistra (x < 70 px),
+   la minimappa e il nome della via a destra: in auto frecce, pedali e pulsanti stanno fuori da quelle zone. ===== */
+#crq{position:absolute;left:50%;bottom:calc(6px + var(--sb));transform:translateX(-50%);width:min(34vw,420px);aspect-ratio:1200/470;touch-action:none;cursor:pointer}
+#crq[hidden]{display:none}#crq canvas{width:100%;height:100%;display:block}
+#crq.nascosto{width:auto;aspect-ratio:auto;height:28px;padding:0 12px;border-radius:14px;background:rgba(10,10,12,.78);color:#e8e8ea;font:700 11px system-ui,sans-serif;display:flex;align-items:center;letter-spacing:.06em}
 #crq.nascosto canvas{display:none}#crq:not(.nascosto) .crl{display:none}
 #cguida[hidden]{display:none}
-.cfr{position:absolute;bottom:calc(14px + var(--sb));width:86px;height:86px;border-radius:20px;background:linear-gradient(180deg,rgba(40,44,52,.72),rgba(14,15,18,.82));border:2px solid rgba(255,255,255,.28);box-shadow:inset 0 2px 0 rgba(255,255,255,.12),0 6px 14px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;touch-action:none;padding:0}
-.cfr svg{width:46px;height:46px;fill:#e9e9ec;filter:drop-shadow(0 1px 1px #000)}.cfr.on{background:linear-gradient(180deg,rgba(24,190,110,.85),rgba(8,110,60,.9));border-color:rgba(160,255,200,.9)}.cfr.on svg{fill:#fff}
-#gsx{left:calc(14px + var(--sl))}#gdx{left:calc(110px + var(--sl))}
-#cluci{position:absolute;left:calc(14px + var(--sl));bottom:calc(112px + var(--sb));display:flex;gap:6px}
-#cluci .b{height:40px;min-width:40px;padding:0 10px;font-size:12px;font-weight:700}#cluci .b.on{background:rgba(30,150,255,.85);color:#fff}#lemer.on{background:rgba(230,40,30,.9)!important}#lnebbia.on{background:rgba(255,160,0,.9)!important}
-#cpedali{position:absolute;right:calc(12px + var(--sr));bottom:calc(10px + var(--sb));display:flex;gap:14px;align-items:flex-end;perspective:420px}
-.ped{position:relative;width:84px;height:108px;touch-action:none;transform-origin:50% 100%;transform:rotateX(calc(var(--p,0) * 24deg)) translateY(calc(var(--p,0) * 4px));transition:transform .04s linear}
-.ped.acc{width:62px;height:142px}
-.ped .pz{position:absolute;inset:0;border-radius:12px 12px 16px 16px;background:repeating-linear-gradient(180deg,#2b2d31 0 7px,#141518 7px 12px),#1b1c20;border:3px solid #8c9097;box-shadow:inset 0 0 0 2px #2f3237,inset 0 10px 14px rgba(255,255,255,.08),0 8px 16px rgba(0,0,0,.55)}
-.ped.acc .pz{border-radius:10px 10px 14px 14px;background:repeating-linear-gradient(180deg,#2d2f33 0 6px,#121316 6px 10px),#1b1c20}
-.ped b{position:absolute;left:0;right:0;bottom:8px;text-align:center;font:800 11px system-ui,sans-serif;letter-spacing:.08em;color:#d7d9de;text-shadow:0 1px 2px #000;pointer-events:none}
-.ped s{position:absolute;left:6px;right:6px;bottom:26px;height:calc(var(--p,0) * (100% - 34px));border-radius:5px;background:linear-gradient(0deg,rgba(255,60,40,.55),rgba(255,120,60,.15));pointer-events:none}
+.cfr{position:absolute;bottom:calc(6px + var(--sb));width:64px;height:64px;border-radius:16px;background:linear-gradient(180deg,rgba(40,44,52,.72),rgba(14,15,18,.82));border:2px solid rgba(255,255,255,.28);box-shadow:inset 0 2px 0 rgba(255,255,255,.12),0 4px 10px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;touch-action:none;padding:0}
+.cfr svg{width:34px;height:34px;fill:#e9e9ec}.cfr.on{background:linear-gradient(180deg,rgba(24,190,110,.85),rgba(8,110,60,.9));border-color:rgba(160,255,200,.9)}.cfr.on svg{fill:#fff}
+#gsx{left:calc(76px + var(--sl))}#gdx{left:calc(148px + var(--sl))}
+#cluci{position:absolute;left:calc(76px + var(--sl));bottom:calc(78px + var(--sb));display:flex;gap:5px}
+#cluci .b{height:32px;min-width:34px;padding:0 6px;font-size:10px;font-weight:700}#lfari{width:62px}#cluci .b.on{background:rgba(30,150,255,.85);color:#fff}#lemer.on{background:rgba(230,40,30,.9)!important}#lnebbia.on{background:rgba(255,160,0,.9)!important}
+#cpedali{position:absolute;right:calc(12px + var(--sr));bottom:calc(6px + var(--sb));display:flex;gap:12px;align-items:flex-end;perspective:360px}
+.ped{position:relative;width:68px;height:74px;touch-action:none;transform-origin:50% 100%;transform:rotateX(calc(var(--p,0) * 24deg)) translateY(calc(var(--p,0) * 3px));transition:transform .04s linear}
+.ped.acc{width:54px;height:92px}
+.ped .pz{position:absolute;inset:0;border-radius:10px 10px 13px 13px;background:repeating-linear-gradient(180deg,#2b2d31 0 6px,#141518 6px 10px),#1b1c20;border:3px solid #8c9097;box-shadow:inset 0 0 0 2px #2f3237,inset 0 8px 12px rgba(255,255,255,.08),0 6px 12px rgba(0,0,0,.5)}
+.ped.acc .pz{background:repeating-linear-gradient(180deg,#2d2f33 0 5px,#121316 5px 9px),#1b1c20}
+.ped b{position:absolute;left:0;right:0;bottom:6px;text-align:center;font:800 10px system-ui,sans-serif;letter-spacing:.06em;color:#d7d9de;text-shadow:0 1px 2px #000;pointer-events:none}
+.ped s{position:absolute;left:5px;right:5px;bottom:21px;height:calc(var(--p,0) * (100% - 27px));border-radius:4px;background:linear-gradient(0deg,rgba(255,60,40,.55),rgba(255,120,60,.15));pointer-events:none}
 .ped.acc s{background:linear-gradient(0deg,rgba(40,220,120,.55),rgba(120,255,170,.12))}
 #hud.inauto #joy{display:none!important}#hud.inauto #sp,#hud.inauto #qd{display:none!important}
-#hud.inauto #act{right:calc(12px + var(--sr));bottom:calc(166px + var(--sb));height:48px;min-width:100px;font-size:13px}
-#hud.inauto #hb{right:calc(112px + var(--sr));bottom:calc(132px + var(--sb));height:40px;min-width:84px;font-size:11px}
-#hud.inauto #gbx{right:calc(182px + var(--sr));bottom:calc(14px + var(--sb));flex-direction:column}
-#hud.inauto #rep{right:calc(12px + var(--sr));bottom:calc(222px + var(--sb))}
-#hud.inauto #sub{bottom:calc(min(31vw,380px) * .733 + 14px + var(--sb))}
-#hud.inauto #cr{bottom:auto;top:calc(2px + var(--st));left:9%;right:31%;font-size:7.5px;line-height:1.15;opacity:.55}   /* crediti della mappa (obbligatori): in auto sopra, fuori da quadro e pedali */
+#hud.inauto #act{right:calc(12px + var(--sr));bottom:calc(max(110px,min(34vw,420px) * .392 + 14px) + var(--sb));height:36px;min-width:96px;max-width:150px;padding:0 10px;font-size:12px}
+#hud.inauto #hb{right:calc(170px + var(--sr));bottom:calc(max(110px,min(34vw,420px) * .392 + 14px) + var(--sb));height:36px;min-width:84px;padding:0 8px;font-size:10px}
+#hud.inauto #gbx{right:calc(154px + var(--sr));bottom:calc(6px + var(--sb));flex-direction:column}#hud.inauto #gbx .b{height:36px;min-width:44px}
+#hud.inauto #rep{right:calc(280px + var(--sr));bottom:calc(max(110px,min(34vw,420px) * .392 + 14px) + var(--sb));height:36px;min-width:100px;font-size:12px}
+#hud.inauto #zn{top:calc(38px + var(--st));right:auto;left:50%;transform:translateX(-50%);max-width:28%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;padding:3px 9px;text-align:center}
+#hud.inauto #sub{bottom:calc(min(34vw,420px) * .392 + 14px + var(--sb))}
+#hud.inauto #cr{bottom:auto;top:calc(1px + var(--st));left:calc(76px + var(--sl));right:max(240px,24vw);font-size:7px;line-height:1.15;opacity:.55}   /* crediti della mappa (obbligatori): in auto in alto, fuori dai comandi */
 #gbx .b{height:48px;min-width:52px;font-size:15px}
 @media (orientation:landscape) and (max-height:520px){#vbtn{top:calc(200px + var(--st));width:42px;height:42px}#vp{top:calc(56px + var(--st));max-height:calc(100% - 66px)}#gbx{right:calc(116px + var(--sr));bottom:calc(126px + var(--sb))}#qd{font-size:11px;padding:5px 8px}}
 #rld{position:fixed;inset:0;z-index:12;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;background:#1d2733;color:#fff;font:600 15px system-ui,sans-serif;text-align:center}#rld[hidden]{display:none}#rlt{font-size:20px;font-weight:800}#rlp{opacity:.8;font-size:13px}#rle{color:#ffb4a8;font-size:13px;max-width:520px}#rla{position:absolute;bottom:calc(10px + var(--sb));left:10px;right:10px;font-size:10px;opacity:.6}#mgo{background:var(--go);opacity:1;height:48px;font-size:14px}#mcity{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;max-width:96vw;padding:2px 4px;touch-action:pan-x}#mcity *{touch-action:pan-x}#mcity .b{height:40px;min-width:0;white-space:nowrap;font-size:12px;padding:0 10px;flex:0 0 auto}#mc{width:min(96vw,calc(100vh - 230px))}#mcred{position:absolute;left:calc(14px + var(--sl));bottom:calc(14px + var(--sb));height:40px}#rcred{position:absolute;inset:0;z-index:3;background:rgba(8,16,26,.97);color:#fff;padding:calc(14px + var(--st)) 16px calc(14px + var(--sb));overflow-y:auto;touch-action:pan-y;font:500 13px/1.45 system-ui,sans-serif}#rcred[hidden]{display:none}#rcred *{touch-action:pan-y}#rcred a{color:#8fc3ff}#rcred>button{float:right}#zn{display:none;white-space:pre-line;line-height:1.25;max-width:180px}@media (orientation:landscape) and (max-height:520px){#mc{width:auto;height:calc(100% - 16px)}#mcity{flex-direction:column;flex-wrap:nowrap;overflow-x:hidden;overflow-y:auto;max-height:calc(100% - 210px);width:190px;touch-action:pan-y;align-self:flex-start;margin-top:calc(124px + var(--st))}#mcity *{touch-action:pan-y}#mcity .b{height:34px}#mgo{position:absolute;right:calc(14px + var(--sr));top:calc(70px + var(--st));height:40px}#mcred{left:auto;right:calc(120px + var(--sr))}}
@@ -2529,7 +2532,7 @@ onmessage = async e => { const m = e.data;
 <div id="hud"><div id="ottica" hidden><i class="oh"></i><i class="ov"></i><i class="ol"></i><i class="or"></i><i class="ob"></i><i class="op"></i></div>
 <div id="look"></div>
 <div id="joy"><div id="base"><div id="knob"></div></div></div>
-<div id="crq" hidden title="Quadro strumenti: tocca per cambiare dimensione, tieni premuto sul display per azzerare i parziali"><canvas id="crcv"></canvas><span class="crl">⏲ QUADRO</span></div>
+<div id="crq" hidden title="Quadro strumenti: tocca per nasconderlo o mostrarlo, tieni premuto sul display per azzerare i parziali"><canvas id="crcv"></canvas><span class="crl">⏲ QUADRO</span></div>
 <div id="cguida" hidden>
  <button class="cfr" id="gsx" aria-label="Sterza a sinistra"><svg viewBox="0 0 24 24"><path d="M15.5 3.5 6 12l9.5 8.5V15h3V9h-3z"/></svg></button>
  <button class="cfr" id="gdx" aria-label="Sterza a destra"><svg viewBox="0 0 24 24"><path d="M8.5 3.5 18 12l-9.5 8.5V15h-3V9h3z"/></svg></button>
@@ -20105,7 +20108,7 @@ if(VEHOK){
    =================================================================================================================== */
 var CRU={ok:!!(window.IOW_CRUSCOTTO&&typeof VEHOK!=='undefined'&&VEHOK),st:null,cmd:null,fari:{modo:'auto',emergenza:false,retronebbia:false},galleria:false,
  porte:{bloccate:false,calci:0,sfondato:false},dim:0,drawT:0,saveT:0,cv:null,g:null,ultimo:null,boPrec:false,koPrec:false,tLungo:null,
- MODI:['auto','spenti','posizione','anabbaglianti','abbaglianti'],NOMI:{auto:'AUTO',spenti:'SPENTI',posizione:'POSIZ.',anabbaglianti:'ANABB.',abbaglianti:'ABBAGL.'},
+ MODI:['auto','spenti','posizione','anabbaglianti','abbaglianti'],NOMI:{auto:'AUTO',spenti:'OFF',posizione:'POS',anabbaglianti:'ANAB',abbaglianti:'ABB'},
  init(){if(!CRU.ok)return;let odo;try{const s=JSON.parse(localStorage.getItem('iow_cruscotto_v1')||'null');if(s&&Number.isFinite(s.odoKm))odo=s.odoKm;if(s&&s.fari&&CRU.MODI.includes(s.fari))CRU.fari.modo=s.fari}catch(e){}
   CRU.st=IOW_CRUSCOTTO.crea({odoKm:odo,redline:VEH.par.limitatore});CRU.cmd=IOW_CRUSCOTTO.creaComandi();CRU.cv=$('#crcv');CRU.g=CRU.cv?CRU.cv.getContext('2d'):null;
   const tasto=(id,k)=>{const el=$(id);if(!el)return;const giu=e=>{e.preventDefault();e.stopPropagation();try{el.setPointerCapture(e.pointerId)}catch(_){}IOW_CRUSCOTTO.premi(CRU.cmd,k);el.classList.add('on')},su=e=>{IOW_CRUSCOTTO.rilascia(CRU.cmd,k);el.classList.remove('on')};
@@ -20121,7 +20124,7 @@ var CRU={ok:!!(window.IOW_CRUSCOTTO&&typeof VEHOK!=='undefined'&&VEHOK),st:null,
   const bn=$('#lnebbia');if(bn)bn.addEventListener('click',e=>{e.stopPropagation();CRU.fari.retronebbia=!CRU.fari.retronebbia;CRU.etichette()});
   const q=$('#crq');if(q){q.addEventListener('pointerdown',e=>{e.stopPropagation();const r=q.getBoundingClientRect(),L=IOW_CRUSCOTTO.LAYOUT.lcd,p0=IOW_CRUSCOTTO.aPixel(r.width,r.height,L.x,L.y),p1=IOW_CRUSCOTTO.aPixel(r.width,r.height,L.x+L.w,L.y+L.h),x=e.clientX-r.left,y=e.clientY-r.top;
     CRU.tLungo=(x>=p0[0]&&x<=p1[0]&&y>=p0[1]&&y<=p1[1]&&CRU.dim!==2)?setTimeout(()=>{CRU.tLungo='fatto';CRU.st.odo.parzialeKm=0;toast('Chilometri parziali azzerati')},650):null});
-   q.addEventListener('pointerup',e=>{e.stopPropagation();if(CRU.tLungo==='fatto'){CRU.tLungo=null;return}if(CRU.tLungo)clearTimeout(CRU.tLungo);CRU.tLungo=null;CRU.dim=(CRU.dim+1)%3;q.classList.toggle('grande',CRU.dim===1);q.classList.toggle('nascosto',CRU.dim===2);CRU.drawT=9})}
+   q.addEventListener('pointerup',e=>{e.stopPropagation();if(CRU.tLungo==='fatto'){CRU.tLungo=null;return}if(CRU.tLungo)clearTimeout(CRU.tLungo);CRU.tLungo=null;CRU.dim=CRU.dim===2?0:2;q.classList.toggle('nascosto',CRU.dim===2);CRU.drawT=9})}
   addEventListener('keydown',e=>{if(!inCar)return;const k=e.key.toLowerCase();if(k==='l')CRU.cambiaFari();else if(k==='h'){CRU.fari.emergenza=!CRU.fari.emergenza;CRU.etichette()}});
   CRU.etichette()},
  cambiaFari(){const i=CRU.MODI.indexOf(CRU.fari.modo);CRU.fari.modo=CRU.MODI[(i+1)%CRU.MODI.length];CRU.etichette();toast('Fari: '+({auto:'automatici (accesi di notte e in galleria)',spenti:'spenti',posizione:'luci di posizione',anabbaglianti:'anabbaglianti',abbaglianti:'abbaglianti'})[CRU.fari.modo]);CRU.salva()},

@@ -1,11 +1,11 @@
 ITALIA OPEN WORLD — quadro strumenti V33, prove in Chromium senza schermo (2026-11-10)
-  ok   A1 quadro spento (fuori dall'auto): nessuna spia accesa, display spento, anelli rossi accesi  — display 2,11,46
+  ok   A1 quadro spento (fuori dall'auto): nessuna spia accesa, display spento, cornici cromate visibili  — display 2,2,3
   ok   A2 ogni spia accesa ha il colore della sua funzione (21 spie, controllo dei pixel)  — 21 spie verificate
-  ok   A3 lampeggi: ABS ed ESP in regolazione accese a t=0,10 s e spente a t=0,35 s; in BLACKOUT accese fisse in entrambi gli istanti  — regolazione: 255,116,23 → 26,26,28; blackout: 255,116,23 → 255,116,23
-  ok   A4 lancette sull'angolo giusto: 100 km/h, 2400 giri, metà serbatoio (pixel rossi sulla punta attesa, buio su un angolo sbagliato)  — 100 km/h 255,169,142, 2400 giri 255,171,144
-  ok   A5 display retroilluminato blu con chilometri totali e parziali  — totale 157256, parziale 0.0
-  ok   B1 in auto la levetta non c'è più: #joy nascosta, frecce, pedali e quadro visibili e senza sovrapposizioni (schermo 844×390)  — quadro 262×192 px, pedali 84×108 e 62×142
-  ok   B2 pedale dell'acceleratore toccato in alto → 100 % e l'auto accelera; toccato in basso → 25 %; rilasciato → 0  — velocità dopo 4 s: 51 km/h
+  ok   A3 lampeggi: ABS ed ESP in regolazione accese a t=0,10 s e spente a t=0,35 s; in BLACKOUT accese fisse in entrambi gli istanti  — regolazione: 255,116,23 → 16,16,17; blackout: 255,116,23 → 255,116,23
+  ok   A4 lancette sull'angolo giusto: 100 km/h, 2400 giri, metà serbatoio (pixel rossi sulla punta attesa, buio su un angolo sbagliato)  — 100 km/h 243,73,42, 2400 giri 243,73,42
+  ok   A5 display con chilometri totali e parziali (cifre chiare su fondo nero)  — totale 157256, parziale 0.0
+  ok   B1 in auto: levetta assente; frecce, pedali, quadro e TUTTI i pulsanti del gioco senza sovrapposizioni e dentro lo schermo, su 5 schermi (760×296 = telefono con la barra del browser)  — 760×296 quadro 258×101, 845×390 quadro 287×113, 915×412 quadro 311×122, 667×375 quadro 227×89, 1280×720 quadro 420×165
+  ok   B2 pedale dell'acceleratore toccato in alto → 100 % e l'auto accelera; toccato in basso → 25 %; rilasciato → 0  — velocità dopo 4 s: 52 km/h
   ok   B3 frecce: destra → sterzo +1 (e l'auto gira a destra), sinistra → −1, rilascio → 0  — rotta cambiata di -0.35 rad
   ok   B4 freno a pedale con due dita insieme al gas (multitocco) e frenata a fondo: ABS in regolazione e spia ABS che lampeggia sul quadro  — fotogrammi con ABS 111, spia lampeggiante 111
   ok   B5 urto da 20 g (blackout): ABS ed ESP fisse sul quadro disegnato, luci di emergenza accese da sole  — {"abs":"accesa","esp":"accesa","em":true,"frecce":"freccia"}
