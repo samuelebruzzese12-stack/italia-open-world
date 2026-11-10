@@ -1,5 +1,11 @@
 # Cronologia delle versioni
 
+## 34 — pannello della polizia chiudibile, bonus 1.000 €
+- Pannello 🚔: intestazione fissa con il tasto «✕ Chiudi» (resta visibile anche scorrendo; in verticale l'altezza non copre più i comandi); Esc lo chiude.
+- Portafoglio: +1.000 € una sola volta (movimento «Bonus 1.000 € (versione 34)»).
+- Motore fisico: `cambiaParametri(v, P)` per cambiare i parametri del veicolo senza ricrearlo.
+- `motore/carro_attrezzi.js`: modulo del carro attrezzi a pianale (dinamica a 200 Hz, aggancio, traino, fattura); non ancora collegato al gioco.
+
 ## Versione 33.1 — 2026-11-10 — quadro rifatto e comandi che non coprono più il gioco
 - Quadro ridisegnato da zero con un aspetto proprio (plancia bassa, strumenti a cannocchiale con cornice cromata, display monocromatico,
   spie in una fila): la 33 riprendeva troppo l'immagine d'esempio ed era troppo grande (1200 × 880 → 1200 × 470; 258 × 101 px su 760 × 296).

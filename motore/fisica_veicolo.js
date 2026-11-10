@@ -526,9 +526,17 @@
     return [0, 1, 2, 3].map(i => ({ omega: D.om[i], vRuota: D.om[i] * Re, lambda: D.kap[i], alfa: D.alf[i], Fz: D.Fz[i], Fx: D.Fx[i], Fy: D.Fy[i], Mz: D.Mz[i], mu: v.ruote.mu[i], bloccata: D.blocc[i], Tfreno: D.Tbt[i], Tmotrice: D.Tdrv[i], kPiccoFreno: v.ctlIn.kPiccoF[i], abs: c.abs.attivo[i], potenzaStrisciamento: D.Pstr[i] }));
   }
 
+  /* cambia i parametri del veicolo (altra auto comprata, assetto modificato) senza ricreare lo stato: geometria e cambio si ricalcolano */
+  function cambiaParametri(v, P) {
+    const nuovi = JSON.parse(JSON.stringify(P)); for (const k in nuovi) v.par[k] = nuovi[k];
+    v.geo = null; const n = v.par.rapporti.length; v.cambio.nMarce = n; if (v.cambio.marcia > n) v.cambio.marcia = n;
+    v.carburante.serbatoio = v.par.serbatoio; v.carburante.litri = Math.min(v.carburante.litri, v.par.serbatoio); v.ecu.limitatore = v.par.limitatore; v.ecu.marciaMaxTCU = n; v.ecu.abs = !!v.par.abs; v.ecu.asr = v.ecu.esp = !!v.par.esc;
+    evento(v, 'parametri_cambiati', { id: v.par.id }); return v;
+  }
+
   /* stato minimo da salvare (il resto si ricostruisce) */
   function serializza(v) { return { v: 3, centralina: v.centralina.stato, carburante: +v.carburante.litri.toFixed(3), consumoTot: +v.carburante.consumoTot.toFixed(4), odometro: +v.odometro.toFixed(1), Tacqua: +v.motore.Tacqua.toFixed(1), Tolio: +v.motore.Tolio.toFixed(1), usura: v.ruote.usura.map(u => +u.toFixed(5)), pressione: v.ruote.pressione.map(p => +p.toFixed(3)), modo: v.cambio.modo, acceso: v.motore.acceso, stat: v.stat } }
   function ripristina(v, s) { if (!s || typeof s !== 'object') return false; const n = (x, fb) => Number.isFinite(x) ? x : fb; v.carburante.litri = cl(n(s.carburante, v.carburante.litri), 0, v.carburante.serbatoio); v.carburante.consumoTot = n(s.consumoTot, 0); v.odometro = n(s.odometro, 0); v.motore.Tacqua = n(s.Tacqua, 20); v.motore.Tolio = n(s.Tolio, 20); if (Array.isArray(s.usura) && s.usura.length === 4) v.ruote.usura = s.usura.map(u => cl(n(u, 0), 0, 1)); if (Array.isArray(s.pressione) && s.pressione.length === 4) v.ruote.pressione = s.pressione.map(p => cl(n(p, v.par.pressioneNom), 0, 5)); if (s.modo === 'man' || s.modo === 'auto') v.cambio.modo = s.modo; if (typeof s.acceso === 'boolean') { v.motore.acceso = s.acceso; if (!s.acceso) v.motore.rpm = 0 } if (s.stat && typeof s.stat === 'object') Object.assign(v.stat, s.stat); if (s.centralina === 'BLACKOUT') v.centralina.stato = 'BLACKOUT'; return true }
 
-  return { versione: '2.0.0', DT, SUPERFICI, coppiaCurva, muRuota, densitaAria, crea, passo, cambia, rapportoTot, rpmDaVelocita, rifornisci, telemetria, serializza, ripristina, urto, riavviaCentralina, impostaVelocita, ruote, geometria, piccoG: IOW_CTL.piccoG, MF: IOW_MF, CTL: IOW_CTL, DB, G };
+  return { versione: '2.0.0', DT, SUPERFICI, coppiaCurva, muRuota, densitaAria, crea, passo, cambia, rapportoTot, rpmDaVelocita, rifornisci, telemetria, serializza, ripristina, urto, riavviaCentralina, impostaVelocita, cambiaParametri, ruote, geometria, piccoG: IOW_CTL.piccoG, MF: IOW_MF, CTL: IOW_CTL, DB, G };
 });

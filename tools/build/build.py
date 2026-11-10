@@ -634,6 +634,10 @@ print('patch pneumatici V32 applicata:',_n,'sostituzioni')
 _sp=_ilu.spec_from_file_location('patch_cruscotto_v33',REPO+'sorgenti/patch_cruscotto_v33.py'); _pm=_ilu.module_from_spec(_sp); _sp.loader.exec_module(_pm)
 h,_n=_pm.applica(h); assert 'motore/cruscotto.js' in h and 'var CRU={' in h and 'id="pacc"' in h, 'integrazione del quadro V33 mancante'
 print('patch cruscotto V33 applicata:',_n,'sostituzioni')
+# 69) Versione 34: tasto «✕ Chiudi» nel pannello della polizia (anche in verticale), bonus una tantum di 1.000 € (sorgenti/patch_v34.py)
+_sp=_ilu.spec_from_file_location('patch_v34',REPO+'sorgenti/patch_v34.py'); _pm=_ilu.module_from_spec(_sp); _sp.loader.exec_module(_pm)
+h,_n=_pm.applica(h); assert 'id="p_x"' in h and 'S.bonusV34' in h, 'patch V34 mancante'
+print('patch V34 applicata:',_n,'sostituzioni')
 open(OUT,'w',encoding='utf-8').write(h)
 js=re.findall(r'<script>([\s\S]*?)</script>',h)[-1]
 os.makedirs(D+'h',exist_ok=True); open(D+PSJ,'w',encoding='utf-8').write(js)
