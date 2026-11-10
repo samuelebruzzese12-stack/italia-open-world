@@ -40,7 +40,7 @@
     C0110: 'Pompa ABS', C0121: 'Valvola ABS', C0131: 'Sensore pressione freni', C0196: 'Sensore imbardata/accelerazione laterale (ESC)',
     B1000: 'Centralina carrozzeria: errore interno', B2425: 'Faro anteriore sinistro: circuito aperto', B2426: 'Faro anteriore destro: circuito aperto', B2430: 'Fanale posteriore sinistro: circuito aperto', B2431: 'Fanale posteriore destro: circuito aperto',
     B2450: 'Sensore livello carburante: plausibilità', B1400: 'Interruttore portiera: plausibilità', B1900: 'Batteria: scarica eccessiva',
-    U0001: 'Bus CAN ad alta velocità', U0100: 'Perdita comunicazione con centralina motore', U0101: 'Perdita comunicazione con centralina cambio', U0121: 'Perdita comunicazione con ABS',
+    U0001: 'Bus CAN ad alta velocità', U0100: 'Perdita comunicazione con centralina motore', U0101: 'Perdita comunicazione con centralina cambio', U0121: 'Perdita comunicazione con ABS', C1100: 'Modulo ABS/ESP fuori servizio dopo un urto oltre 15 g (blackout)',
     U0140: 'Perdita comunicazione con centralina carrozzeria', U0141: 'Perdita comunicazione con gateway', U0111: 'Perdita comunicazione con gestione batteria',
   };
 
@@ -128,7 +128,8 @@
     r.bus.busOff = !!gBus || (D.elettrico !== undefined && D.elettrico < 0.15);
     r.bus.stato = r.bus.busOff ? 'bus-off' : (D.elettrico !== undefined && D.elettrico < 0.6 ? 'errori' : 'ok');
     if (r.bus.busOff) r.bus.errori += dt * 100;
-    for (const k in r.ecu) { const e = r.ecu[k]; e.alimentato = B.V > 6.5; const gt = guasto(r, k, '', 'timeout'); e.online = e.alimentato && !gt && !(D.elettrico !== undefined && D.elettrico < 0.3 && k !== 'EMS' && k !== 'GW') && !(D.centraline !== undefined && D.centraline < 0.2 && k !== 'EMS' && k !== 'GW') }   // centraline: scatola delle ECU schiacciata (danni_meccanici.comp.centraline)
+    const blackout = !!(v.centralina && v.centralina.stato === 'BLACKOUT');   // urto oltre la soglia (motore/controllo_dinamica.js): il modulo ABS/ESP non risponde più
+    for (const k in r.ecu) { const e = r.ecu[k]; e.alimentato = B.V > 6.5; const gt = guasto(r, k, '', 'timeout'); e.online = e.alimentato && !gt && !(D.elettrico !== undefined && D.elettrico < 0.3 && k !== 'EMS' && k !== 'GW') && !(D.centraline !== undefined && D.centraline < 0.2 && k !== 'EMS' && k !== 'GW') && !(blackout && (k === 'ABS' || k === 'ESC')) }   // centraline: scatola delle ECU schiacciata (danni_meccanici.comp.centraline)
 
     /* --- BMS / batteria 12 V: alternatore a motore acceso, consumo con luci e avviamento, danni --- */
     {
@@ -153,10 +154,12 @@
       let guasti = 0;
       for (let k = 0; k < 4; k++) {
         const rotta = D.sensoriRuota ? D.sensoriRuota[k] : false;
-        const wv = R.bloccate && k < 2 ? 0 : R.bloccatePost && k >= 2 ? 0 : R.slitta && k < 2 ? Math.abs(v.v) * 1.5 : Math.abs(v.v);
+        // velocità vera della ruota dalla dinamica a 7 gradi di libertà (ω·Re); per stati senza dinamica, la stima di prima
+        const wv = v.dyn && v.geo ? Math.abs(v.dyn.om[k] * v.geo.Re) : R.bloccate && k < 2 ? 0 : R.bloccatePost && k >= 2 ? 0 : R.slitta && k < 2 ? Math.abs(v.v) * 1.5 : Math.abs(v.v);
         const val = rotta ? null : leggi(r, 'ABS', 'ruota' + nomi[k], wv, 0.05);
         sens.push(val === null ? null : +Math.max(0, val).toFixed(2));
-        const ko = val === null || (Math.abs(v.v) > 3 && Math.abs(val - Math.abs(v.v)) > Math.max(2, Math.abs(v.v) * 0.6) && !R.bloccate && !R.bloccatePost && !R.slitta);
+        const lib = !(v.dyn && (v.dyn.blocc[k] || Math.abs(v.dyn.kap[k]) > 0.3 || Math.abs(v.dyn.alf[k]) > 0.35));   // ruota che scivola o deriva molto: lo scostamento è reale, non un guasto
+        const ko = val === null || (Math.abs(v.v) > 3 && Math.abs(val - Math.abs(v.v)) > Math.max(2, Math.abs(v.v) * 0.6) && !R.bloccate && !R.bloccatePost && !R.slitta && lib);
         setDTC(r, 'ABS', codici[k], ko, ko ? freeze(r) : null); if (ko) guasti++;
       }
       const pompa = D.absPompa !== undefined && D.absPompa < 0.3; setDTC(r, 'ABS', 'C0110', pompa, pompa ? freeze(r) : null);
@@ -168,11 +171,17 @@
       const escOK = absOK && esc.online && !gImb && !(D.sensoreImbardata !== undefined && D.sensoreImbardata < 0.3) && v.par.esc && X.escAttivo !== false;
       const deriva = Math.abs(X.scivolamentoLaterale || 0);
       let taglio = 0;
-      if (escOK && deriva > esc.parametri.sogliaDerivaMs && Math.abs(v.v) > 4) { taglio = cl((deriva - esc.parametri.sogliaDerivaMs) / 6, 0.15, esc.parametri.taglioMax); if (!esc.uscite.intervento) { r.stat.interventiESC++; nota(r, 'ESC', 'intervento', '', { deriva: +deriva.toFixed(1), kmh: +(v.v * 3.6).toFixed(0) }) } }
-      esc.uscite = { intervento: taglio > 0, taglioCoppia: +taglio.toFixed(2), attivo: escOK }; esc.stato = !esc.online ? 'offline' : escOK ? 'ok' : 'disattivato'; esc.modo = escOK ? 'normale' : 'spia ESC accesa';
+      // supervisione della deriva (scivolamento laterale oltre 6,5 m/s): taglio di coppia grossolano. L'ESP vero e proprio (imbardata di riferimento
+      // e frenata della singola ruota) è nella dinamica (motore/controllo_dinamica.js): qui se ne riportano lo stato e gli interventi.
+      const ce = v.centralina ? v.centralina.esp : null;
+      let contato = false; if (ce && escOK && ce.attivo && !esc.uscite.intervento) { contato = true; r.stat.interventiESC++; nota(r, 'ESC', 'intervento', '', { Mz: Math.round(ce.Mz), kmh: +(v.v * 3.6).toFixed(0) }) }
+      if (escOK && deriva > esc.parametri.sogliaDerivaMs && Math.abs(v.v) > 4) { taglio = cl((deriva - esc.parametri.sogliaDerivaMs) / 6, 0.15, esc.parametri.taglioMax); if (!esc.uscite.intervento && !contato) { r.stat.interventiESC++; nota(r, 'ESC', 'intervento', '', { deriva: +deriva.toFixed(1), kmh: +(v.v * 3.6).toFixed(0) }) } }
+      esc.uscite = { intervento: taglio > 0 || !!(ce && escOK && ce.attivo), taglioCoppia: +Math.max(taglio, ce && ce.attivo ? ce.taglio : 0).toFixed(2), attivo: escOK, Mz: ce ? Math.round(ce.Mz) : 0, imbardataRif: ce ? +ce.rDes.toFixed(3) : 0 }; esc.stato = !esc.online ? 'offline' : escOK ? 'ok' : 'disattivato'; esc.modo = escOK ? 'normale' : 'spia ESC accesa';
       if (v.freni.abs && absOK) { if (!abs.uscite.regolazione) { r.stat.interventiABS++ } }
       abs.uscite = { regolazione: v.freni.abs && absOK, asr: absOK && v.ruote.slip > 0.11 };
-      E.abs = absOK; E.asr = escOK || absOK;      // ASR funziona con il solo ABS; ESC richiede anche l'imbardata
+      E.abs = absOK; E.asr = escOK || absOK; E.esp = escOK;      // ASR funziona con il solo ABS; ESC richiede anche l'imbardata
+      if (blackout) { setDTC(r, 'ABS', 'C1100', true, freeze(r)); if (!abs.uscite.ko) nota(r, 'ABS', 'blackout', '', { g: +v.centralina.ultimoUrtoG.toFixed(1) }) } else setDTC(r, 'ABS', 'C1100', false, null);
+      abs.uscite.ko = blackout;
       r.limiti.tagliaCoppiaESC = taglio;
       tx(r, 'ABS', '0x1A0', 'Velocità ruote', 20, { ruote: sens, abs: abs.uscite.regolazione, asr: abs.uscite.asr });
       tx(r, 'ESC', '0x1A4', 'Stabilità', 20, esc.uscite);

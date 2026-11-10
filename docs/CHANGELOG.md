@@ -1,5 +1,24 @@
 # Cronologia delle versioni
 
+## Versione 32 — 2026-11-10 — Magic Formula combinata, dinamica a 200 Hz, ABS/TCS/ESP con PID, blackout oltre 15 g
+Documentazione: `docs/PNEUMATICI_DINAMICA.md`. Misure: `docs/test/pneumatici_dinamica_misure.txt` (`node tools/dinamica/misure_js.js`).
+- `motore/pneumatici_mf.js` (nuovo): Magic Formula a scorrimento combinato con la struttura MF 5.2 (Fx, Fy, Mz, sensibilità al carico,
+  fattori di scala λ, rilassamento laterale, scorrimento di picco della formula combinata). Coefficienti di un pneumatico generico
+  (dichiarati provvisori, non del 215/55 R16).
+- `motore/fisica_veicolo.js` 2.0.0: dinamica a 7 gradi di libertà (vx, vy, imbardata, 4 ruote) a passo fisso di 5 ms; integrazione
+  implicita di vx e delle ruote con l'inerzia del motore e il differenziale aperto; trasferimento di carico per ruota; bloccaggio
+  geometrico (ω = 0, λ = −1); attrito isotropo a pieno strisciamento; temperatura e usura delle gomme dalla potenza di strisciamento.
+  Sostituisce il limite d'aderenza per asse e l'ABS/ASR «al 96 %» della versione 29.
+- `motore/controllo_dinamica.js` (nuovo): ABS per ruota e TCS (con frenata della ruota che pattina) con PID sullo scorrimento di picco,
+  ESP sull'imbardata di riferimento, EBD; blackout oltre 15 g di accelerazione di picco (stimata da impulso e schiacciamento del solver).
+- `motore/ecu.js`: sensori ruota con la velocità vera delle ruote; blackout → ABS ed ESC offline, C1100, spie; ESP fisico riportato.
+- `motore/veicoli_db.js`: inerzia d'imbardata e delle ruote, carreggiate, Ackermann, ripartizione del rollio, freno a mano (provvisori).
+- Pagina (`sorgenti/patch_pneumatici_v32.py`, passo 67 della costruzione): `drive()` riceve vx, vy e imbardata dal motore fisico; urti →
+  impulso d'imbardata e accelerazione di picco → centralina; officina che ripara la centralina; righe nuove nel quadro.
+- Test: 96 (23 nuovi in `test/pneumatici_dinamica.js`, fra cui il codice vero di `drive()` estratto dalla pagina). Calibrazione invariata
+  (errore medio 5,6 %; 100-0 km/h 42,3 m).
+Non verificato in questa sessione: la pagina intera in Chromium (three.js non raggiungibile dalla rete del contenitore).
+
 ## Versione 31.7b — 2026-11-09 — confini fra celle, sentieri sotto le strade, report calcolato
 Report: `docs/test/v31_7_misure_finali.txt`, scritto da `tools/collaudo/report_finale.js` (esegue le prove, ricalcola il «prima» dal commit
 dba1fbe con lo stesso codice di misura, confronta con soglie scritte nello script; PASSED solo se tutti i criteri sono rispettati).

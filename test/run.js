@@ -443,6 +443,9 @@ test('auto contro auto con la quota (index.html): un\'auto del traffico sulla vi
     ok(html.includes(s), 'manca nella pagina: ' + s) });
 
 console.log('\nRISULTATI REALI (rete di gioco + solver):'); console.log(JSON.stringify(RIS, null, 1));
+/* ------------------------------------------------------------ pneumatici (Magic Formula combinata), dinamica a 7 gradi di libertà a 200 Hz, ABS/TCS/ESP, blackout */
+require(path.join(__dirname, 'pneumatici_dinamica.js'))({ test, ok, vicino });
+
 console.log(esiti.join('\n'));
 console.log('\n' + passati + ' test superati, ' + falliti + ' falliti');
 if (typeof process !== 'undefined') process.exit(falliti ? 1 : 0);

@@ -4,6 +4,13 @@ Moduli autonomi (Python 3, solo libreria standard). Parametri generici di una be
 di un costruttore e il modello **non** è validato su prove reali. Non sostituiscono il motore fisico del gioco (`motore/fisica_veicolo.js`,
 `motore/ecu.js`): servono a studiare il comportamento con e senza controlli elettronici.
 
+Dalla versione 32 lo stesso schema (7 gradi di libertà, Magic Formula combinata, centralina a 200 Hz con ABS/TCS a PID, ESP, EBD e
+blackout oltre 15 g) è anche nel **gioco**, in JavaScript: `motore/fisica_veicolo.js`, `motore/pneumatici_mf.js`,
+`motore/controllo_dinamica.js` (vedi `docs/PNEUMATICI_DINAMICA.md`). `misure_js.js` misura quella versione:
+`node tools/dinamica/misure_js.js` → `docs/test/pneumatici_dinamica_misure.txt`. Le due versioni non hanno gli stessi pneumatici
+(qui B, C, E fissi; nel gioco la MF 5.2 con sensibilità al carico), ma la manovra PIT dà lo stesso esito: centralina sana che riprende
+l'auto, blackout con testacoda.
+
 - `dinamica_7dof.py` — 7 gradi di libertà (vx, vy, r e le quattro ruote), trasferimento di carico, Magic Formula a scorrimento combinato,
   centralina a 200 Hz con ESP (frenata differenziale), ABS, TCS (PID) ed EBD, blackout sopra i 15 g. RK4 con 4 sotto-passi.
   Configurazione predefinita: passo fisso dt = 0,005 s (200 Hz, costante `DT`), 1610 kg, Iz = 2450 kg·m², partenza a 50 m/s (`V0`, 180 km/h).

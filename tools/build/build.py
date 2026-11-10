@@ -624,6 +624,11 @@ print('patch solver V30 applicata:',_n,'sostituzioni')
 _sp=_ilu.spec_from_file_location('patch_mappa_v31',REPO+'sorgenti/patch_mappa_v31.py'); _pm=_ilu.module_from_spec(_sp); _sp.loader.exec_module(_pm)
 h,_n=_pm.applica(h); assert h.count('PO.y')>=4 and 'r.rails' in h, 'integrazione delle collisioni con la quota mancante'
 print('patch mappa V31 applicata:',_n,'sostituzioni')
+# 67) Versione 32: Magic Formula combinata, dinamica a 7 gradi di libertà a 200 Hz, centralina ABS/TCS/ESP con blackout oltre 15 g
+#     (sorgenti/patch_pneumatici_v32.py: drive() riceve vx, vy e imbardata dal motore fisico; urti → accelerazione di picco → centralina)
+_sp=_ilu.spec_from_file_location('patch_pneumatici_v32',REPO+'sorgenti/patch_pneumatici_v32.py'); _pm=_ilu.module_from_spec(_sp); _sp.loader.exec_module(_pm)
+h,_n=_pm.applica(h); assert 'motore/pneumatici_mf.js' in h and 'VEHX.imbardataUrto' in h and 'VEHX.urtoG(' in h, 'integrazione della dinamica V32 mancante'
+print('patch pneumatici V32 applicata:',_n,'sostituzioni')
 open(OUT,'w',encoding='utf-8').write(h)
 js=re.findall(r'<script>([\s\S]*?)</script>',h)[-1]
 os.makedirs(D+'h',exist_ok=True); open(D+PSJ,'w',encoding='utf-8').write(js)
