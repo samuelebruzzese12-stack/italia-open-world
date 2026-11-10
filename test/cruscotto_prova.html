@@ -1,0 +1,18 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Prova del quadro strumenti</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1200" height="880"></canvas>
+<script src="../motore/cruscotto.js"></script>
+<script>
+/* scenari del quadro per le prove grafiche (test/browser_cruscotto.js): ogni scenario simula alcuni secondi con la logica vera e disegna */
+const C = IOW_CRUSCOTTO, cv = document.getElementById('c'), g = cv.getContext('2d');
+const base = { quadro: true, motoreAcceso: true, rpm: 800, vx: 0, consumoLh: 0.6, Tacqua: 90, carbL: 42, serbatoioL: 70, marcia: 1, centralina: { stato: 'OPERATIVA' }, motoreIntegrita: 1, batteriaV: 14.1, alternatore: 1, fari: 'spenti', posizione: { x: 0, z: 0 } };
+window.scenario = function (nome, secondi, I, tFinale) {
+  const s = C.crea(); let m, x = 0; const n = Math.round(secondi * 60);
+  for (let i = 0; i < n; i++) { const ing = Object.assign({}, base, typeof I === 'function' ? I(i / 60) : I); x += Math.abs(ing.vx || 0) / 60; ing.posizione = { x, z: 0 }; m = C.aggiorna(s, 1 / 60, ing) }
+  if (tFinale !== undefined) { const ing = Object.assign({}, base, typeof I === 'function' ? I(secondi) : I); ing.posizione = { x, z: 0 }; s.t = tFinale - 1 / 60; m = C.aggiorna(s, 1 / 60, ing) }
+  C.disegna(g, m); window.ultimo = m; return { aghi: m.aghi, angoli: m.angoli, lcd: m.lcd, spie: Object.fromEntries(Object.entries(m.spie).map(([k, v]) => [k, v.stato + (v.accesa ? '*' : '')])) };
+};
+/* colore medio di un'area quadrata (coordinate di progetto) */
+window.colore = function (x, y, r) { const [px, py] = C.aPixel(cv.width, cv.height, x, y), d = g.getImageData(Math.round(px - r), Math.round(py - r), 2 * r + 1, 2 * r + 1).data; let R = 0, G = 0, B = 0, n = d.length / 4; for (let i = 0; i < d.length; i += 4) { R += d[i]; G += d[i + 1]; B += d[i + 2] } return [Math.round(R / n), Math.round(G / n), Math.round(B / n)] };
+window.massimo = function (x, y, r) { const [px, py] = C.aPixel(cv.width, cv.height, x, y), d = g.getImageData(Math.round(px - r), Math.round(py - r), 2 * r + 1, 2 * r + 1).data; let best = [0, 0, 0], bs = -1; for (let i = 0; i < d.length; i += 4) { const s = d[i] + d[i + 1] + d[i + 2]; if (s > bs) { bs = s; best = [d[i], d[i + 1], d[i + 2]] } } return best };
+</script></body></html>

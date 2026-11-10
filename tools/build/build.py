@@ -629,6 +629,11 @@ print('patch mappa V31 applicata:',_n,'sostituzioni')
 _sp=_ilu.spec_from_file_location('patch_pneumatici_v32',REPO+'sorgenti/patch_pneumatici_v32.py'); _pm=_ilu.module_from_spec(_sp); _sp.loader.exec_module(_pm)
 h,_n=_pm.applica(h); assert 'motore/pneumatici_mf.js' in h and 'VEHX.imbardataUrto' in h and 'VEHX.urtoG(' in h, 'integrazione della dinamica V32 mancante'
 print('patch pneumatici V32 applicata:',_n,'sostituzioni')
+# 68) Versione 33: quadro strumenti analogico-digitale (motore/cruscotto.js), frecce e pedali al posto della levetta in auto, fari e polizia
+#     in galleria, portiere bloccate con 10 calci sul parabrezza (sorgenti/patch_cruscotto_v33.py)
+_sp=_ilu.spec_from_file_location('patch_cruscotto_v33',REPO+'sorgenti/patch_cruscotto_v33.py'); _pm=_ilu.module_from_spec(_sp); _sp.loader.exec_module(_pm)
+h,_n=_pm.applica(h); assert 'motore/cruscotto.js' in h and 'var CRU={' in h and 'id="pacc"' in h, 'integrazione del quadro V33 mancante'
+print('patch cruscotto V33 applicata:',_n,'sostituzioni')
 open(OUT,'w',encoding='utf-8').write(h)
 js=re.findall(r'<script>([\s\S]*?)</script>',h)[-1]
 os.makedirs(D+'h',exist_ok=True); open(D+PSJ,'w',encoding='utf-8').write(js)

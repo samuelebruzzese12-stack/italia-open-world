@@ -1,5 +1,17 @@
 # Cronologia delle versioni
 
+## Versione 33 — 2026-11-10 — quadro strumenti analogico-digitale, frecce e pedali, fari e portiere bloccate
+Documentazione: `docs/CRUSCOTTO.md`. Prove: `docs/test/v33_cruscotto_chromium.txt`, immagini `docs/img/v33_*.png`.
+- `motore/cruscotto.js` (nuovo): tachimetro 0–280 km/h con consumo istantaneo km/l, contagiri 0–8 con zona rossa dal limitatore, display a
+  7 segmenti (totali da 157 256 km salvati, parziali della sessione misurati sulla mappa), temperatura C–H tamponata, carburante E–F
+  smorzato; lancette con dinamica del secondo ordine e giro di prova; 21 spie con logica, lampeggi e autotest; disegno vettoriale.
+- Spie collegate a centralina a 200 Hz, rete ECU, danni e gioco: ABS ed ESP lampeggiano in regolazione e restano fisse in blackout.
+- In auto la levetta è eliminata: frecce con sterzo a rampa e pedali analogici (acceleratore lineare sulla coppia, freno idraulico).
+- Fari (auto, spenti, posizione, anabbaglianti, abbaglianti), emergenza automatica dopo l'urto, retronebbia; fascio anche in galleria;
+  a fari spenti di notte o in galleria la polizia vede l'auto solo entro 35 m.
+- Portiere bloccate dal telaio deformato: 10 calci sul parabrezza (crepa al 4°, sfondato al 10°) per uscire.
+- Test: 111 in Node (14 nuovi) + 13 prove in Chromium con controllo dei pixel.
+
 ## Versione 32 — 2026-11-10 — Magic Formula combinata, dinamica a 200 Hz, ABS/TCS/ESP con PID, blackout oltre 15 g
 Documentazione: `docs/PNEUMATICI_DINAMICA.md`. Misure: `docs/test/pneumatici_dinamica_misure.txt` (`node tools/dinamica/misure_js.js`).
 - `motore/pneumatici_mf.js` (nuovo): Magic Formula a scorrimento combinato con la struttura MF 5.2 (Fx, Fy, Mz, sensibilità al carico,

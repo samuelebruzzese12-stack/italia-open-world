@@ -134,7 +134,34 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--
 #qd{font-size:12px;padding:6px 10px;max-width:46vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#qd[hidden]{display:none}
 #vbtn{position:absolute;left:calc(10px + var(--sl));top:calc(232px + var(--st));width:46px;height:46px;border-radius:50%;padding:0;font-size:22px;display:flex;align-items:center;justify-content:center}
 #vp{position:absolute;left:calc(10px + var(--sl));top:calc(124px + var(--st));width:min(92vw,520px);max-height:66vh;overflow:auto;background:rgba(16,24,34,.95);color:#fff;border-radius:12px;padding:10px;font-size:13px;line-height:1.3;z-index:5}#vp[hidden]{display:none}#vp,#vp *{touch-action:pan-y}#vp .ph{font-weight:800;margin-bottom:4px}#vp .pr{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}#vp .s{height:34px;padding:0 9px;font-size:12px;min-width:0}#vp .s.on{background:var(--go)}#vp .s[disabled]{opacity:.4}#vp .vrow{margin:3px 0}#vp .vg{font-size:15px;margin:2px 0 4px}#vp .vnote{font-size:11px;opacity:.8;margin:4px 0}#vp .vt{width:100%;border-collapse:collapse;font-size:12px}#vp .vt td{padding:3px 4px;border-top:1px solid rgba(255,255,255,.12);vertical-align:top}#vp .vbar{display:inline-block;width:64px;height:8px;background:rgba(255,255,255,.15);border-radius:4px;vertical-align:middle;overflow:hidden}#vp .vbar i{display:block;height:100%}#vp .vok{color:#7fd8a8}#vp .vko{color:#ff8f8f;font-weight:700}#vp .vmem{color:#f3c76b}#vp .vpre{margin:0;font:10.5px/1.3 monospace;white-space:pre-wrap;max-height:120px;overflow:auto;background:#0008;border-radius:8px;padding:6px}
-#gbx{position:absolute;right:calc(20px + var(--sr));bottom:calc(236px + var(--sb));display:none;gap:6px}#gbx .b{height:48px;min-width:52px;font-size:15px}
+#gbx{position:absolute;right:calc(20px + var(--sr));bottom:calc(236px + var(--sb));display:none;gap:6px}
+/* ===== V33: quadro strumenti, frecce e pedali ===== */
+#crq{position:absolute;left:50%;bottom:calc(4px + var(--sb));transform:translateX(-50%);width:min(31vw,380px);aspect-ratio:1200/880;filter:drop-shadow(0 6px 16px rgba(0,0,0,.65));touch-action:none;cursor:pointer}
+#crq[hidden]{display:none}#crq.grande{width:min(47vw,600px)}#crq canvas{width:100%;height:100%;display:block}
+#crq.nascosto{width:auto;aspect-ratio:auto;height:30px;padding:0 12px;border-radius:15px;background:rgba(10,10,12,.78);color:#ff4a36;font:700 12px system-ui,sans-serif;display:flex;align-items:center;letter-spacing:.06em}
+#crq.nascosto canvas{display:none}#crq:not(.nascosto) .crl{display:none}
+#cguida[hidden]{display:none}
+.cfr{position:absolute;bottom:calc(14px + var(--sb));width:86px;height:86px;border-radius:20px;background:linear-gradient(180deg,rgba(40,44,52,.72),rgba(14,15,18,.82));border:2px solid rgba(255,255,255,.28);box-shadow:inset 0 2px 0 rgba(255,255,255,.12),0 6px 14px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;touch-action:none;padding:0}
+.cfr svg{width:46px;height:46px;fill:#e9e9ec;filter:drop-shadow(0 1px 1px #000)}.cfr.on{background:linear-gradient(180deg,rgba(24,190,110,.85),rgba(8,110,60,.9));border-color:rgba(160,255,200,.9)}.cfr.on svg{fill:#fff}
+#gsx{left:calc(14px + var(--sl))}#gdx{left:calc(110px + var(--sl))}
+#cluci{position:absolute;left:calc(14px + var(--sl));bottom:calc(112px + var(--sb));display:flex;gap:6px}
+#cluci .b{height:40px;min-width:40px;padding:0 10px;font-size:12px;font-weight:700}#cluci .b.on{background:rgba(30,150,255,.85);color:#fff}#lemer.on{background:rgba(230,40,30,.9)!important}#lnebbia.on{background:rgba(255,160,0,.9)!important}
+#cpedali{position:absolute;right:calc(12px + var(--sr));bottom:calc(10px + var(--sb));display:flex;gap:14px;align-items:flex-end;perspective:420px}
+.ped{position:relative;width:84px;height:108px;touch-action:none;transform-origin:50% 100%;transform:rotateX(calc(var(--p,0) * 24deg)) translateY(calc(var(--p,0) * 4px));transition:transform .04s linear}
+.ped.acc{width:62px;height:142px}
+.ped .pz{position:absolute;inset:0;border-radius:12px 12px 16px 16px;background:repeating-linear-gradient(180deg,#2b2d31 0 7px,#141518 7px 12px),#1b1c20;border:3px solid #8c9097;box-shadow:inset 0 0 0 2px #2f3237,inset 0 10px 14px rgba(255,255,255,.08),0 8px 16px rgba(0,0,0,.55)}
+.ped.acc .pz{border-radius:10px 10px 14px 14px;background:repeating-linear-gradient(180deg,#2d2f33 0 6px,#121316 6px 10px),#1b1c20}
+.ped b{position:absolute;left:0;right:0;bottom:8px;text-align:center;font:800 11px system-ui,sans-serif;letter-spacing:.08em;color:#d7d9de;text-shadow:0 1px 2px #000;pointer-events:none}
+.ped s{position:absolute;left:6px;right:6px;bottom:26px;height:calc(var(--p,0) * (100% - 34px));border-radius:5px;background:linear-gradient(0deg,rgba(255,60,40,.55),rgba(255,120,60,.15));pointer-events:none}
+.ped.acc s{background:linear-gradient(0deg,rgba(40,220,120,.55),rgba(120,255,170,.12))}
+#hud.inauto #joy{display:none!important}#hud.inauto #sp,#hud.inauto #qd{display:none!important}
+#hud.inauto #act{right:calc(12px + var(--sr));bottom:calc(166px + var(--sb));height:48px;min-width:100px;font-size:13px}
+#hud.inauto #hb{right:calc(112px + var(--sr));bottom:calc(132px + var(--sb));height:40px;min-width:84px;font-size:11px}
+#hud.inauto #gbx{right:calc(182px + var(--sr));bottom:calc(14px + var(--sb));flex-direction:column}
+#hud.inauto #rep{right:calc(12px + var(--sr));bottom:calc(222px + var(--sb))}
+#hud.inauto #sub{bottom:calc(min(31vw,380px) * .733 + 14px + var(--sb))}
+#hud.inauto #cr{bottom:auto;top:calc(2px + var(--st));left:9%;right:31%;font-size:7.5px;line-height:1.15;opacity:.55}   /* crediti della mappa (obbligatori): in auto sopra, fuori da quadro e pedali */
+#gbx .b{height:48px;min-width:52px;font-size:15px}
 @media (orientation:landscape) and (max-height:520px){#vbtn{top:calc(200px + var(--st));width:42px;height:42px}#vp{top:calc(56px + var(--st));max-height:calc(100% - 66px)}#gbx{right:calc(116px + var(--sr));bottom:calc(126px + var(--sb))}#qd{font-size:11px;padding:5px 8px}}
 #rld{position:fixed;inset:0;z-index:12;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;background:#1d2733;color:#fff;font:600 15px system-ui,sans-serif;text-align:center}#rld[hidden]{display:none}#rlt{font-size:20px;font-weight:800}#rlp{opacity:.8;font-size:13px}#rle{color:#ffb4a8;font-size:13px;max-width:520px}#rla{position:absolute;bottom:calc(10px + var(--sb));left:10px;right:10px;font-size:10px;opacity:.6}#mgo{background:var(--go);opacity:1;height:48px;font-size:14px}#mcity{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;max-width:96vw;padding:2px 4px;touch-action:pan-x}#mcity *{touch-action:pan-x}#mcity .b{height:40px;min-width:0;white-space:nowrap;font-size:12px;padding:0 10px;flex:0 0 auto}#mc{width:min(96vw,calc(100vh - 230px))}#mcred{position:absolute;left:calc(14px + var(--sl));bottom:calc(14px + var(--sb));height:40px}#rcred{position:absolute;inset:0;z-index:3;background:rgba(8,16,26,.97);color:#fff;padding:calc(14px + var(--st)) 16px calc(14px + var(--sb));overflow-y:auto;touch-action:pan-y;font:500 13px/1.45 system-ui,sans-serif}#rcred[hidden]{display:none}#rcred *{touch-action:pan-y}#rcred a{color:#8fc3ff}#rcred>button{float:right}#zn{display:none;white-space:pre-line;line-height:1.25;max-width:180px}@media (orientation:landscape) and (max-height:520px){#mc{width:auto;height:calc(100% - 16px)}#mcity{flex-direction:column;flex-wrap:nowrap;overflow-x:hidden;overflow-y:auto;max-height:calc(100% - 210px);width:190px;touch-action:pan-y;align-self:flex-start;margin-top:calc(124px + var(--st))}#mcity *{touch-action:pan-y}#mcity .b{height:34px}#mgo{position:absolute;right:calc(14px + var(--sr));top:calc(70px + var(--st));height:40px}#mcred{left:auto;right:calc(120px + var(--sr))}}
 #msat{position:absolute;left:calc(92px + var(--sl));bottom:calc(14px + var(--sb));height:40px}
@@ -2502,6 +2529,14 @@ onmessage = async e => { const m = e.data;
 <div id="hud"><div id="ottica" hidden><i class="oh"></i><i class="ov"></i><i class="ol"></i><i class="or"></i><i class="ob"></i><i class="op"></i></div>
 <div id="look"></div>
 <div id="joy"><div id="base"><div id="knob"></div></div></div>
+<div id="crq" hidden title="Quadro strumenti: tocca per cambiare dimensione, tieni premuto sul display per azzerare i parziali"><canvas id="crcv"></canvas><span class="crl">⏲ QUADRO</span></div>
+<div id="cguida" hidden>
+ <button class="cfr" id="gsx" aria-label="Sterza a sinistra"><svg viewBox="0 0 24 24"><path d="M15.5 3.5 6 12l9.5 8.5V15h3V9h-3z"/></svg></button>
+ <button class="cfr" id="gdx" aria-label="Sterza a destra"><svg viewBox="0 0 24 24"><path d="M8.5 3.5 18 12l-9.5 8.5V15h-3V9h3z"/></svg></button>
+ <div id="cluci"><button class="b" id="lfari" title="Fari (L)">💡 AUTO</button><button class="b" id="lemer" title="Luci di emergenza (H)">⚠</button><button class="b" id="lnebbia" title="Retronebbia">❄D</button></div>
+ <div id="cpedali"><div class="ped" id="pfreno" aria-label="Pedale del freno"><i class="pz"></i><s></s><b>FRENO</b></div><div class="ped acc" id="pacc" aria-label="Pedale dell'acceleratore"><i class="pz"></i><s></s><b>GAS</b></div></div>
+</div>
+
 <div id="top"><div class="chip" id="w"></div><div class="chip" id="sp" hidden></div><div class="chip" id="qd" hidden></div><div style="flex:1"></div><button class="b" id="tbtn" title="Ora del giorno">🌓</button><button class="b" id="rbtn" title="Radio">📻</button><button class="b" id="v360">360°</button><button class="b" id="vw">VISTA</button></div>
 <button class="b" id="hb" hidden>FRENO A MANO</button>
 <button class="b" id="act">—</button>
@@ -2520,7 +2555,7 @@ onmessage = async e => { const m = e.data;
 <div id="rld"><div id="rlt">Caricamento della mappa reale…</div><div id="rlp"></div><div id="rle"></div><button class="b" id="rlr" hidden>Riprova</button><div id="rla">Mappa © OpenStreetMap contributors · OpenMapTiles · OpenFreeMap · Rilievo Mapterhorn (INGV TINITALY e fonti regionali)</div></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="motore/veicoli_db.js"></script><script src="motore/pneumatici_mf.js"></script><script src="motore/controllo_dinamica.js"></script><script src="motore/fisica_veicolo.js"></script><script src="motore/ecu.js"></script><script src="motore/danni_meccanici.js"></script><script src="motore/calibrazione.js"></script><script src="motore/profili_danno.js"></script><script src="motore/danni_solver.js"></script>
+<script src="motore/cruscotto.js"></script><script src="motore/veicoli_db.js"></script><script src="motore/pneumatici_mf.js"></script><script src="motore/controllo_dinamica.js"></script><script src="motore/fisica_veicolo.js"></script><script src="motore/ecu.js"></script><script src="motore/danni_meccanici.js"></script><script src="motore/calibrazione.js"></script><script src="motore/profili_danno.js"></script><script src="motore/danni_solver.js"></script>
 <script>
 ( function () {
 
@@ -16717,7 +16752,7 @@ void main(){vec3 d=normalize(vD);float h=d.y;vec3 col=mix(uHor,uZen,pow(clamp(h,
   R.toneMappingExposure=1.12+night*.25;
   // lampioni, fari
   const po=Math.min(1,night*1.25);POOLM.opacity=po*.42;const vis=po>.02;for(const m of POOLS)if(m.visible!==vis)m.visible=vis;
-  if(HEAD){const on=night>.25&&typeof inCar!=='undefined'&&inCar;HEAD.visible=on;HEADM.opacity=on?Math.min(1,night*1.4)*.55:0}
+  if(HEAD){const fz=typeof CRU!=='undefined'&&CRU.ok?CRU.fariEffettivi():'anabbaglianti',lv=fz==='abbaglianti'?2:fz==='anabbaglianti'?1:0,buio=Math.max(night,typeof CRU!=='undefined'&&CRU.galleria?.85:0),on=lv>0&&buio>.25&&typeof inCar!=='undefined'&&inCar;HEAD.visible=on;HEADM.opacity=on?Math.min(1,buio*1.4)*(lv===2?.78:.55):0;HEAD.scale.set(lv===2?1.2:1,1,lv===2?1.65:1)}
   if(now>envT&&PBR.ok.v){envT=now+1500;const urb=urbanNear(px,pz);env(urb>.18?'citta':'campagna',.05+.95*dayK,deg<8&&deg>-6?[1,.82,.7]:[1,1,1])}}
  function sunPos(px,py,pz){sun.position.set(px+lightDir.x*80,py+lightDir.y*80,pz+lightDir.z*80)}
  function next(){const i=MODES.indexOf(mode);mode=MODES[(i+1)%MODES.length];tramH=null;fast0=Date.now();try{localStorage.setItem('iow_ora',mode)}catch(e){}return NAMES[mode]}
@@ -17359,7 +17394,7 @@ function pdRoam(u,dt){let s=RSL[u.rs];if(!s){pdPickRoam(u);s=RSL[u.rs];if(!s){u.
 /* percezione: vede il bersaglio solo entro la portata, nel cono frontale (o vicino) e senza ostacoli in mezzo */
 function pdLosDist(x,z,dx,dz,d){let best=d;for(const s of solids){if(s.on===0||s.nc)continue;if(s.c===undefined&&(s.x1-s.x0)<1.3&&(s.z1-s.z0)<1.3)continue;best=rayBox(x,z,dx,dz,s.x0,s.x1,s.z0,s.z1,best)}const cx=Math.floor((x+WORLD.WS)/WORLD.CSZ),cz=Math.floor((z+WORLD.WS)/WORLD.CSZ),ex=Math.ceil(d/WORLD.CSZ)+1;
  for(let i=-ex;i<=ex;i++)for(let j=-ex;j<=ex;j++){const a=CSO.get((cx+i)+','+(cz+j));if(a)for(const s of a){if((s.hx<.65&&s.hz<.65)||s.lo||s.pk)continue;const ox=x-s.x,oz=z-s.z;best=rayBox(ox*s.c+oz*s.s,-ox*s.s+oz*s.c,dx*s.c+dz*s.s,-dx*s.s+dz*s.c,-s.hx,s.hx,-s.hz,s.hz,best)}}return best}
-function pdCanSee(u,tx,tz){const dx=tx-u.x,dz=tz-u.z,d=Math.hypot(dx,dz);if(d>(PD.T&&PD.T.open?PD.cfg.visOpen:PD.cfg.vis))return false;if(d<3)return true;const fa=Math.abs(pdWrap(Math.atan2(dx,dz)-u.h));if(fa>1.75&&d>PD.cfg.visBack)return false;const ux=dx/d,uz=dz/d,nx=-uz,nz=ux;for(const o of [0,1.1,-1.1]){const sx=u.x+ux*1.5+nx*o*.3,sz=u.z+uz*1.5+nz*o*.3,ex=tx+nx*o,ez=tz+nz*o,ddx=ex-sx,ddz=ez-sz,L=Math.hypot(ddx,ddz);if(pdLosDist(sx,sz,ddx/L,ddz/L,L)>=L-1.2)return true}return false}
+function pdCanSee(u,tx,tz){const dx=tx-u.x,dz=tz-u.z,d=Math.hypot(dx,dz);if(typeof CRU!=='undefined'&&d>CRU.visibilitaMax())return false;if(d>(PD.T&&PD.T.open?PD.cfg.visOpen:PD.cfg.vis))return false;if(d<3)return true;const fa=Math.abs(pdWrap(Math.atan2(dx,dz)-u.h));if(fa>1.75&&d>PD.cfg.visBack)return false;const ux=dx/d,uz=dz/d,nx=-uz,nz=ux;for(const o of [0,1.1,-1.1]){const sx=u.x+ux*1.5+nx*o*.3,sz=u.z+uz*1.5+nz*o*.3,ex=tx+nx*o,ez=tz+nz*o,ddx=ex-sx,ddz=ez-sz,L=Math.hypot(ddx,ddz);if(pdLosDist(sx,sz,ddx/L,ddz/L,L)>=L-1.2)return true}return false}
 /* collisioni fra auto (player e pattuglie): tre cerchi per veicolo, impulsi con attrito e momento di rotazione */
 function pdContact(A,B,px,pz,nx,nz,pen){const rax=px-A.x,raz=pz-A.z,rbx=px-B.x,rbz=pz-B.z,vax=A.vx+A.w*raz,vaz=A.vz-A.w*rax,vbx=B.vx+B.w*rbz,vbz=B.vz-B.w*rbx,rvx=vax-vbx,rvz=vaz-vbz,vn=rvx*nx+rvz*nz,tm=A.m+B.m;
  A.x+=nx*pen*B.m/tm;A.z+=nz*pen*B.m/tm;B.x-=nx*pen*A.m/tm;B.z-=nz*pen*A.m/tm;if(vn>=0)return 0;
@@ -19394,7 +19429,7 @@ let tab_='Caffè';
 function renderMenu(){$('#tabs').innerHTML=Object.keys(MENU).map(k=>'<button class="b t'+(k===tab_?' on':'')+'" data-k="'+k+'">'+k+'</button>').join('');
  $('#items').innerHTML=ITEMS.filter(i=>i.k===tab_).map(i=>'<button class="b i" data-n="'+i.n+'"><span class="p">'+i.e+'</span><span class="nm">'+i.n+'</span><span>'+eur(i.c)+'</span></button>').join('')}
 function near(){const px=inCar?C.x:P.x,pz=inCar?C.z:P.z,L3=[];
- if(inCar)L3.push({x:px,z:pz,r:99,t:'Scendi dall\u2019auto',a:exitCar});
+ if(inCar)L3.push({x:px,z:pz,r:99,t:typeof CRU!=='undefined'&&CRU.ok&&CRU.porteBloccate()?'Calcia il parabrezza ('+CRU.porte.calci+'/10)':'Scendi dall\u2019auto',a:exitCar});
  else{L3.push({x:C.x,z:C.z,r:4.6,t:'Sali in auto',a:()=>{inCar=true;S.inCar=true;cs.v=0;camYaw=C.h;view=0;lookYaw=lookPitch=0;save();radioApply(RADIO.cur>0);if(VEHOK)VEHX.avvioAuto()}});
   const bb=REAL.nearBar(px,pz);if(bb)L3.push({x:bb.x,z:bb.z,r:16,t:'Ordina'+(bb.name?' da '+bb.name:' al bar'),a:()=>{menu=true;$('#menu').hidden=false;$('#menu b').textContent=(bb.name||'Bar')+' · Menu';renderMenu()}});
   if(CC.st>=3&&CC.st<=6)OF.forEach(o=>{if(o.visible)L3.push({x:o.position.x,z:o.position.z,r:2.2,t:'Saluta il carabiniere',a:()=>toast('«Buongiorno! Tutto tranquillo da queste parti?» — «Sì, grazie, agente.»')})});
@@ -20064,8 +20099,75 @@ if(VEHOK){
  $('#gup').addEventListener('pointerdown',e=>{e.stopPropagation();VEHX.cmd='su'});$('#gdn').addEventListener('pointerdown',e=>{e.stopPropagation();VEHX.cmd='giu'});
  addEventListener('keydown',e=>{if(!inCar)return;const k=e.key.toLowerCase();if(k==='x')VEHX.cmd='su';else if(k==='z')VEHX.cmd='giu';else if(k==='n'){VEH.cambio.modo=VEH.cambio.modo==='auto'?'man':'auto';toast(VEH.cambio.modo==='auto'?'Cambio automatico':'Cambio manuale: Z scala, X sale')}});
 }
-function step(dt){const ts=performance.now()/1000;dmgDrive();dmgStep(dt);VEHX.step(dt);crStep(dt);if(inCar)dmgSmokeFor(carA,{x:C.x,z:C.z,h:C.h,y:V.y},dt);dmgUi(dt);if(RADIO.el&&!RADIO.el.paused){const tv=(VOICE.cur?.22:1)*RADIO.vol*(inCar?1:0);RADIO.el.volume+=(tv-RADIO.el.volume)*Math.min(1,dt*4)}
- const ix=cl(joy.x+(K.d||K.arrowright?1:0)-(K.a||K.arrowleft?1:0),-1,1),iy=cl(joy.y+(K.w||K.arrowup?1:0)-(K.s||K.arrowdown?1:0),-1,1);
+
+/* ===================================================================================================================
+   V33 — QUADRO STRUMENTI, COMANDI A FRECCE E PEDALI, FARI, PORTIERE BLOCCATE (motore/cruscotto.js; sorgenti/patch_cruscotto_v33.py)
+   =================================================================================================================== */
+var CRU={ok:!!(window.IOW_CRUSCOTTO&&typeof VEHOK!=='undefined'&&VEHOK),st:null,cmd:null,fari:{modo:'auto',emergenza:false,retronebbia:false},galleria:false,
+ porte:{bloccate:false,calci:0,sfondato:false},dim:0,drawT:0,saveT:0,cv:null,g:null,ultimo:null,boPrec:false,koPrec:false,tLungo:null,
+ MODI:['auto','spenti','posizione','anabbaglianti','abbaglianti'],NOMI:{auto:'AUTO',spenti:'SPENTI',posizione:'POSIZ.',anabbaglianti:'ANABB.',abbaglianti:'ABBAGL.'},
+ init(){if(!CRU.ok)return;let odo;try{const s=JSON.parse(localStorage.getItem('iow_cruscotto_v1')||'null');if(s&&Number.isFinite(s.odoKm))odo=s.odoKm;if(s&&s.fari&&CRU.MODI.includes(s.fari))CRU.fari.modo=s.fari}catch(e){}
+  CRU.st=IOW_CRUSCOTTO.crea({odoKm:odo,redline:VEH.par.limitatore});CRU.cmd=IOW_CRUSCOTTO.creaComandi();CRU.cv=$('#crcv');CRU.g=CRU.cv?CRU.cv.getContext('2d'):null;
+  const tasto=(id,k)=>{const el=$(id);if(!el)return;const giu=e=>{e.preventDefault();e.stopPropagation();try{el.setPointerCapture(e.pointerId)}catch(_){}IOW_CRUSCOTTO.premi(CRU.cmd,k);el.classList.add('on')},su=e=>{IOW_CRUSCOTTO.rilascia(CRU.cmd,k);el.classList.remove('on')};
+   el.addEventListener('pointerdown',giu);el.addEventListener('pointerup',su);el.addEventListener('pointercancel',su);el.addEventListener('lostpointercapture',su)};
+  tasto('#gsx','sx');tasto('#gdx','dx');
+  const pedale=(id,k)=>{const el=$(id);if(!el)return;let pid=null;const rel=e=>{const r=el.getBoundingClientRect();return (e.clientY-r.top)/Math.max(1,r.height)};
+   el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();pid=e.pointerId;try{el.setPointerCapture(pid)}catch(_){}IOW_CRUSCOTTO.premi(CRU.cmd,k,rel(e))});
+   el.addEventListener('pointermove',e=>{if(e.pointerId===pid)IOW_CRUSCOTTO.premi(CRU.cmd,k,rel(e))});
+   const su=e=>{if(e.pointerId!==pid)return;pid=null;IOW_CRUSCOTTO.rilascia(CRU.cmd,k)};el.addEventListener('pointerup',su);el.addEventListener('pointercancel',su);el.addEventListener('lostpointercapture',su)};
+  pedale('#pacc','acc');pedale('#pfreno','freno');
+  const bf=$('#lfari');if(bf)bf.addEventListener('click',e=>{e.stopPropagation();CRU.cambiaFari()});
+  const be=$('#lemer');if(be)be.addEventListener('click',e=>{e.stopPropagation();CRU.fari.emergenza=!CRU.fari.emergenza;CRU.etichette()});
+  const bn=$('#lnebbia');if(bn)bn.addEventListener('click',e=>{e.stopPropagation();CRU.fari.retronebbia=!CRU.fari.retronebbia;CRU.etichette()});
+  const q=$('#crq');if(q){q.addEventListener('pointerdown',e=>{e.stopPropagation();const r=q.getBoundingClientRect(),L=IOW_CRUSCOTTO.LAYOUT.lcd,p0=IOW_CRUSCOTTO.aPixel(r.width,r.height,L.x,L.y),p1=IOW_CRUSCOTTO.aPixel(r.width,r.height,L.x+L.w,L.y+L.h),x=e.clientX-r.left,y=e.clientY-r.top;
+    CRU.tLungo=(x>=p0[0]&&x<=p1[0]&&y>=p0[1]&&y<=p1[1]&&CRU.dim!==2)?setTimeout(()=>{CRU.tLungo='fatto';CRU.st.odo.parzialeKm=0;toast('Chilometri parziali azzerati')},650):null});
+   q.addEventListener('pointerup',e=>{e.stopPropagation();if(CRU.tLungo==='fatto'){CRU.tLungo=null;return}if(CRU.tLungo)clearTimeout(CRU.tLungo);CRU.tLungo=null;CRU.dim=(CRU.dim+1)%3;q.classList.toggle('grande',CRU.dim===1);q.classList.toggle('nascosto',CRU.dim===2);CRU.drawT=9})}
+  addEventListener('keydown',e=>{if(!inCar)return;const k=e.key.toLowerCase();if(k==='l')CRU.cambiaFari();else if(k==='h'){CRU.fari.emergenza=!CRU.fari.emergenza;CRU.etichette()}});
+  CRU.etichette()},
+ cambiaFari(){const i=CRU.MODI.indexOf(CRU.fari.modo);CRU.fari.modo=CRU.MODI[(i+1)%CRU.MODI.length];CRU.etichette();toast('Fari: '+({auto:'automatici (accesi di notte e in galleria)',spenti:'spenti',posizione:'luci di posizione',anabbaglianti:'anabbaglianti',abbaglianti:'abbaglianti'})[CRU.fari.modo]);CRU.salva()},
+ etichette(){const b=$('#lfari');if(b){b.textContent='💡 '+CRU.NOMI[CRU.fari.modo];b.classList.toggle('on',CRU.fari.modo!=='spenti')}const e=$('#lemer');if(e)e.classList.toggle('on',CRU.fari.emergenza);const n=$('#lnebbia');if(n)n.classList.toggle('on',CRU.fari.retronebbia)},
+ notte(){try{return UNI.uNight.value}catch(e){return 0}},
+ buio(){return CRU.notte()>.25||CRU.galleria},
+ /* fari effettivamente accesi: in AUTO anabbaglianti di notte e in galleria (sensore crepuscolare), altrimenti spenti */
+ fariEffettivi(){const m=CRU.fari.modo;if(m==='auto')return CRU.buio()?'anabbaglianti':'spenti';return m},
+ /* distanza massima a cui la polizia vede l'auto: di notte o in galleria a fari spenti 35 m, con le sole luci di posizione 70 m */
+ visibilitaMax(){if(!CRU.ok||!inCar||!CRU.buio())return 1e9;const f=CRU.fariEffettivi();return f==='spenti'?35:f==='posizione'?70:1e9},
+ porteBloccate(){return CRU.porte.bloccate&&!CRU.porte.sfondato},
+ /* telaio deformato → portiere bloccate (zone nominate del Vehicle Damage Solver; senza solver: zone centrali della rete) */
+ controllaPorte(){const P_=CRU.porte,z=VDS.st&&VDS.st.zone,g=k=>z&&z[k]?z[k].integrita:1,s=DANS.comp.struttura||[1,1,1,1,1,1];
+  const rotto=z?(g('porte')<.6||g('montanti')<.65||g('abitacolo')<.8):Math.min(s[2],s[3])<.55,sano=z?(g('porte')>=.85&&g('montanti')>=.85&&g('abitacolo')>=.9):Math.min(s[2],s[3])>=.9;
+  if(!P_.bloccate&&rotto&&inCar){P_.bloccate=true;P_.calci=0;P_.sfondato=false;toast('Telaio deformato: le portiere sono bloccate. Per uscire sfonda il parabrezza (10 calci)')}
+  else if(P_.bloccate&&sano){P_.bloccate=false;P_.calci=0;P_.sfondato=false}},
+ calcio(){const P_=CRU.porte;if(Math.hypot(V.vx,V.vz)>1){toast('Fermati prima di calciare il parabrezza');return}
+  P_.calci++;const car={x:C.x,z:C.z,h:C.h,y:V.y,vx:0,vz:0,player:true};V.pt=-.06;
+  try{if(typeof crBang==='function')crBang(.5+P_.calci*.05,650+P_.calci*70,.16)}catch(e){}
+  if(P_.calci===4)try{crGlassCrack(carA,car,0,'calci')}catch(e){}
+  if(P_.calci>=10){P_.sfondato=true;try{crGlassBreak(carA,car,'ws')}catch(e){}toast('Parabrezza sfondato: esci dal davanti');const sn=Math.sin(C.h),cn=Math.cos(C.h);exitCarV33();const q=push(C.x+sn*3.4,C.z+cn*3.4,P.r,V.y);P.x=q[0];P.z=q[1];P.y=GY(P.x,P.z,V.y,true)}
+  else toast('Calcio sul parabrezza: '+P_.calci+'/10'+(P_.calci>=4?' (si crepa)':''))},
+ comandi(dt){if(!CRU.ok)return null;const o=IOW_CRUSCOTTO.passoComandi(CRU.cmd,dt),pa=$('#pacc'),pf=$('#pfreno');if(pa)pa.style.setProperty('--p',o.acc.toFixed(3));if(pf)pf.style.setProperty('--p',o.freno.toFixed(3));return o},
+ ingressi(){const v=VEH,m=v.motore,cen=v.centralina,mf=v.mod.freni||[1,1,1,1],Cm=DANS.comp,parti=(carA.cr&&carA.cr.parts)||{};
+  let mil=false;try{mil=Object.values(ECUN.ecu.EMS.dtc).some(d=>d.stato==='attivo')}catch(e){}
+  const servizio=['radiatore','motore','cambio','frizione','differenziale','centraline','sterzo','batteria','elettrico'].some(k=>Cm[k]<.7)||DANS.termico<.7;
+  return{quadro:inCar,motoreAcceso:m.acceso,rpm:m.rpm,vx:VEHOK?v.v:cs.v,consumoLh:m.consumoLh,Tacqua:m.Tacqua,carbL:v.carburante.litri,serbatoioL:v.par.serbatoio,riserva:v.carburante.riserva,marcia:v.cambio.marcia,
+   frenoMano:!!(K[' ']||K.hb),freniIntegrita:(mf[0]+mf[1]+mf[2]+mf[3])/4,centralina:{stato:cen.stato,abs:cen.abs.attivo.some(Boolean),tcs:cen.tcs.attivo,esp:cen.esp.attivo},absOK:!!v.ecu.abs,espOK:v.ecu.esp!==false,
+   batteriaV:ECUN.batteria.V,alternatore:v.mod.alternatore,milDTC:mil,motoreIntegrita:Math.min(Cm.motore,DANS.termico),fari:CRU.fariEffettivi(),fariGuasti:(Cm.fari&&Math.min(...Cm.fari)<.5)||(Cm.fanali&&Math.min(...Cm.fanali)<.5),
+   retronebbia:CRU.fari.retronebbia,emergenza:CRU.fari.emergenza,porteBloccate:CRU.porteBloccate(),portaAperta:['dFL','dRL','dFR','dRR'].some(k=>parti[k]&&parti[k].st!=='closed'),posizione:{x:C.x,z:C.z},assistenza:servizio}},
+ step(dt){if(!CRU.ok)return;const hud=$('#hud');if(hud&&hud.classList.contains('inauto')!==inCar)hud.classList.toggle('inauto',inCar);
+  const q=$('#crq'),cg=$('#cguida');if(q&&q.hidden===inCar)q.hidden=!inCar;if(cg&&cg.hidden===inCar)cg.hidden=!inCar;
+  if(!inCar){IOW_CRUSCOTTO.rilascia(CRU.cmd,'sx');IOW_CRUSCOTTO.rilascia(CRU.cmd,'dx');IOW_CRUSCOTTO.rilascia(CRU.cmd,'acc');IOW_CRUSCOTTO.rilascia(CRU.cmd,'freno')}
+  try{CRU.galleria=inCar&&REAL.terrainH(C.x,C.z)-V.y>2.5}catch(e){CRU.galleria=false}   /* sotto la montagna: più di 2,5 m di terreno sopra l'auto */
+  CRU.controllaPorte();
+  const bo=VEH.centralina.stato==='BLACKOUT';if(bo&&!CRU.boPrec&&inCar){CRU.fari.emergenza=true;CRU.etichette()}CRU.boPrec=bo;   /* dopo l'urto si accendono da sole le luci di emergenza */
+  const ko=Math.min(DANS.comp.motore,DANS.termico)<.3;if(ko&&!CRU.koPrec)toast('Motore KO: spie guasto motore e pressione olio accese');CRU.koPrec=ko;
+  CRU.ultimo=IOW_CRUSCOTTO.aggiorna(CRU.st,dt,CRU.ingressi());
+  CRU.drawT+=dt;if(inCar&&CRU.dim!==2&&CRU.g&&CRU.drawT>=1/30){CRU.drawT=0;const c=CRU.cv,r=Math.min(2,devicePixelRatio||1),w=Math.round(c.clientWidth*r),h=Math.round(c.clientHeight*r);if(w>10&&h>10){if(c.width!==w||c.height!==h){c.width=w;c.height=h}IOW_CRUSCOTTO.disegna(CRU.g,CRU.ultimo)}}
+  CRU.saveT+=dt;if(CRU.saveT>5){CRU.saveT=0;CRU.salva()}},
+ salva(){if(!CRU.st)return;try{localStorage.setItem('iow_cruscotto_v1',JSON.stringify({odoKm:+CRU.st.odo.totaleKm.toFixed(3),fari:CRU.fari.modo}))}catch(e){}}};
+const exitCarV33=exitCar;exitCar=function(){if(CRU.ok&&CRU.porteBloccate()){CRU.calcio();return}exitCarV33()};
+CRU.init();
+function step(dt){const ts=performance.now()/1000;dmgDrive();dmgStep(dt);VEHX.step(dt);if(typeof CRU!=='undefined')CRU.step(dt);crStep(dt);if(inCar)dmgSmokeFor(carA,{x:C.x,z:C.z,h:C.h,y:V.y},dt);dmgUi(dt);if(RADIO.el&&!RADIO.el.paused){const tv=(VOICE.cur?.22:1)*RADIO.vol*(inCar?1:0);RADIO.el.volume+=(tv-RADIO.el.volume)*Math.min(1,dt*4)}
+ const kx=(K.d||K.arrowright?1:0)-(K.a||K.arrowleft?1:0),ky=(K.w||K.arrowup?1:0)-(K.s||K.arrowdown?1:0),cmd=inCar&&typeof CRU!=='undefined'?CRU.comandi(dt):null;   /* V33: in auto niente levetta, frecce e pedali */
+ const ix=cmd?cl(cmd.ix+kx,-1,1):cl(joy.x+kx,-1,1),iy=cmd?cl(cmd.iy+ky,-1,1):cl(joy.y+ky,-1,1);
  if(!menu&&!mapOpen){if(inCar)drive(dt,ix,iy);else walk(dt,ix,iy,!!K.shift)}if(!inCar)parked(dt);
  doorA+=((S.door?-PI/2:0)-doorA)*Math.min(1,dt*8);door.rotation.y=doorA;
  const px=inCar?C.x:P.x,pz=inCar?C.z:P.z,far=true;
