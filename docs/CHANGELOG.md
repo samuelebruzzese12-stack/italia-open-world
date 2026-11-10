@@ -3,6 +3,7 @@
 ## 34 — pannello della polizia chiudibile, bonus 1.000 €
 - Pannello 🚔: intestazione fissa con il tasto «✕ Chiudi» (resta visibile anche scorrendo; in verticale l'altezza non copre più i comandi); Esc lo chiude.
 - Portafoglio: +1.000 € una sola volta (movimento «Bonus 1.000 € (versione 34)»).
+- Serbatoio: pieno di gasolio regalato una volta all'avvio (70 L).
 - Motore fisico: `cambiaParametri(v, P)` per cambiare i parametri del veicolo senza ricrearlo.
 - `motore/carro_attrezzi.js`: modulo del carro attrezzi a pianale (dinamica a 200 Hz, aggancio, traino, fattura); non ancora collegato al gioco.
 

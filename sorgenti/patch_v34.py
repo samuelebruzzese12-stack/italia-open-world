@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""ITALIA OPEN WORLD — V34: pannello della polizia con il tasto «✕ Chiudi» (anche in verticale) e bonus una tantum di 1.000 € nel portafoglio."""
+"""ITALIA OPEN WORLD — V34: pannello della polizia con il tasto «✕ Chiudi» (anche in verticale) e bonus una tantum di 1.000 € nel portafoglio, pieno di gasolio regalato una volta."""
 import sys
 CSS = r"""
 #pp .ph{position:sticky;top:-10px;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-10px -10px 6px;padding:8px 10px;background:rgba(16,24,34,.98);border-radius:12px 12px 0 0}
@@ -22,4 +22,7 @@ def applica(h):
         "{const x=el('p_x');if(x)x.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();p.hidden=true});addEventListener('keydown',e=>{if(e.key==='Escape')p.hidden=true})}")
     rep("let S=load();",
         "let S=load();\nif(!S.bonusV34){S.bonusV34=1;S.cents+=100000;S.log.push({t:Date.now(),w:'Bonus 1.000 € (versione 34)',c:100000});if(S.log.length>30)S.log.shift()}   /* V34: +1.000 € una volta sola */")
+    # pieno di gasolio regalato una volta (richiesto: «aggiungi un po' di benzina perché l'ho finita»)
+    rep("VEHX.ripristina(S.veicolo);",
+        "VEHX.ripristina(S.veicolo);if(VEHOK&&!S.pienoV34){S.pienoV34=1;const L=VEH.par.serbatoio-VEH.carburante.litri;if(L>0)IOW_FISICA.rifornisci(VEH,L);save();setTimeout(()=>toast('Serbatoio pieno: '+Math.round(VEH.carburante.litri)+' L di gasolio regalati'),1500)}")
     return h,n[0]

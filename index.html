@@ -20102,7 +20102,7 @@ if(VEHOK){
  /* riparazione d'emergenza (pulsante esistente): carrozzeria e gomme come prima, meccanica solo al 70% */
  {const dmgRepair0=dmgRepair;dmgRepair=function(a){dmgRepair0(a);if(a===carA&&!VEHX.inOfficina){IOW_DANNI.ripara(DANS,'emergenza',undefined,VEH);VDS.ripara('emergenza');if(VEHX.open)VEHX.render()}}}
  const exitCar0=exitCar;exitCar=function(){const was=inCar;exitCar0();if(was&&!inCar){VEH.motore.acceso=false;VEH.motore.rpm=0}};
- VEHX.ripristina(S.veicolo);if(inCar)setTimeout(()=>VEHX.avvioAuto(),800);
+ VEHX.ripristina(S.veicolo);if(VEHOK&&!S.pienoV34){S.pienoV34=1;const L=VEH.par.serbatoio-VEH.carburante.litri;if(L>0)IOW_FISICA.rifornisci(VEH,L);save();setTimeout(()=>toast('Serbatoio pieno: '+Math.round(VEH.carburante.litri)+' L di gasolio regalati'),1500)}if(inCar)setTimeout(()=>VEHX.avvioAuto(),800);
  {let km0=VEH.odometro,L0=VEH.carburante.consumoTot;setInterval(()=>{const dk=VEH.odometro-km0,dL=VEH.carburante.consumoTot-L0;if(dk>500){VEHX.consumoMedia=dL/dk*1e5;km0=VEH.odometro;L0=VEH.carburante.consumoTot}},5000)}
  $('#vbtn').addEventListener('pointerdown',e=>{e.stopPropagation();VEHX.apri(!VEHX.open)});
  $('#gup').addEventListener('pointerdown',e=>{e.stopPropagation();VEHX.cmd='su'});$('#gdn').addEventListener('pointerdown',e=>{e.stopPropagation();VEHX.cmd='giu'});
